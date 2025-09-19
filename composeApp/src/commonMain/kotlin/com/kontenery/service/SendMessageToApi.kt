@@ -1,5 +1,6 @@
 package com.kontenery.service
 
+import com.kontenery.data.MessageRequest
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.request.*
@@ -10,12 +11,7 @@ import io.ktor.serialization.kotlinx.json.*
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
-const val url: String = "http://localhost:8080/"
-
-@Serializable
-data class MessageRequest(
-    val message: String
-)
+const val url: String = "http://localhost:8100"
 
 // jeden wspólny klient
 val httpClient = HttpClient {

@@ -1,7 +1,6 @@
 package com.kontenery
 
 // commonMain
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.*
 import androidx.compose.material3.*

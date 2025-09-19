@@ -5,8 +5,8 @@ import androidx.compose.material3.*
 import com.kontenery.FilePickerButton
 import com.kontenery.PickFileFunc
 import com.kontenery.data.BankTransaction
+import com.kontenery.data.MessageRequest
 import com.kontenery.data.parseBankTransactions
-import com.kontenery.service.MessageRequest
 import com.kontenery.service.sendCSVMessage
 import kotlinx.coroutines.launch
 
