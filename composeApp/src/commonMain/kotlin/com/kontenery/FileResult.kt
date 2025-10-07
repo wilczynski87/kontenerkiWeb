@@ -5,6 +5,7 @@ import kotlinx.coroutines.launch
 import androidx.compose.runtime.*
 import androidx.compose.material3.*
 import androidx.compose.ui.Modifier
+import com.kontenery.data.CSVType
 
 data class FileResult(
     val name: String,
@@ -22,7 +23,8 @@ fun FilePickerButton(
     pickFile: PickFileFunc,
     onPicked: (FileResult) -> Unit,
     modifier: Modifier = Modifier,
-    buttonText: String = "Wybierz plik"
+    buttonText: String = "Wybierz plik",
+    fileType: CSVType? = CSVType.PEKAOSABUSSINESS
 ) {
     val scope = rememberCoroutineScope()
     Button(onClick = {

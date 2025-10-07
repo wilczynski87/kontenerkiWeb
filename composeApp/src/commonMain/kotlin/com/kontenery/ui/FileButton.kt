@@ -5,14 +5,17 @@ import androidx.compose.material3.*
 import com.kontenery.FilePickerButton
 import com.kontenery.PickFileFunc
 import com.kontenery.data.BankTransaction
+import com.kontenery.data.CSVType
 import com.kontenery.data.MessageRequest
 import com.kontenery.data.parseBankTransactions
 import com.kontenery.service.sendCSVMessage
 import kotlinx.coroutines.launch
 
-
 @Composable
-fun MyFilePickerButton(pickFile: PickFileFunc) {
+fun MyFilePickerButton(
+    pickFile: PickFileFunc,
+    csvType: CSVType? = null
+) {
     var lastName by remember { mutableStateOf<String?>(null) }
     var transactions by remember { mutableStateOf<List<BankTransaction>>(emptyList()) }
 
@@ -26,12 +29,13 @@ fun MyFilePickerButton(pickFile: PickFileFunc) {
 
                 file.let {
                     val csvText = it.bytes.decodeToString()
-                    sendCSVMessage(MessageRequest(csvText))
+                    sendCSVMessage(MessageRequest(csvText), csvType ?: CSVType.PEKAOSABUSSINESS)
                     transactions = parseBankTransactions(csvText)
                 }
             }
         },
-        buttonText = "Wybierz plik (KMP)"
+        buttonText = "Wybierz plik (KMP) dla: ${csvType?.endpoint}",
+        fileType = csvType ?: CSVType.PEKAOSABUSSINESS
     )
 
     lastName?.let { Text("Ostatnio wybrany: $it") }

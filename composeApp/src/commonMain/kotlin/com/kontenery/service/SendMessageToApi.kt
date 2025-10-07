@@ -1,5 +1,6 @@
 package com.kontenery.service
 
+import com.kontenery.data.CSVType
 import com.kontenery.data.MessageRequest
 import io.ktor.client.*
 import io.ktor.client.call.*
@@ -21,8 +22,11 @@ val httpClient = HttpClient {
 }
 
 // przykład POST
-suspend fun sendCSVMessage(message: MessageRequest): MessageRequest {
-    return httpClient.post("$url/csv/PeKaOSA") {
+suspend fun sendCSVMessage(
+    message: MessageRequest,
+    csvType: CSVType,
+): MessageRequest {
+    return httpClient.post("$url/csv/${csvType.endpoint}") {
         contentType(ContentType.Application.Json)
         setBody(message)
     }.body()
