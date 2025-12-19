@@ -14,7 +14,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun MyFilePickerButton(
     pickFile: PickFileFunc,
-    csvType: CSVType? = null
+    csvType: CSVType? = null,
 ) {
     var lastName by remember { mutableStateOf<String?>(null) }
     var transactions by remember { mutableStateOf<List<BankTransaction>>(emptyList()) }
@@ -29,7 +29,10 @@ fun MyFilePickerButton(
 
                 file.let {
                     val csvText = it.bytes.decodeToString()
-                    sendCSVMessage(MessageRequest(csvText), csvType ?: CSVType.PEKAOSABUSSINESS)
+                    sendCSVMessage(
+                        MessageRequest(csvText),
+                        csvType ?: CSVType.PEKAOSABUSSINESS,
+                    )
                     transactions = parseBankTransactions(csvText)
                 }
             }

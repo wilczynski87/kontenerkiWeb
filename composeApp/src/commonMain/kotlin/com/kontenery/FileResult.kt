@@ -24,7 +24,7 @@ fun FilePickerButton(
     onPicked: (FileResult) -> Unit,
     modifier: Modifier = Modifier,
     buttonText: String = "Wybierz plik",
-    fileType: CSVType? = CSVType.PEKAOSABUSSINESS
+    fileType: CSVType? = CSVType.PEKAOSABUSSINESS,
 ) {
     val scope = rememberCoroutineScope()
     Button(onClick = {

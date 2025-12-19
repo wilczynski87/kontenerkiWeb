@@ -11,6 +11,7 @@ import org.w3c.files.Blob
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
+@OptIn(ExperimentalWasmJsInterop::class)
 actual suspend fun pickFile(): FileResult? = suspendCancellableCoroutine { cont ->
     val input = document.createElement("input") as HTMLInputElement
     input.type = "file"
