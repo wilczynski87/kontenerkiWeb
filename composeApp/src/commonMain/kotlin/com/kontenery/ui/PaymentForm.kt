@@ -166,7 +166,7 @@ fun PaymentForm(
                 Text("Nowa Płatność")
             }
             TextButton({
-                if(payment != null) viewModel.postPaymentToDB(payment)
+                if(payment != null) viewModel.postPaymentToApiWithResponse(payment)
                 val clientId: Long? = client?.id
                 if(clientId != null) {
                     viewModel.fetchPaymentsForClient(client.id!!)

@@ -45,7 +45,6 @@ import com.kontenery.model.ClientOnList
 import com.kontenery.model.enums.ClientFilter
 import com.kontenery.model.enums.WindowWidthSizeClass
 import com.kontenery.model.enums.now
-import com.kontenery.service.ParkingAppState
 import com.kontenery.service.ParkingAppViewModel
 import kotlinx.datetime.LocalDate
 import kotlin.enums.EnumEntries

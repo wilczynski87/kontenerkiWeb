@@ -991,6 +991,19 @@ class ParkingAppViewModel(
             }
         }
     }
+    fun postPaymentToApiWithResponse(payment: PaymentDto) {
+        viewModelScope.launch {
+            try {
+                println("postPayment $payment")
+                val paymentSaved = ApiClientsService.payments.postPayment(payment)
+                if(paymentSaved?.fromClient?.id != null) {
+                    fetchPaymentsForClient(paymentSaved.fromClient.id)
+                } else println("Probem z płatnością: $paymentSaved")
+            } catch (e: Exception) {
+                println("postPayment nie udało się zapisać płatności,\n $e")
+            }
+        }
+    }
 
     fun deletePayment(paymentId: String) {
         viewModelScope.launch {
