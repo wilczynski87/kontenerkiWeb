@@ -34,19 +34,22 @@ class ApiInvoice(
     }.body()
 
     suspend fun postCustomInvoice(
-        clientID: Long,
+       clientId: Long,
        customInvoice: Invoice,
     ): String? =
-        httpClient.post("$BASE_URL/invoice/{clientId}/custom").body()
+        httpClient.post("$BASE_URL/invoice/${clientId}/custom").body()
 
 
     suspend fun fetchInvoicesForClient(
         clientId: Long,
         from: String?,
         to: String?,
-    ): List<Invoice> = httpClient.get("$BASE_URL/invoice/{clientId}/forClient").body()
+    ): List<Invoice> = httpClient.get("$BASE_URL/invoice/${clientId}/forClient") {
+        parameter("from", from)
+        parameter("to", to)
+    }.body()
 
     suspend fun printAllInvoice(
         date: LocalDate? = LocalDate.now()
-    ): Boolean = httpClient.get("$BASE_URL/invoice/{date}/print").body()
+    ): Boolean = httpClient.get("$BASE_URL/invoice/${date}/print").body()
 }

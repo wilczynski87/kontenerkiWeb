@@ -52,7 +52,8 @@ fun LoadingDotsText(
     Text(text = baseText + dots)
 }
 
-@Preview@Composable
+@Preview
+@Composable
 fun LoadingBoxPreview() {
     LoadingBox()
 }

@@ -34,7 +34,7 @@ actual suspend fun pickFile(): FileResult? = suspendCancellableCoroutine { cont 
 
             val u8 = Uint8Array(arrayBuffer!!)
             val bytes = ByteArray(u8.length) { i ->
-                u8[i].toByte()
+                u8[i]
             }
 
             cont.resume(

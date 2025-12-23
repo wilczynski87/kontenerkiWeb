@@ -51,7 +51,7 @@ class BankAccount {
 
             // MOD 97
             val mod = mod97(numeric)
-            val checkDigits = 98 - mod.toInt()
+            val checkDigits = 98 - mod
 
             return checkDigits.toString().padStart(2, '0')
         }

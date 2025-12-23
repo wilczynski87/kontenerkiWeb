@@ -8,6 +8,7 @@ enum class ClientFilter(val label: String) {
     OVERPAID("Nadpłaty"),
     INVOICE("Faktury"),
     BILL("Rachunki"),
+    NOCONTRACT("Bez umów"),
 }
 
 enum class ContractFilter(val label: String) {

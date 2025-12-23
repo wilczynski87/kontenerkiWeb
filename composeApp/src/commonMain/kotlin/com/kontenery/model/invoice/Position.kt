@@ -37,12 +37,12 @@ data class Position(
 
             return Position(
                 productName = contract.product?.name ?: "Błąd w nazwie",
-                unitPrice = unitPriceCalculate().toString() ?: "Błąd w cenie",
+                unitPrice = (unitPriceCalculate() ?: "Błąd w cenie").toString(),
                 quantity = getQuantity().toString(),
                 price = contract.netPrice.toString(),
                 vatRate = contract.vatRate.toString(),
                 vatAmount = vatCalculate().toString(),
-                priceWithVat = contract.netPrice?.plus(vatCalculate()).toString() ?: "Błąd w obliczeniach"
+                priceWithVat = (contract.netPrice?.plus(vatCalculate()) ?: "Błąd w obliczeniach").toString()
             )
         }
 

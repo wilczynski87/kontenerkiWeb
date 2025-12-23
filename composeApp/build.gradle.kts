@@ -53,12 +53,15 @@ kotlin {
             implementation(libs.ktor.client.content.negotiation)
             implementation(libs.ktor.serialization.kotlinx.json)
             implementation(libs.jetbrains.kotlinx.serialization.json)
+            implementation(compose.material)
+            implementation(compose.materialIconsExtended)
+
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
         }
         wasmJsMain.dependencies {
-            implementation("io.ktor:ktor-client-js:3.3.0")
+            implementation(libs.ktor.client.js)
         }
     }
 }

@@ -1,6 +1,7 @@
 package com.kontenery.ui
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -34,6 +35,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -41,6 +43,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.kontenery.model.ClientOnList
 import com.kontenery.model.enums.ClientFilter
+import com.kontenery.model.enums.WindowWidthSizeClass
 import com.kontenery.model.enums.now
 import com.kontenery.service.ParkingAppState
 import com.kontenery.service.ParkingAppViewModel
@@ -50,8 +53,7 @@ import kotlin.enums.EnumEntries
 @Composable
 fun ClientTable(
     viewModel: ParkingAppViewModel,
-//    state: ParkingAppState,
-//    windowSize: WindowWidthSizeClass,
+    windowSize: WindowWidthSizeClass,
     modifier: Modifier = Modifier
 ) {
     ClientsListWithFilter(viewModel, modifier)
@@ -74,9 +76,6 @@ fun ClientsListWithFilter(
             compareByDescending<ClientOnList> { it.active }
                 .thenBy { it.name }
         )
-//        ClientFilter.ACTIVE -> filteredClients.sortedWith(
-//            compareByDescending<ClientOnList> { it.active }.thenBy { it.name }
-//        )
         ClientFilter.INACTIVE -> filteredClients.sortedWith(
             compareBy<ClientOnList> { it.active }
                 .thenBy { it.name }
@@ -98,6 +97,10 @@ fun ClientsListWithFilter(
         ClientFilter.BILL -> filteredClients.filterNot { it.invoice }
             .sortedWith(compareByDescending<ClientOnList> { it.active }
                     .thenBy { it.name }
+            )
+        ClientFilter.NOCONTRACT -> filteredClients.filter { it.contracts.isNullOrEmpty() }
+            .sortedWith(compareByDescending<ClientOnList> { it.active }
+                .thenBy { it.name }
             )
     }
     if(clients.isEmpty()) LoadingBox("listę klientów")
@@ -135,8 +138,11 @@ fun ClientListItem(
     modifier: Modifier = Modifier
 ) {
     val state by viewModel.state.collectAsState()
+    val backgroundColor = if (client.contracts.isNullOrEmpty()) Color.LightGray.copy(alpha = 0.2f) else Color.Transparent
 
     ListItem(
+        modifier = Modifier.alpha(if (client.contracts.isNullOrEmpty()) 0.5f else 1f)
+            .background(backgroundColor),
         headlineContent = {
             TextButton(
                 onClick = { viewModel.toggleClientNavRow(client.id) },
@@ -152,7 +158,7 @@ fun ClientListItem(
         },
         supportingContent = {
             val annotated = buildAnnotatedString {
-                append("Umowy: ${if (client.contracts.isNullOrEmpty()) "brak" else client.contracts?.joinToString()}")
+                append("Umowy: ${if (client.contracts.isNullOrEmpty()) "brak" else client.contracts.joinToString()}")
 
                 client.paymentsOverdue?.let { overdue ->
                     append("\n")
@@ -164,7 +170,7 @@ fun ClientListItem(
                         append("Płatności: ")
                         pushStyle(SpanStyle(color = Color(0xFF2E7D32)))
                     } else {
-//                        Log.i("Overdue: ", "$overdue")
+//                        println("Overdue: ", "$overdue")
                         append("Nadpłata: ")
                         pushStyle(SpanStyle(background = Color(0xFFFFA500), color = Color.White))
                     }
@@ -186,7 +192,7 @@ fun ClientListItem(
                 textAlign = TextAlign.Start
             )
             Text(buildString {
-                append("Umowy: ${if(client.contracts.isNullOrEmpty()) "brak" else client.contracts?.joinToString()}")
+                append("Umowy: ${if(client.contracts.isNullOrEmpty()) "brak" else client.contracts.joinToString()}")
                 if (client.paymentsOverdue != null) append("\nZaległości: ${client.paymentsOverdue}")
                 if (client.lastBill != null) append("\nOstatnia faktura: ${client.lastBill}")
             })
