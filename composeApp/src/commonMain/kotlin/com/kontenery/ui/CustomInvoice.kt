@@ -1,4 +1,4 @@
-package com.example.parkingandroidview.ui
+package com.kontenery.ui
 
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -22,6 +22,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -35,9 +36,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.kontenery.library.model.invoice.Invoice
 import com.kontenery.library.model.invoice.Position
-import com.kontenery.ui.BillType
-import com.kontenery.ui.ChooseDate
-import com.kontenery.ui.ClientsDropdown
 import com.kontenery.model.enums.now
 import com.kontenery.service.ParkingAppViewModel
 import com.kontenery.service.isDigitsOnly
@@ -50,13 +48,19 @@ fun InvoiceForm(
     , modifier: Modifier = Modifier
         .fillMaxSize()
 ) {
-    val invoice: Invoice = viewModel.state.collectAsState().value.invoice ?: throw NullPointerException("No new Invoice for create custom invoice")
-    val clients = viewModel.state.collectAsState().value.clients
-    val client = viewModel.state.collectAsState().value.client
+    val state by viewModel.state.collectAsState()
+    val invoice: Invoice = state.invoice ?: return
+    val clients = state.clients
+    val client = state.client
     var expandedClients by remember { mutableStateOf(false) }
-    // set default customer to invoice
-    if(client?.id != null) viewModel.updateCustomerToInvoice(client.id)
 
+    // set default customer to invoice
+    LaunchedEffect(Unit) {
+        if (client?.id != null)
+            client.id.let {
+                viewModel.ensureInvoiceCustomer()
+            }
+    }
 
     Column(
         modifier = Modifier
@@ -78,9 +82,9 @@ fun InvoiceForm(
                     chosenClient = client,
                     selectClient = { selectedClient ->
                         viewModel.updateCustomerToInvoice(selectedClient)
-                        println(
-                            "ClientsDropdown selectedClient: $selectedClient, viewModel: $invoice"
-                        )
+//                        println(
+//                            "ClientsDropdown selectedClient: $selectedClient, viewModel: $invoice"
+//                        )
                     },
                     clients = clients,
                     expanded = expandedClients,
@@ -146,19 +150,20 @@ fun ProductsTable(
         .horizontalScroll(rememberScrollState())
         .defaultMinSize(minWidth = 600.dp)
 ) {
-    val positions: List<Position> = viewModel.state.collectAsState().value.invoice?.products ?: listOf()
+    val state by viewModel.state.collectAsState()
+    val positions: List<Position> = state.invoice?.products ?: listOf()
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp)
     ) {
-        println("positions: $positions")
+//        println("positions: $positions")
         val sumPrice = positions.sumOf { it.price?.replace(',', '.')?.toDoubleOrNull() ?: 0.0 }
         val sumVat = positions.sumOf { it.vatAmount?.replace(',', '.')?.toDoubleOrNull() ?: 0.0 }
         val sumWithVat = positions.sumOf { it.priceWithVat?.replace(',', '.')?.toDoubleOrNull() ?: 0.0 }
-        println("sumPrice: $sumPrice")
-        println("sumVat: $sumVat")
-        println("sumWithVat: $sumWithVat")
+//        println("sumPrice: $sumPrice")
+//        println("sumVat: $sumVat")
+//        println("sumWithVat: $sumWithVat")
 
         val columnWeight = listOf(2f, 1f, 1f, 1f, 1f, 1f, 1.5f, 1f)
 
@@ -208,11 +213,11 @@ fun TableRow(
     index: Int? = null
 ) {
     Row(modifier = Modifier.fillMaxWidth()) {
-        values.forEachIndexed { index, value ->
+        values.forEachIndexed { colIndex, value ->
             Text(
                 text = value,
                 modifier = Modifier
-                    .weight(weights.getOrElse(index) { 1f })
+                    .weight(weights.getOrElse(colIndex) { 1f })
                     .padding(4.dp),
                 fontWeight = when {
                     isHeader || isSummary -> FontWeight.Bold
@@ -237,9 +242,11 @@ fun TableRow(
 fun ProductForm(
     viewModel: ParkingAppViewModel
 ) {
-    var position: Position? = viewModel.state.collectAsState().value.position
-    if (position == null) viewModel.updatePosition(null)
-    position = viewModel.state.collectAsState().value.position!!
+    val state by viewModel.state.collectAsState()
+    var position: Position? = state.position ?: Position()
+    LaunchedEffect(Unit) {
+        viewModel.updatePosition(null)
+    }
 
 //    positions.forEachIndexed { index, position ->
     Column (
@@ -251,20 +258,20 @@ fun ProductForm(
             , fontStyle = MaterialTheme.typography.headlineLarge.fontStyle
         )
         OutlinedTextField(
-            value = position.productName ?: "",
+            value = position?.productName ?: "",
             onValueChange = {
-                    viewModel.updatePosition(position.copy(productName = it))
+                    viewModel.updatePosition(position?.copy(productName = it))
             },
             label = { Text("Nazwa: ") },
             modifier = Modifier.fillMaxWidth()
         )
         Row {
             OutlinedTextField(
-                value = position.unitPrice ?: "",
+                value = position?.unitPrice ?: "",
                 onValueChange = {
                     if(it.toDoubleOrNull() != null) {
                         val num = it.toDoubleOrNull() ?: 0.00
-                        viewModel.calculatePosition(position.copy(unitPrice = num.toString()))
+                        viewModel.calculatePosition(position!!.copy(unitPrice = num.toString()))
                     } else {
                         println("ProductForm nie udało się zamienić na double")
                     }
@@ -278,10 +285,10 @@ fun ProductForm(
                 modifier = Modifier.weight(1f)
             )
             OutlinedTextField(
-                value = position.quantity ?: "",
+                value = position?.quantity ?: "",
                 onValueChange = {
                     if(it.toDoubleOrNull() != null)
-                    viewModel.calculatePosition(position.copy(quantity = it))
+                    viewModel.calculatePosition(position!!.copy(quantity = it))
                 },
                 label = { Text("Ilość: ") },
                 keyboardOptions = KeyboardOptions(
@@ -291,10 +298,10 @@ fun ProductForm(
             )
         }
         OutlinedTextField(
-            value = position.price ?: "",
+            value = position?.price ?: "",
             onValueChange = {
                 if(it.toDoubleOrNull() != null) {
-                    viewModel.calculatePosition(position.copy(price = it))
+                    viewModel.calculatePosition(position!!.copy(price = it))
                 }
             },
             label = { Text("Cena netto: ") },
@@ -302,21 +309,21 @@ fun ProductForm(
         )
         Row {
             OutlinedTextField(
-                value = position.vatRate ?: "",
+                value = position?.vatRate ?: "",
                 onValueChange = {
                     if(it.isDigitsOnly())
-                    viewModel.calculatePosition(position.copy(vatRate = it))
+                    viewModel.calculatePosition(position!!.copy(vatRate = it))
                 },
                 label = { Text("Stawka VAT: ") },
                 modifier = Modifier.weight(0.5f)
             )
             OutlinedTextField(
-                value = position.vatAmount ?: "",
+                value = position?.vatAmount ?: "",
                 onValueChange = {
                     if(it.toDoubleOrNull() != null) {
 //                        val num = String.format("%.2f", it.toDouble())
 //                        val num = String.format(java.util.Locale.getDefault(), "%.2f", it.toDouble())
-                        viewModel.updatePosition(position.copy(vatAmount = it))
+                        viewModel.updatePosition(position!!.copy(vatAmount = it))
                     }
                 },
                 label = { Text("VAT: ") },
@@ -324,11 +331,11 @@ fun ProductForm(
             )
         }
         OutlinedTextField(
-            value = position.priceWithVat ?: "",
+            value = position?.priceWithVat ?: "",
             onValueChange = {
                 if(it.toDoubleOrNull() != null) {
 //                    val num = String.format("%.2f", it.toDouble())
-                    viewModel.updatePosition(position.copy(priceWithVat = it))
+                    viewModel.updatePosition(position!!.copy(priceWithVat = it))
                 }
             },
             label = { Text("Cena brutto: ") },

@@ -9,6 +9,9 @@ import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
 import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.http.ContentType
+import io.ktor.http.contentType
 import kotlinx.datetime.LocalDate
 
 class ApiInvoice(
@@ -37,7 +40,10 @@ class ApiInvoice(
        clientId: Long,
        customInvoice: Invoice,
     ): String? =
-        httpClient.post("$BASE_URL/invoice/${clientId}/custom").body()
+        httpClient.post("$BASE_URL/invoice/${clientId}/custom"){
+            contentType(ContentType.Application.Json)
+            setBody(customInvoice)
+        }.body()
 
 
     suspend fun fetchInvoicesForClient(

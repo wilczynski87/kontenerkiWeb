@@ -1137,4 +1137,21 @@ class ParkingAppViewModel(
         }
     }
 
+    fun onUnitPriceChanged(input: String) {
+        val value = input.replace(',', '.').toDoubleOrNull()
+        updatePosition(
+            state.value.position?.copy(unitPrice = input)
+        )
+        value
+    }
+
+    fun ensureInvoiceCustomer() {
+        val clientId = state.value.client?.id ?: return
+        val invoice = state.value.invoice ?: return
+
+        if (invoice.customer?.client?.id == clientId) return // ⛔ KLUCZOWE
+
+        updateCustomerToInvoice(clientId)
+    }
+
 }
