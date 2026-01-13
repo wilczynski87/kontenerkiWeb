@@ -25,8 +25,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.parkingandroidview.ui.DatePickerDocked
-import com.kontenery.library.model.Product.Container
-import com.kontenery.library.model.Product.Yard
+import com.kontenery.model.Product.Container
+import com.kontenery.model.Product.Yard
 import com.kontenery.model.enums.WindowWidthSizeClass
 import com.kontenery.model.enums.now
 import com.kontenery.service.ParkingAppViewModel

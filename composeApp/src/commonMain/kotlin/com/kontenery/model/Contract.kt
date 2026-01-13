@@ -2,6 +2,7 @@ package com.kontenery.library.model
 
 import com.kontenery.library.serializers.LocalDateSerializer
 import com.kontenery.model.Client
+import com.kontenery.model.Product
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.Serializable
 

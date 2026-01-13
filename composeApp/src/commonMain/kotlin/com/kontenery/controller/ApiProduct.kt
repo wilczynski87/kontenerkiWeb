@@ -1,9 +1,9 @@
 package com.kontenery.controller
 
 import com.kontenery.config.ApiConfig.BASE_URL
-import com.kontenery.library.model.Product
-import com.kontenery.library.model.Product.Container
-import com.kontenery.library.model.Product.Yard
+import com.kontenery.model.Product
+import com.kontenery.model.Product.Container
+import com.kontenery.model.Product.Yard
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.delete

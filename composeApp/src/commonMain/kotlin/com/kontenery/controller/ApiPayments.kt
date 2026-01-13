@@ -1,9 +1,8 @@
 package com.kontenery.controller
 
 import com.kontenery.config.ApiConfig.BASE_URL
-import com.kontenery.library.model.Payment
-import com.kontenery.library.model.PaymentDto
-import com.kontenery.model.ClientOnList
+import com.kontenery.model.Payment
+import com.kontenery.model.PaymentDto
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.delete

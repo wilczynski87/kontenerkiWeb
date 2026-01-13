@@ -1,6 +1,6 @@
 package com.kontenery.library.utils.errors
 
-import com.kontenery.library.model.Payment
+import com.kontenery.model.Payment
 import kotlinx.serialization.Serializable
 
 @Serializable

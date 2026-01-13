@@ -1,16 +1,13 @@
 package com.kontenery.service
 
-import androidx.lifecycle.viewModelScope
 import com.kontenery.controller.ApiClientsService
-import com.kontenery.controller.ApiInvoice
-import com.kontenery.controller.ApiPayments
 import com.kontenery.library.model.Contract
 import com.kontenery.library.model.Deposit
-import com.kontenery.library.model.Payment
-import com.kontenery.library.model.PaymentDto
-import com.kontenery.library.model.Product
-import com.kontenery.library.model.Product.Container
-import com.kontenery.library.model.Product.Yard
+import com.kontenery.model.Payment
+import com.kontenery.model.PaymentDto
+import com.kontenery.model.Product
+import com.kontenery.model.Product.Container
+import com.kontenery.model.Product.Yard
 import com.kontenery.library.model.invoice.Invoice
 import com.kontenery.library.model.invoice.Position
 import com.kontenery.library.model.invoice.Subject
@@ -22,6 +19,9 @@ import com.kontenery.model.ClientCompanyData
 import com.kontenery.model.ClientOnList
 import com.kontenery.model.ClientPersonalData
 import com.kontenery.model.ModalData
+import com.kontenery.model.PaymentForFinanceTable
+import com.kontenery.model.PaymentsListForFinanceTable
+import com.kontenery.model.TableRowFinance
 import com.kontenery.model.enums.CurrentScreen
 import com.kontenery.model.enums.endOfCurrentYear
 import com.kontenery.model.enums.now
@@ -1149,9 +1149,55 @@ class ParkingAppViewModel(
         val clientId = state.value.client?.id ?: return
         val invoice = state.value.invoice ?: return
 
-        if (invoice.customer?.client?.id == clientId) return // ⛔ KLUCZOWE
+        if (invoice.customer?.client?.id == clientId) return
 
         updateCustomerToInvoice(clientId)
+    }
+
+    // FINANCE
+    // FINANCE LIST
+    fun fetchListClientsFinance(page: Long = 0, size: Long = 100) {
+        // TODO fetch list + update state
+        viewModelScope.launch {
+            _state.update { currentState ->
+                currentState.copy(
+                    clientsWithPayments = ApiClientsService.paymentsListForFinanceTable.getPaymentsListForFinanceTable(page, size)
+                )
+            }
+
+            println("clientsWithPayments: ${state.value.clientsWithPayments}")
+        }
+    }
+
+    fun toFinanceList() {
+        // fech client data
+        getClientsList(0, 100)
+        // update state
+        _state.update { currentState ->
+            currentState.copy(
+//                clients = clients,
+                currentScreen = CurrentScreen.FINANCES
+            )
+        }
+    }
+
+    fun rowsFinance(): List<TableRowFinance> {
+        val clientsWithPayments: List<PaymentsListForFinanceTable> = state.value.clientsWithPayments
+        println("rowsFinance: $clientsWithPayments")
+
+        return clientsWithPayments.map { it ->
+            val paymentsInMonth: List<PaymentForFinanceTable> = it.payments
+
+            val grouped = paymentsInMonth
+                .filter { !it.date.isNullOrBlank() }
+                .groupBy { getMonthFinanceFromString(it.date!!) }
+
+            TableRowFinance(
+                name = it.client?.name ?: "brak nazwy!",
+                values = grouped
+            )
+        }
+
     }
 
 }

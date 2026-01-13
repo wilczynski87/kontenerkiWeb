@@ -30,11 +30,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.key.Key.Companion.R
 import androidx.compose.ui.unit.dp
-import com.kontenery.library.model.Product
-import com.kontenery.library.model.Product.Container
-import com.kontenery.library.model.Product.Yard
+import com.kontenery.model.Product
+import com.kontenery.model.Product.Container
+import com.kontenery.model.Product.Yard
 import com.kontenery.model.Client
 import com.kontenery.model.enums.ProductFilter
 import com.kontenery.model.enums.WindowWidthSizeClass
@@ -42,7 +41,6 @@ import com.kontenery.service.ParkingAppViewModel
 import konteneryweb.composeapp.generated.resources.Res
 import konteneryweb.composeapp.generated.resources.container_blue
 import konteneryweb.composeapp.generated.resources.yard_ruler
-import kotlinx.datetime.LocalDate
 import org.jetbrains.compose.resources.painterResource
 
 @Composable

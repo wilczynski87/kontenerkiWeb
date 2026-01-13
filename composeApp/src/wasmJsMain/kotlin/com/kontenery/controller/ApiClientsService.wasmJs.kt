@@ -1,5 +1,6 @@
 package com.kontenery.controller
 
+import com.kontenery.serializers.productSerializersModule
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.js.Js
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
@@ -12,19 +13,11 @@ actual fun createHttpClient(): HttpClient {
             json(
                 Json {
                     ignoreUnknownKeys = true
-                    encodeDefaults = true
-                    explicitNulls = false
+                    isLenient = true
+                    classDiscriminator = "type" // ⬅️ MUSI pasować do backendu
+                    serializersModule = productSerializersModule
                 }
             )
         }
-
-//        install(Logging) {
-//            level = LogLevel.ALL
-//            logger = object : Logger {
-//                override fun log(message: String) {
-//                    println("HTTP: $message")
-//                }
-//            }
-//        }
     }
 }

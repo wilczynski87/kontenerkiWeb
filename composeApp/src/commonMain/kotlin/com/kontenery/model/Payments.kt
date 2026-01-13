@@ -1,9 +1,8 @@
-package com.kontenery.library.model
+package com.kontenery.model
 
 import com.kontenery.library.model.invoice.Invoice
 import com.kontenery.library.serializers.LocalDateSerializer
 import com.kontenery.library.utils.SellerAccount
-import com.kontenery.model.Client
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.Serializable
 
@@ -52,21 +51,7 @@ data class PaymentDto(
     val title: String? = null,
     val forInvoices: List<String>? = null,
     val referenceNumber: String? = null,
-) {
-//    fun toPayment(): Payment {
-//        return Payment(
-//            id = this.paymentId?.toLongOrNull(),
-//            amount = this.amount ?: throw NullPointerException("toPayment, lack of 'AMOUNT'"),
-//            date = this.date ?: throw NullPointerException("toPayment, lack of 'DATE'"),
-//            fromClientId = this.fromClient?.id,
-//            method = this.method,
-//            toAccount = this.toAccount?.accountNumber,
-//            fromAccount = this.fromAccount,
-//            title = this.title,
-//            forInvoices = this.forInvoices.mapNotNull { it.invoiceNumber }
-//        )
-//    }
-}
+)
 
 @Serializable
 enum class PaymentMethod(val polishName: String) {
@@ -76,8 +61,21 @@ enum class PaymentMethod(val polishName: String) {
     OTHER("inna");
 
     companion object {
-        fun fromName(polishName: String): PaymentMethod? = PaymentMethod.entries.find {
+        fun fromName(polishName: String): PaymentMethod? = entries.find {
             it.polishName == polishName
         }
     }
 }
+
+@Serializable
+data class PaymentForFinanceTable(
+    val paymentId: Long? = null,
+    val date: String? = "",   // np. "2026-01-10"
+    val amount: Double? = null  // np. 284.55
+)
+
+@Serializable
+data class PaymentsListForFinanceTable(
+    val client: ClientOnListForFinance? = null,
+    val payments: List<PaymentForFinanceTable> = listOf(),
+)

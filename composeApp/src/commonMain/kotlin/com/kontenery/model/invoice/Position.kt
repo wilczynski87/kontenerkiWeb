@@ -1,7 +1,7 @@
 package com.kontenery.library.model.invoice
 
 import com.kontenery.library.model.Contract
-import com.kontenery.library.model.Product
+import com.kontenery.model.Product
 import kotlinx.serialization.Serializable
 
 @Serializable

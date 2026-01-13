@@ -2,19 +2,22 @@ package com.kontenery.ui
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AssistChip
@@ -46,7 +49,10 @@ import com.kontenery.model.enums.ClientFilter
 import com.kontenery.model.enums.WindowWidthSizeClass
 import com.kontenery.model.enums.now
 import com.kontenery.service.ParkingAppViewModel
+import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.todayIn
 import kotlin.enums.EnumEntries
 
 @Composable
@@ -55,15 +61,18 @@ fun ClientTable(
     windowSize: WindowWidthSizeClass,
     modifier: Modifier = Modifier
 ) {
-    ClientsListWithFilter(viewModel, modifier)
+    ClientsListWithFilter(viewModel, windowSize, modifier)
 }
 
 @Composable
 fun ClientsListWithFilter(
     viewModel: ParkingAppViewModel,
+    windowSize: WindowWidthSizeClass = WindowWidthSizeClass.Compact,
     modifier: Modifier = Modifier
 ) {
-    val clients: List<ClientOnList> = viewModel.state.collectAsState().value.clients
+    val state by viewModel.state.collectAsState()
+    val clients: List<ClientOnList> = state.clients
+    val clientNavRow = state.clientNavRow
     var selectedFilter by remember { mutableStateOf(ClientFilter.ALL) }
     var query by remember { mutableStateOf("") }
 
@@ -121,11 +130,45 @@ fun ClientsListWithFilter(
 
         Spacer(Modifier.height(12.dp))
 
-        LazyColumn(modifier = Modifier.fillMaxSize()) {
-            items(sortedClients) { client ->
-                ClientListItem(viewModel, client)
-                HorizontalDivider(Modifier, DividerDefaults.Thickness, DividerDefaults.color)
+        when(windowSize) {
+            WindowWidthSizeClass.Compact -> {
+                LazyColumn(modifier = Modifier.fillMaxSize()) {
+                    items(sortedClients) { client ->
+                        ClientListItem(viewModel, client, clientNavRow)
+                        HorizontalDivider(Modifier, DividerDefaults.Thickness, DividerDefaults.color)
+                    }
+                }
             }
+            WindowWidthSizeClass.Expanded -> {
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(3),
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(
+                        sortedClients,
+                        key = { it.id }
+                    ) { client ->
+                        ClientListItem(
+                            viewModel = viewModel,
+                            client = client,
+                            clientNavRow = clientNavRow,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                }
+            }
+            WindowWidthSizeClass.Medium -> {
+                LazyColumn(modifier = Modifier.fillMaxSize()) {
+                    items(sortedClients) { client ->
+                        ClientListItem(viewModel, client, clientNavRow)
+                        HorizontalDivider(Modifier, DividerDefaults.Thickness, DividerDefaults.color)
+                    }
+                }
+            }
+
         }
     }
 }
@@ -134,13 +177,14 @@ fun ClientsListWithFilter(
 fun ClientListItem(
     viewModel: ParkingAppViewModel,
     client: ClientOnList,
+    clientNavRow: Long? = null,
     modifier: Modifier = Modifier
 ) {
-    val state by viewModel.state.collectAsState()
     val backgroundColor = if (client.contracts.isNullOrEmpty()) Color.LightGray.copy(alpha = 0.2f) else Color.Transparent
 
+    Column {
     ListItem(
-        modifier = Modifier.alpha(if (client.contracts.isNullOrEmpty()) 0.5f else 1f)
+        modifier = modifier.alpha(if (client.contracts.isNullOrEmpty()) 0.5f else 1f)
             .background(backgroundColor),
         headlineContent = {
             TextButton(
@@ -150,7 +194,6 @@ fun ClientListItem(
             ) {
                 Text(
                     client.name,
-                    Modifier.fillMaxHeight().padding(0.dp)
                 )
             }
 
@@ -190,11 +233,11 @@ fun ClientListItem(
                 modifier = Modifier.padding(bottom = 12.dp),
                 textAlign = TextAlign.Start
             )
-            Text(buildString {
-                append("Umowy: ${if(client.contracts.isNullOrEmpty()) "brak" else client.contracts.joinToString()}")
-                if (client.paymentsOverdue != null) append("\nZaległości: ${client.paymentsOverdue}")
-                if (client.lastBill != null) append("\nOstatnia faktura: ${client.lastBill}")
-            })
+//            Text(buildString {
+//                append("Umowy: ${if(client.contracts.isNullOrEmpty()) "brak" else client.contracts.joinToString()}")
+//                if (client.paymentsOverdue != null) append("\nZaległości: ${client.paymentsOverdue}")
+//                if (client.lastBill != null) append("\nOstatnia faktura: ${client.lastBill}")
+//            })
         },
         trailingContent = {
             if (client.active) {
@@ -209,10 +252,12 @@ fun ClientListItem(
         }
     )
     AnimatedVisibility(
-        visible = client.id == state.clientNavRow,
+        visible = client.id == clientNavRow,
         modifier = Modifier.padding(horizontal = 5.dp)
     ) {
         ClientNavRow(client.id, viewModel, modifier)
+    }
+
     }
 }
 
@@ -241,11 +286,11 @@ fun <T : Enum<T>> FilterButtons(
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ClientNavRow(clientId: Long, viewModel: ParkingAppViewModel, modifier: Modifier = Modifier) {
-    FlowRow(modifier = modifier
-            .fillMaxWidth()
+    FlowRow(modifier = modifier.fillMaxWidth()
         , verticalArrangement = Arrangement.Center
         , horizontalArrangement = Arrangement.SpaceAround)
     {
+        val modifier: Modifier = Modifier
         // Dane klienta
         TextButton(onClick = { viewModel.toClientData(clientId) }
             , modifier = modifier
@@ -339,10 +384,22 @@ fun ClientNavRow(clientId: Long, viewModel: ParkingAppViewModel, modifier: Modif
     }
 }
 
+//private fun checkLastInvoiceSend(client: ClientOnList): Boolean {
+//    val currentDate: LocalDate = LocalDate.now()
+//    val lastBill: LocalDate = client.lastBill ?: return false
+////    return currentDate.monthNumber <= lastBill.monthNumber
+//    return !lastBill.isBefore(currentDate.withDayOfMonth(1))
+//}
+
 private fun checkLastInvoiceSend(client: ClientOnList): Boolean {
-    val currentDate: LocalDate = LocalDate.now()
-    val lastBill: LocalDate = client.lastBill ?: return false
-    return currentDate.monthNumber <= lastBill.monthNumber
+    val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+    val lastBill = client.lastBill ?: return false
+
+    return when {
+        lastBill.year > today.year -> true
+        lastBill.year < today.year -> false
+        else -> lastBill.monthNumber >= today.monthNumber
+    }
 }
 
 //@Preview()

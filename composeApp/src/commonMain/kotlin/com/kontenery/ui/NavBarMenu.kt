@@ -97,6 +97,15 @@ fun Drawer(
                     }
                 )
                 NavigationDrawerItem(
+                    label = { Text(text = "Finanse") },
+                    selected = false,
+                    onClick = {
+                        toggleDrawer(scope, drawerState)
+                        viewModel.fetchListClientsFinance()
+                        viewModel.toFinanceList()
+                    }
+                )
+                NavigationDrawerItem(
                     label = { Text(text = "Dodaj klienta") },
                     selected = false,
                     onClick = {

@@ -41,3 +41,34 @@ fun formatLocalDate(date: LocalDate): String {
     val year = date.year.toString()
     return "$day/$month/$year"
 }
+
+fun formatCurrency(value: Double): String {
+    val rounded = (value * 100).toInt() / 100.0
+    return "$rounded zł"
+}
+
+fun getMonthFinanceFromString(date: String): String {
+    val month: String = date.substringAfter("-").substringBefore("-")
+    val year: String = date.substringBefore("-")
+    return "$month.$year"
+}
+
+fun unifyMonth(input: String): String {
+    val parts = when {
+        input.contains("-") -> input.split("-")       // np. 2-2026
+        input.contains(".") -> input.split(".")       // np. 2026.12
+        else -> throw IllegalArgumentException("Nieobsługiwany format: $input")
+    }
+
+    val (year, month) = if (input.contains("-")) {
+        parts[1].toInt() to parts[0].toInt()
+    } else {
+        parts[0].toInt() to parts[1].toInt()
+    }
+
+    // ręczne formatowanie w yyyy-MM
+    val monthStr = month.toString().padStart(2, '0')
+    val yearStr = year.toString().padStart(4, '0')
+
+    return "$monthStr.$yearStr"
+}

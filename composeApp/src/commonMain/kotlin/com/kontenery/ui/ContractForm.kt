@@ -31,7 +31,7 @@ import androidx.compose.ui.unit.dp
 import com.example.parkingandroidview.ui.DatePickerDocked
 import com.example.parkingandroidview.ui.DepositOptionSelector
 import com.kontenery.library.model.Contract
-import com.kontenery.library.model.Product
+import com.kontenery.model.Product
 import com.kontenery.model.Client
 import com.kontenery.model.ClientOnList
 import com.kontenery.service.ParkingAppViewModel

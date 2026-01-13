@@ -27,7 +27,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.kontenery.library.model.Payment
+import com.kontenery.model.Payment
 import com.kontenery.library.utils.Month
 import com.kontenery.model.ModalData
 import com.kontenery.model.enums.endOfCurrentMonth
