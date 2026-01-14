@@ -2,6 +2,7 @@ package com.kontenery.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -29,6 +30,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.kontenery.model.MonthValue
 import com.kontenery.model.PaymentForFinanceTable
 import com.kontenery.model.TableRowFinance
@@ -58,12 +60,25 @@ fun TableCell(
 @Composable
 fun TableCell(
     payment: PaymentForFinanceTable?,
-    width: Dp = 120.dp
+    width: Dp = 120.dp,
+    viewModel: ParkingAppViewModel,
 ) {
     Column(
         modifier = Modifier
             .width(width)
-            .padding(4.dp),
+            .padding(4.dp)
+            .clickable {
+            payment?.let { p ->
+                viewModel.showConfirmModal(
+                    dialogTitle = "Potwierdzenie",
+                    dialogText = "Czy chcesz zatwierdzić płatność ${p.amount} z dnia ${p.date}?",
+                    onConfirmation = {
+                        // co się dzieje po potwierdzeniu
+                        println("Potwierdzono płatność: ${p.amount}")
+                    }
+                )
+            }
+        },
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
@@ -101,7 +116,8 @@ fun TableHeader(months: List<MonthValue>) {
 @Composable
 fun TableDataRow(
     row: TableRowFinance,
-    months: List<MonthValue>
+    months: List<MonthValue>,
+    viewModel: ParkingAppViewModel,
 ) {
     Row(
         modifier = Modifier
@@ -115,7 +131,7 @@ fun TableDataRow(
                 modifier = Modifier
             ) {
                 payments?.forEach { payment ->
-                    TableCell(payment = payment)
+                    TableCell(payment = payment, viewModel = viewModel)
                     HorizontalDivider(modifier = Modifier.fillMaxWidth(), thickness = 1.dp, color = MaterialTheme.colorScheme.onPrimary)
                 }
             }
@@ -146,7 +162,7 @@ fun PaymentsTable(
             }
 
             items(rows) { row ->
-                TableDataRow(row, months)
+                TableDataRow(row, months, viewModel)
                 HorizontalDivider()
             }
         }

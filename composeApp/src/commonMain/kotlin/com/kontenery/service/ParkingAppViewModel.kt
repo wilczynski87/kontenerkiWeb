@@ -59,6 +59,20 @@ class ParkingAppViewModel(
         }
     }
 
+    fun showConfirmModal(
+        dialogTitle: String,
+        dialogText: String,
+        onConfirmation: () -> Unit
+    ) {
+        _state.update { it.copy(
+            confirmModal = ModalData(
+                dialogTitle = dialogTitle,
+                dialogText = dialogText,
+                onConfirmation = onConfirmation
+            )
+        ) }
+    }
+
     fun createConfirmationModal(
         modal: ModalData = ModalData(onDismissRequest = {closeConfirmationModal()})
     ) {
