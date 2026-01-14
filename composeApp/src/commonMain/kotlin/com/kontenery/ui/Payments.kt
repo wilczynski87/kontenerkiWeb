@@ -1,4 +1,4 @@
-package com.example.parkingandroidview.ui
+package com.kontenery.ui
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -6,15 +6,25 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Email
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -33,17 +43,17 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.plus
 import com.kontenery.model.Client
 import com.kontenery.model.enums.CurrentScreen
+import com.kontenery.model.enums.WindowWidthSizeClass
 import com.kontenery.model.enums.now
 import com.kontenery.model.enums.startOfCurrentYear
 import com.kontenery.service.ParkingAppViewModel
 import com.kontenery.service.formatLocalDate
 import com.kontenery.service.to2Decimals
-import com.kontenery.ui.InvoicesTable
-import com.kontenery.ui.PaymentsDetails
 
 @Composable
 fun PaymentsMenu(
     viewModel: ParkingAppViewModel,
+    windowSize: WindowWidthSizeClass,
     modifier: Modifier = Modifier
 ) {
     val client: Client? = viewModel.state.collectAsState().value.client
@@ -90,7 +100,7 @@ fun PaymentsMenu(
             ) { Text("Dodaj płatność") }
         }
         PaymentsDetails(viewModel)
-        InvoicesTable(viewModel)
+        InvoicesTable(viewModel, windowSize)
     }
 }
 
@@ -357,74 +367,3 @@ fun invoicesInMonth(month: Int, invoices: List<Invoice>): List<Invoice> {
 fun paymentsInMonth(month: Int, payments: List<Payment>): List<Payment> {
     return payments.filter { it.date.monthNumber == month }
 }
-
-//@Preview(showBackground = true, widthDp = 500 )
-//@Composable
-//fun PaymentsMenuPreview() {
-//    val viewModel = ParkingAppViewModel()
-//    val client: Client = Client(clientPrivate = ClientPersonalData(firstName = "Test", lastName = "Test", pesel = "12345678901"), clientCompany = null, isActive = true)
-//    val inv1 = Invoice(
-//        invoiceNumber = "test num 1",
-//        invoiceTitle = "faktura VAT",
-//        invoiceDate = LocalDate.parse("2025-01-01"),
-//        seller = Subject.Seller.company(null),
-//        customer = Subject.Customer("test1", Address(), "test1", "test1"),
-//        products = listOf(),
-//        vatAmountSum = "230",
-//        priceSum = "1000",
-//        priceWithVatSum = "1230",
-//        paymentDay = LocalDate.parse("2025-01-15"),
-//        invoiceSendToClient = LocalDate.parse("2025-01-01"),
-//        vatApply = false
-//    )
-//    val inv2 = Invoice(
-//        invoiceNumber = "test num 2",
-//        invoiceTitle = "faktura VAT",
-//        invoiceDate = LocalDate.now(),
-//        seller = Subject.Seller.company(null),
-//        customer = Subject.Customer("test2", Address(), "test2", "test2"),
-//        products = listOf(),
-//        vatAmountSum = "115",
-//        priceSum = "500",
-//        priceWithVatSum = "615",
-//        paymentDay = LocalDate.now(),
-//        invoiceSendToClient = LocalDate.now(),
-//        vatApply = true
-//    )
-//    val pay1 = Payment(
-//        amount = BigDecimal(900),
-//        date = LocalDate.parse("2025-01-07"),
-//        fromClient = Client(),
-//        method = "przelew",
-//        toAccount = SellerAccount.BUSSINESS,
-//        fromAccount = "0000 0000",
-//        title = "test num 1",
-//        forInvoices = listOf()
-//    )
-//    val pay2 = Payment(
-//        amount = BigDecimal(200),
-//        date = LocalDate.parse("2025-01-15"),
-//        fromClient = Client(),
-//        method = "przelew",
-//        toAccount = SellerAccount.BUSSINESS,
-//        fromAccount = "0000 0000",
-//        title = "test num 1",
-//        forInvoices = listOf()
-//    )
-//    val pay3 = Payment(
-//        amount = BigDecimal(615),
-//        date = LocalDate.now(),
-//        fromClient = Client(),
-//        method = "przelew",
-//        toAccount = SellerAccount.BUSSINESS,
-//        fromAccount = "0000 0000",
-//        title = "test num 2",
-//        forInvoices = listOf()
-//    )
-//    val invoices: List<Invoice> = listOf(inv1, inv2)
-//    val payments: List<Payment> = listOf(pay1, pay2, pay3)
-//    viewModel.updateClient(client)
-//    viewModel.updateInvoicesAndPayments(invoices, payments)
-//
-//    PaymentsMenu(viewModel)
-//}

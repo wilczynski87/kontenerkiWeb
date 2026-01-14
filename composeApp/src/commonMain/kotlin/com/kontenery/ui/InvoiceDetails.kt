@@ -36,6 +36,7 @@ import com.kontenery.library.utils.Month
 import com.kontenery.library.utils.SellerAccount
 import kotlinx.datetime.LocalDate
 import com.kontenery.model.ModalData
+import com.kontenery.model.enums.WindowWidthSizeClass
 import com.kontenery.model.enums.endOfCurrentMonth
 import com.kontenery.model.enums.now
 import com.kontenery.model.enums.startOfCurrentMonth
@@ -44,6 +45,7 @@ import com.kontenery.service.ParkingAppViewModel
 @Composable
 fun InvoicesTable(
     viewModel: ParkingAppViewModel,
+    windowSize: WindowWidthSizeClass,
     modifier: Modifier = Modifier
 ) {
     val state by viewModel.state.collectAsState()

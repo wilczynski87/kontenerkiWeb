@@ -341,7 +341,7 @@ fun ClientNavRow(clientId: Long, viewModel: ParkingAppViewModel, modifier: Modif
             , contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp)
             , shape = RoundedCornerShape(25)
         ) {
-            Text("Umowy",
+            Text("Umowy Klienta",
                 modifier = modifier
                 , textAlign = TextAlign.Center
             )

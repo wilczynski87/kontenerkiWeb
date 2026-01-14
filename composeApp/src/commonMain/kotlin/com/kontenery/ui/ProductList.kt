@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -12,6 +13,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
@@ -80,40 +85,82 @@ fun ProductListWithFilter(
     }
 
     if(products.isEmpty()) LoadingBox("kontenery i place")
-    else Column(
-        modifier.fillMaxSize().padding(16.dp)
-    ) {
-        OutlinedTextField(
-            value = query,
-            onValueChange = { query = it },
-            label = { Text("Szukaj Produktu") },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true
-        )
+    else {
+        when(windowSize) {
+            WindowWidthSizeClass.Expanded -> {
+                Column(modifier = modifier.fillMaxSize()) {
+                    OutlinedTextField(
+                        value = query,
+                        onValueChange = { query = it },
+                        label = { Text("Szukaj Produktu") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
 
-        FilterButtons(
-            filters = ProductFilter.entries,
-            selectedFilter = selectedFilter,
-            changeFilter = { selectedFilter = it },
-            labelProvider = { it.label }
-        )
+                    FilterButtons(
+                        filters = ProductFilter.entries,
+                        selectedFilter = selectedFilter,
+                        changeFilter = { selectedFilter = it },
+                        labelProvider = { it.label }
+                    )
 
-        Spacer(Modifier.height(12.dp))
+                    Spacer(Modifier.height(12.dp))
 
-        LazyColumn(modifier = Modifier.fillMaxSize()) {
-            items(sortedProducts) { product ->
-                ProductCard(product, viewModel)
-                HorizontalDivider(Modifier, DividerDefaults.Thickness, DividerDefaults.color)
+                    LazyVerticalGrid(
+                        columns = GridCells.Fixed(4),
+                        modifier = Modifier.fillMaxSize().padding(4.dp),
+                        contentPadding = PaddingValues(8.dp)
+                    ) {
+                        items(
+                            sortedProducts,
+                        ) {
+                            ProductCard(it, viewModel)
+                        }
+                    }
+                }
+            }
+            else -> {
+                Column(modifier = modifier.fillMaxSize()) {
+                    OutlinedTextField(
+                        value = query,
+                        onValueChange = { query = it },
+                        label = { Text("Szukaj Produktu") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
+
+                    FilterButtons(
+                        filters = ProductFilter.entries,
+                        selectedFilter = selectedFilter,
+                        changeFilter = { selectedFilter = it },
+                        labelProvider = { it.label }
+                    )
+
+                    Spacer(Modifier.height(12.dp))
+
+                    LazyVerticalGrid(
+                        columns = GridCells.Fixed(1),
+                        modifier = Modifier.fillMaxSize().padding(4.dp),
+                        contentPadding = PaddingValues(8.dp)
+                    ) {
+                        items(
+                            sortedProducts,
+                        ) {
+                            ProductCard(it, viewModel)
+                        }
+                    }
+                }
             }
         }
     }
+
 }
 
 @Composable
 fun ProductCard(product: Product, viewModel: ParkingAppViewModel) {
     val details: Long? = viewModel.state.collectAsState().value.productNavRow
     OutlinedCard(
-        modifier = Modifier,
+        modifier = Modifier.padding(2.dp),
         colors = CardDefaults.outlinedCardColors(containerColor = Color.White),
     ) {
         Column {
@@ -188,6 +235,7 @@ fun ProductNavRow(
 //                    if(clientId != null) viewModel.fetchClientForContract(clientId)
 //                    viewModel.toContractMenu()
                     viewModel.getContractByProductId(product.id!!)
+                    viewModel.toContractMenu()
                 }
             ) {
                 Text("Umowa")
@@ -198,7 +246,7 @@ fun ProductNavRow(
 
 @Composable
 fun ProductIcon(product: Product?) {
-    println("ProductIcon $product")
+//    println("ProductIcon $product")
     when(product) {
         is Container -> {
             val containerColor: Color = if(product.length.equals("20ft")) Color.Blue else Color.Red

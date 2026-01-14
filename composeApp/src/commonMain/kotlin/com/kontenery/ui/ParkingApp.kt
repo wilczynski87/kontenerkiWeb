@@ -16,7 +16,6 @@ import androidx.compose.ui.Modifier
 import com.example.parkingandroidview.ui.BankAccountMenu
 import com.example.parkingandroidview.ui.ContractList
 import com.example.parkingandroidview.ui.PaymentForm
-import com.example.parkingandroidview.ui.PaymentsMenu
 import com.kontenery.model.ModalData
 import com.kontenery.model.enums.CurrentScreen
 import com.kontenery.model.enums.WindowWidthSizeClass
@@ -132,6 +131,7 @@ fun ParkingApp(
                         CurrentScreen.PAYMENT_MENU -> {
                             PaymentsMenu(
                                 viewModel = viewModel,
+                                windowSize = windowSize,
                                 modifier = modifier.padding(innerPadding)
                             )
                         }
