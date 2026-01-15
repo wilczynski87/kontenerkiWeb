@@ -1,5 +1,6 @@
-package com.kontenery.library.model.invoice
+package com.kontenery.model.invoice
 
+import com.kontenery.library.model.invoice.Subject
 import com.kontenery.library.serializers.LocalDateSerializer
 import com.kontenery.library.utils.InvoiceType
 import kotlinx.datetime.LocalDate

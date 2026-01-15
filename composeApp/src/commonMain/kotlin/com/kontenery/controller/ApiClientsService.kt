@@ -16,4 +16,6 @@ object ApiClientsService {
     val payments by lazy { ApiPayments(httpClient) }
     val bankAccounts by lazy { ApiBankAccount(httpClient) }
     val paymentsListForFinanceTable by lazy { ApiPaymentsListForFinanceTable(httpClient) }
+
+    val auth by lazy { ApiAuth(httpClient) }
 }

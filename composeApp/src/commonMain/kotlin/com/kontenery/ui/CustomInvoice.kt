@@ -34,9 +34,9 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.kontenery.library.model.invoice.Invoice
-import com.kontenery.library.model.invoice.Position
+import com.kontenery.model.invoice.Invoice
 import com.kontenery.model.enums.now
+import com.kontenery.model.invoice.Position
 import com.kontenery.service.ParkingAppViewModel
 import com.kontenery.service.isDigitsOnly
 import com.kontenery.service.to2Decimals

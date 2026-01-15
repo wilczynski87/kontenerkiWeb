@@ -55,6 +55,7 @@ kotlin {
             implementation(libs.jetbrains.kotlinx.serialization.json)
             implementation(compose.material)
             implementation(compose.materialIconsExtended)
+            implementation(libs.ktor.auth)
 
         }
         commonTest.dependencies {

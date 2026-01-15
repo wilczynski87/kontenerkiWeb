@@ -1,7 +1,7 @@
 package com.kontenery.controller
 
 import com.kontenery.config.ApiConfig.BASE_URL
-import com.kontenery.library.model.invoice.Invoice
+import com.kontenery.model.invoice.Invoice
 import com.kontenery.library.utils.errors.InvoiceErrorMessage
 import com.kontenery.model.enums.now
 import io.ktor.client.HttpClient

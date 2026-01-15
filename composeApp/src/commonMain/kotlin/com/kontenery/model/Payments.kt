@@ -1,8 +1,8 @@
 package com.kontenery.model
 
-import com.kontenery.library.model.invoice.Invoice
+import com.kontenery.model.invoice.Invoice
 import com.kontenery.library.serializers.LocalDateSerializer
-import com.kontenery.library.utils.SellerAccount
+import com.kontenery.model.enums.SellerAccount
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.Serializable
 

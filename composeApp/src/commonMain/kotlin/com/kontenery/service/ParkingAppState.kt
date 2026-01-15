@@ -5,20 +5,24 @@ import com.kontenery.model.Payment
 import com.kontenery.model.PaymentDto
 import com.kontenery.model.Product
 import com.kontenery.library.model.Submeter
-import com.kontenery.library.model.invoice.Invoice
-import com.kontenery.library.model.invoice.Position
+import com.kontenery.model.invoice.Invoice
 import com.kontenery.library.utils.errors.ErrorMessage
 import com.kontenery.model.Client
 import com.kontenery.model.ClientBankAccount
 import com.kontenery.model.ClientOnList
 import com.kontenery.model.ModalData
 import com.kontenery.model.PaymentsListForFinanceTable
+import com.kontenery.model.auth.AuthUser
 import com.kontenery.model.enums.CurrentScreen
 import com.kontenery.model.enums.now
+import com.kontenery.model.invoice.Position
 import kotlinx.datetime.LocalDate
 
 data class ParkingAppState(
     val loggedUser: Client? = null,
+    val isLoggedIn: Boolean = false,
+    val user: AuthUser? = null,
+    val error: String? = null,
 
     val clientNavRow: Long? = null,
     val client: Client? = null,
@@ -52,4 +56,4 @@ data class ParkingAppState(
     val submeters: List<Submeter> = listOf(),
     val clientsWithPayments: List<PaymentsListForFinanceTable> = listOf(),
 
-)
+    )

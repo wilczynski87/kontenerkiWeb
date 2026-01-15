@@ -27,8 +27,8 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.kontenery.model.Payment
 import com.kontenery.library.utils.Month
+import com.kontenery.model.Payment
 import com.kontenery.model.ModalData
 import com.kontenery.model.enums.endOfCurrentMonth
 import com.kontenery.model.enums.now
@@ -193,35 +193,3 @@ fun sharedWidthModifier(
         }
         .width(with(density) { columnWidths[index].toDp() })
 }
-
-//@Preview(showBackground = true)
-//@Composable
-//fun PaymentsDetailsPreview() {
-//    val viewModel = ParkingAppViewModel()
-//    val Payment1 = Payment(
-//        amount = BigDecimal.valueOf(350),
-//        date = LocalDate.now(),
-//        fromClient = Client(),
-//        method = PaymentMethod.TRANSFER.name,
-//        toAccount = SellerAccount.BUSSINESS,
-//        fromAccount = "000000000000000000",
-//        title = null,
-//        forInvoices = listOf()
-//    )
-//    val Payment2 = Payment(
-//        amount = BigDecimal.valueOf(700),
-//        date = LocalDate.now().minus(14, DateTimeUnit.DAY),
-//        fromClient = Client(),
-//        method = PaymentMethod.TRANSFER.name,
-//        toAccount = SellerAccount.BUSSINESS,
-//        fromAccount = "1111111111111111111111111",
-//        title = null,
-//        forInvoices = listOf()
-//    )
-//    val payments: List<Payment> = listOf(Payment1, Payment2)
-//    viewModel.updateInvoicesAndPayments(listOf(), payments)
-//
-//    PaymentsDetails(
-//        viewModel = viewModel
-//    )
-//}

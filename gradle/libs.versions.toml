@@ -17,6 +17,7 @@ ktorClientCore = "3.3.3"
 kotlinx-serialization-json = "1.9.0"
 ktorClientJs = "3.3.3"
 library = "1.0.0"
+ktor-auth = "3.3.3"
 
 [libraries]
 jetbrains-material-icons-extended = { module = "org.jetbrains.compose.material:material-icons-extended" }
@@ -38,6 +39,7 @@ ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx
 jetbrains-kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization-json" }
 library = { module = "composeApp.libs.library-:library", version.ref = "library" }
 material-icons-extended = { module = "org.jetbrains.compose.material:material-icons-extended" }
+ktor-auth = { module = "io.ktor:ktor-client-auth", version.ref = "ktor-auth" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

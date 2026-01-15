@@ -1,7 +1,8 @@
-package com.kontenery.library.model.invoice
+package com.kontenery.model.invoice
 
 import com.kontenery.library.model.Contract
 import com.kontenery.model.Product
+import com.kontenery.util.round2
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -45,9 +46,6 @@ data class Position(
                 priceWithVat = (contract.netPrice?.plus(vatCalculate()) ?: "Błąd w obliczeniach").toString()
             )
         }
-
-        fun Double.round2(): Double =
-            kotlin.math.round(this * 100) / 100
     }
 
 }

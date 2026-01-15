@@ -8,8 +8,7 @@ import com.kontenery.model.PaymentDto
 import com.kontenery.model.Product
 import com.kontenery.model.Product.Container
 import com.kontenery.model.Product.Yard
-import com.kontenery.library.model.invoice.Invoice
-import com.kontenery.library.model.invoice.Position
+import com.kontenery.model.invoice.Invoice
 import com.kontenery.library.model.invoice.Subject
 import com.kontenery.library.model.invoice.Subject.Seller
 import com.kontenery.library.utils.InvoiceType
@@ -26,6 +25,7 @@ import com.kontenery.model.enums.CurrentScreen
 import com.kontenery.model.enums.endOfCurrentYear
 import com.kontenery.model.enums.now
 import com.kontenery.model.enums.startOfCurrentYear
+import com.kontenery.model.invoice.Position
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -1212,6 +1212,26 @@ class ParkingAppViewModel(
             )
         }
 
+    }
+
+    // AUTH
+
+    suspend fun login(email: String, password: String) {
+        runCatching {
+            val response = ApiClientsService.auth.login(email, password)
+        }.onSuccess {
+            _state.update {
+                it.copy(
+                    isLoggedIn = true,
+                    user = it.user,
+                    error = null
+                )
+            }
+        }.onFailure {
+            _state.update {
+                it.copy(error = "Błędne dane logowania")
+            }
+        }
     }
 
 }

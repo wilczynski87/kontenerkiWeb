@@ -1,13 +1,11 @@
 package com.kontenery.ui
 
-import androidx.compose.foundation.border
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
@@ -31,11 +29,11 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.kontenery.library.model.invoice.Invoice
+import com.kontenery.model.invoice.Invoice
 import com.kontenery.library.utils.Month
-import com.kontenery.library.utils.SellerAccount
 import kotlinx.datetime.LocalDate
 import com.kontenery.model.ModalData
+import com.kontenery.model.enums.SellerAccount
 import com.kontenery.model.enums.WindowWidthSizeClass
 import com.kontenery.model.enums.endOfCurrentMonth
 import com.kontenery.model.enums.now

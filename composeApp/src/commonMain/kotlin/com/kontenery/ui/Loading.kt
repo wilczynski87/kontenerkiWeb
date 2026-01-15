@@ -14,7 +14,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import kotlinx.coroutines.delay
-import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @Composable
 fun LoadingBox(info: String? = "") {
@@ -50,10 +49,4 @@ fun LoadingDotsText(
     }
 
     Text(text = baseText + dots)
-}
-
-@Preview
-@Composable
-fun LoadingBoxPreview() {
-    LoadingBox()
 }
