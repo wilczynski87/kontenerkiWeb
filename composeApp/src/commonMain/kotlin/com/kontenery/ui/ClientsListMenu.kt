@@ -49,9 +49,9 @@ import com.kontenery.model.enums.ClientFilter
 import com.kontenery.model.enums.WindowWidthSizeClass
 import com.kontenery.model.enums.now
 import com.kontenery.service.ParkingAppViewModel
-import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.number
 import kotlinx.datetime.todayIn
 import kotlin.enums.EnumEntries
 
@@ -392,13 +392,13 @@ fun ClientNavRow(clientId: Long, viewModel: ParkingAppViewModel, modifier: Modif
 //}
 
 private fun checkLastInvoiceSend(client: ClientOnList): Boolean {
-    val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+    val today = kotlin.time.Clock.System.todayIn(TimeZone.currentSystemDefault())
     val lastBill = client.lastBill ?: return false
 
     return when {
         lastBill.year > today.year -> true
         lastBill.year < today.year -> false
-        else -> lastBill.monthNumber >= today.monthNumber
+        else -> lastBill.month.number >= today.month.number
     }
 }
 

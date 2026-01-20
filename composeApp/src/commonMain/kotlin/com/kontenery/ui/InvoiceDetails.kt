@@ -31,7 +31,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.kontenery.model.invoice.Invoice
 import com.kontenery.library.utils.Month
-import kotlinx.datetime.LocalDate
 import com.kontenery.model.ModalData
 import com.kontenery.model.enums.SellerAccount
 import com.kontenery.model.enums.WindowWidthSizeClass
@@ -39,6 +38,8 @@ import com.kontenery.model.enums.endOfCurrentMonth
 import com.kontenery.model.enums.now
 import com.kontenery.model.enums.startOfCurrentMonth
 import com.kontenery.service.ParkingAppViewModel
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.number
 
 @Composable
 fun InvoicesTable(
@@ -90,7 +91,7 @@ fun InvoicesTable(
             .fillMaxWidth()
         ) {
             Text(
-                text = "Faktury za ${Month.fromNumber(forDate.monthNumber)?.polishName}:",
+                text = "Faktury za ${Month.fromNumber(forDate.month.number)?.polishName}:",
                 textAlign = TextAlign.Center,
             )
         }

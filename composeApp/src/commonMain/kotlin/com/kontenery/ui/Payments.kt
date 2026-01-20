@@ -39,6 +39,7 @@ import com.kontenery.model.enums.startOfCurrentYear
 import com.kontenery.service.ParkingAppViewModel
 import com.kontenery.service.formatLocalDate
 import com.kontenery.service.to2Decimals
+import kotlinx.datetime.number
 
 @Composable
 fun PaymentsMenu(
@@ -160,7 +161,7 @@ fun PaymentsTableRows(
             Row(modifier = Modifier
                 .padding(1.dp)
                 .clickable {
-                    viewModel.updateForDate(LocalDate(year = from.year, monthNumber = monthNum, dayOfMonth = 1))
+                    viewModel.updateForDate(LocalDate(year = from.year, month = monthNum, day = 1))
                 }
             ) {
                 // data:
@@ -343,7 +344,7 @@ fun monthsBetween(from: LocalDate = LocalDate.startOfCurrentYear(), to: LocalDat
     var current = from
 
     while (current <= to) {
-        months.add(current.monthNumber)
+        months.add(current.month.number)
         current = current.plus(1, DateTimeUnit.MONTH)
     }
     months.reverse()
@@ -352,8 +353,8 @@ fun monthsBetween(from: LocalDate = LocalDate.startOfCurrentYear(), to: LocalDat
 }
 
 fun invoicesInMonth(month: Int, invoices: List<Invoice>): List<Invoice> {
-    return invoices.filter { it.invoiceDate?.monthNumber == month }
+    return invoices.filter { it.invoiceDate?.month?.number == month }
 }
 fun paymentsInMonth(month: Int, payments: List<Payment>): List<Payment> {
-    return payments.filter { it.date.monthNumber == month }
+    return payments.filter { it.date.month.number == month }
 }

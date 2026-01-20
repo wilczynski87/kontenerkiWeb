@@ -9,13 +9,35 @@ data class LoginRequest(
 )
 
 @Serializable
+data class UserCredentials(
+    val userName: String? = null,
+    val password: String? = null,
+)
+
+@Serializable
+data class UserInfo(
+    val id: String,
+    val email: String,
+    val role: String,
+    val name: String? = null
+)
+
+@Serializable
 data class LoginResponse(
     val userId: String,
     val role: String
 )
 
 @Serializable
-data class AuthUser(
-    val id: String,
-    val role: String
+data class TokenResponse(
+    val accessToken: String,
+    val refreshToken: String? = null,
+    val expiresTn: Int? = null,
+    val tokenType: String = "Bearer"
+)
+
+@Serializable
+data class AuthResponse(
+    val loginResponse: LoginResponse,
+    val tokenResponse: TokenResponse
 )

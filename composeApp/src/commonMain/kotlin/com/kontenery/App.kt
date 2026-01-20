@@ -8,11 +8,11 @@ import androidx.compose.runtime.rememberCoroutineScope
 import com.kontenery.ui.ParkingApp
 import com.kontenery.model.enums.WindowWidthSizeClass
 import com.kontenery.service.ParkingAppViewModel
+import com.kontenery.ui.AuthGate
+import com.kontenery.ui.LoginScreen
 import com.kontenery.ui.rememberWindowWidthSizeClass
-import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @Composable
-@Preview
 fun App() {
     val scope = rememberCoroutineScope()
     val viewModel = remember { ParkingAppViewModel(scope) }
@@ -31,6 +31,11 @@ fun App() {
     }
 
     MaterialTheme {
-        ParkingApp(widthClass, viewModel)
+        AuthGate(
+            viewModel = viewModel,
+            loginScreen = { LoginScreen(viewModel) }
+        ) {
+            ParkingApp(widthClass, viewModel)
+        }
     }
 }

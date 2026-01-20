@@ -1,12 +1,15 @@
 package com.kontenery.model.enums
 
 import kotlinx.datetime.*
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.number
+import kotlin.time.Clock
 
-fun LocalDate.Companion.now(): LocalDate = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+fun LocalDate.Companion.now(): LocalDate = kotlin.time.Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
 
 fun LocalDate.Companion.startOfCurrentMonth(period: LocalDate? = null): LocalDate {
-    val currentDate:LocalDate = period ?: Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
-    return LocalDate(currentDate.year, currentDate.monthNumber, 1)
+    val currentDate:LocalDate = period ?: kotlin.time.Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+    return LocalDate(currentDate.year, currentDate.month.number, 1)
 }
 
 fun LocalDate.Companion.endOfCurrentMonth(period: LocalDate? = null): LocalDate {
@@ -21,5 +24,5 @@ fun LocalDate.Companion.startOfCurrentYear(period: LocalDate? = null): LocalDate
 
 fun LocalDate.Companion.endOfCurrentYear(period: LocalDate? = null): LocalDate {
     val endOfCurrentMonth: LocalDate = if(period == null) LocalDate.Companion.endOfCurrentMonth() else LocalDate.Companion.endOfCurrentMonth(period)
-    return parse("${endOfCurrentMonth.year}-12-${endOfCurrentMonth.dayOfMonth}")
+    return parse("${endOfCurrentMonth.year}-12-${endOfCurrentMonth.day}")
 }

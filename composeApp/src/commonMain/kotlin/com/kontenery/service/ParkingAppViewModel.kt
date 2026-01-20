@@ -1,6 +1,7 @@
 package com.kontenery.service
 
 import com.kontenery.controller.ApiClientsService
+import com.kontenery.data.AuthState
 import com.kontenery.library.model.Contract
 import com.kontenery.library.model.Deposit
 import com.kontenery.model.Payment
@@ -21,6 +22,9 @@ import com.kontenery.model.ModalData
 import com.kontenery.model.PaymentForFinanceTable
 import com.kontenery.model.PaymentsListForFinanceTable
 import com.kontenery.model.TableRowFinance
+import com.kontenery.model.auth.LoginResponse
+import com.kontenery.model.auth.UserCredentials
+import com.kontenery.model.auth.UserInfo
 import com.kontenery.model.enums.CurrentScreen
 import com.kontenery.model.enums.endOfCurrentYear
 import com.kontenery.model.enums.now
@@ -44,7 +48,6 @@ class ParkingAppViewModel(
 
     init {
         initializeUiState()
-        getClientsList(0, 100)
     }
 
     private fun initializeUiState() {
@@ -1217,21 +1220,45 @@ class ParkingAppViewModel(
     // AUTH
 
     suspend fun login(email: String, password: String) {
+        _state.update {
+            it.copy(authState = AuthState(loading = true))
+        }
+
         runCatching {
-            val response = ApiClientsService.auth.login(email, password)
-        }.onSuccess {
+            ApiClientsService.auth.login(email, password)
+        }.onSuccess { user ->
+            val user: UserInfo = user.getOrNull() ?: throw NullPointerException("User is null")
+
+            getClientsList(0, 100)
+
             _state.update {
-                it.copy(
-                    isLoggedIn = true,
-                    user = it.user,
-                    error = null
-                )
+                it.copy(authState = AuthState(isAuthenticated = true, user = LoginResponse(user.id, user.role)))
             }
-        }.onFailure {
+
+        }.onFailure { e ->
             _state.update {
-                it.copy(error = "Błędne dane logowania")
+                it.copy(authState = AuthState(isAuthenticated = false, error = "Błędne dane logowania"))
             }
         }
+    }
+
+    suspend fun logout() {
+        ApiClientsService.auth.logout()
+        _state.update {
+            it.copy(authState = AuthState())
+        }
+    }
+
+    fun updateCredentials(userCredentials: UserCredentials) {
+        _state.update {
+            it.copy(
+                userCredentials = userCredentials
+            )
+        }
+    }
+
+    fun getCredentials(): UserCredentials? {
+        return state.value.userCredentials
     }
 
 }

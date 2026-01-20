@@ -21,14 +21,6 @@ kotlin {
     }
 
     wasmJs {
-//        browser {
-//            runTask {
-//                devServerOptions {
-//                    port = 8081
-//                    open = true
-//                }
-//            }
-//        }
         browser()
         binaries.executable()
     }
@@ -37,7 +29,7 @@ kotlin {
         androidMain.dependencies {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
-            implementation(files("libs/library-1.0.0.jar")) // 👈 tylko na Android/JVM
+            implementation(files("libs/library-1.0.0.jar"))
         }
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -55,7 +47,7 @@ kotlin {
             implementation(libs.jetbrains.kotlinx.serialization.json)
             implementation(compose.material)
             implementation(compose.materialIconsExtended)
-            implementation(libs.ktor.auth)
+            implementation(libs.ktor.client.auth)
 
         }
         commonTest.dependencies {
@@ -97,11 +89,3 @@ android {
 dependencies {
     debugImplementation(compose.uiTooling)
 }
-
-//pluginManagement {
-//    repositories {
-//        google()
-//        gradlePluginPortal()
-//        mavenCentral()
-//    }
-//}

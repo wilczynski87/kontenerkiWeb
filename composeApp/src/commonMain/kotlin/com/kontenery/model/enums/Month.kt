@@ -1,6 +1,7 @@
 package com.kontenery.library.utils
 
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.number
 
 enum class Month(val number: Int, val polishName: String) {
     JANUARY(1, "Styczeń"),
@@ -22,7 +23,7 @@ enum class Month(val number: Int, val polishName: String) {
             it.number == getNumberFromDateString(dateString)
         }
         fun getMonth(date:LocalDate): Month? = entries.find {
-            it.number == date.monthNumber
+            it.number == date.month.number
         }
 
         private fun getNumberFromDateString(dateString: String): Int {

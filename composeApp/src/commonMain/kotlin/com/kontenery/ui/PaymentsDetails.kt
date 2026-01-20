@@ -35,6 +35,7 @@ import com.kontenery.model.enums.now
 import com.kontenery.model.enums.startOfCurrentMonth
 import com.kontenery.service.ParkingAppViewModel
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.number
 
 @Composable
 fun PaymentsDetails(
@@ -76,7 +77,7 @@ fun PaymentsDetails(
 fun HeaderPayments(date: LocalDate, columnWidths: MutableList<Int>) {
     Row(modifier = Modifier.fillMaxWidth()) {
         Text(
-            text = "Płatności za ${Month.fromNumber(date.monthNumber)?.polishName}:"
+            text = "Płatności za ${Month.fromNumber(date.month.number)?.polishName}:"
             , textAlign = TextAlign.Center,
         )
     }

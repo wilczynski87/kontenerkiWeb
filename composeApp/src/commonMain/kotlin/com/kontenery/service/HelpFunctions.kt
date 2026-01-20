@@ -2,6 +2,7 @@ package com.kontenery.service
 
 import com.kontenery.model.enums.WindowWidthSizeClass
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.number
 
 fun calculateWidthSizeClass(widthDp: Float): WindowWidthSizeClass =
     when {
@@ -36,8 +37,8 @@ fun String.isDigitsOnly(): Boolean =
     }
 
 fun formatLocalDate(date: LocalDate): String {
-    val day = date.dayOfMonth.toString().padStart(2, '0')
-    val month = date.monthNumber.toString().padStart(2, '0')
+    val day = date.day.toString().padStart(2, '0')
+    val month = date.month.number.toString().padStart(2, '0')
     val year = date.year.toString()
     return "$day/$month/$year"
 }

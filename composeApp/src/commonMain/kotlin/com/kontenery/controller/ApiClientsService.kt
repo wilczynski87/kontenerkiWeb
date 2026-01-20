@@ -5,9 +5,8 @@ import io.ktor.client.HttpClient
 expect fun createHttpClient(): HttpClient
 
 object ApiClientsService {
-    private val httpClient by lazy {
-        createHttpClient()
-    }
+
+    val httpClient by lazy { createHttpClient() }
 
     val clients by lazy { ApiClients(httpClient) }
     val products by lazy { ApiProduct(httpClient) }
@@ -16,6 +15,5 @@ object ApiClientsService {
     val payments by lazy { ApiPayments(httpClient) }
     val bankAccounts by lazy { ApiBankAccount(httpClient) }
     val paymentsListForFinanceTable by lazy { ApiPaymentsListForFinanceTable(httpClient) }
-
     val auth by lazy { ApiAuth(httpClient) }
 }

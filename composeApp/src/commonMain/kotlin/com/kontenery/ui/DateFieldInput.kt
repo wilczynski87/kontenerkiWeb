@@ -36,8 +36,9 @@ import androidx.compose.ui.window.Popup
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
-import kotlinx.datetime.Instant
+import kotlinx.datetime.number
 import kotlinx.datetime.toLocalDateTime
+import kotlin.time.Instant
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -177,8 +178,8 @@ fun convertMillisToDate(millis: Long): String {
     val instant = Instant.fromEpochMilliseconds(millis)
     val date = instant.toLocalDateTime(TimeZone.currentSystemDefault()).date
 
-    val day = date.dayOfMonth.toString().padStart(2, '0')
-    val month = date.monthNumber.toString().padStart(2, '0')
+    val day = date.day.toString().padStart(2, '0')
+    val month = date.month.number.toString().padStart(2, '0')
     val year = date.year.toString()
 
     return "$day/$month/$year"
@@ -188,8 +189,8 @@ fun convertMillisToLocalDateKotlinx(millis: Long): String {
     val instant = Instant.fromEpochMilliseconds(millis)
     val date = instant.toLocalDateTime(TimeZone.currentSystemDefault()).date
 
-    val day = date.dayOfMonth.toString().padStart(2, '0')
-    val month = date.monthNumber.toString().padStart(2, '0')
+    val day = date.day.toString().padStart(2, '0')
+    val month = date.month.number.toString().padStart(2, '0')
     val year = date.year.toString()
 
     return "$year-$month-$day"
