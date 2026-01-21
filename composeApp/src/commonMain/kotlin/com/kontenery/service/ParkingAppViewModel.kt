@@ -1243,7 +1243,7 @@ class ParkingAppViewModel(
     }
 
     suspend fun logout() {
-        ApiClientsService.auth.logout()
+//        ApiClientsService.auth.logout()
         _state.update {
             it.copy(authState = AuthState())
         }

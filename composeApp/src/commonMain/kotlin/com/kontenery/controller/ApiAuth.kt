@@ -4,22 +4,18 @@ import com.kontenery.config.ApiConfig.BASE_URL
 import com.kontenery.model.TokenManager
 import com.kontenery.model.auth.AuthResponse
 import com.kontenery.model.auth.LoginRequest
-import com.kontenery.model.auth.LoginResponse
-import com.kontenery.model.auth.TokenResponse
 import com.kontenery.model.auth.UserInfo
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.ClientRequestException
-import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
-import io.ktor.client.statement.HttpResponse
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
-import kotlinx.coroutines.sync.withLock
 
-lateinit var authManager: AuthManager
+//expect fun tokenManagerInit(): TokenManager
+
 class ApiAuth(
     private val httpClient: HttpClient
 ) {
@@ -36,11 +32,6 @@ class ApiAuth(
                 response.tokenResponse.refreshToken
             )
 
-//            Result.success(response.loginResponse ?: UserInfo(
-//                id = 0,
-//                email = email,
-//                role = "USER"
-//            ))
             Result.success(UserInfo(
                 id = response.loginResponse.userId,
                 email = email,
@@ -52,26 +43,26 @@ class ApiAuth(
         }
     }
 
-    suspend fun refresh() = safeRequest {
-        httpClient.post("$BASE_URL/auth/refresh")
-    }
-
-    suspend fun logout() = safeRequest {
-        httpClient.post("$BASE_URL/auth/logout")
-    }
+//    suspend fun refresh() = safeRequest {
+//        httpClient.post("$BASE_URL/auth/refresh")
+//    }
+//
+//    suspend fun logout() = safeRequest {
+//        httpClient.post("$BASE_URL/auth/logout")
+//    }
 
 
 }
 
-class AuthManager(private val apiAuth: ApiAuth) {
-    private val mutex = kotlinx.coroutines.sync.Mutex()
-
-    suspend fun refreshIfNeeded(): Boolean = mutex.withLock {
-        runCatching {
-            apiAuth.refresh()
-        }.isSuccess
-    }
-}
+//class AuthManager(private val apiAuth: ApiAuth) {
+//    private val mutex = kotlinx.coroutines.sync.Mutex()
+//
+//    suspend fun refreshIfNeeded(): Boolean = mutex.withLock {
+//        runCatching {
+//            apiAuth.refresh()
+//        }.isSuccess
+//    }
+//}
 
 class UnauthorizedException : RuntimeException()
 
@@ -83,8 +74,8 @@ suspend fun <T> safeRequest(block: suspend () -> T): T {
     } catch (e: Exception) {
         if (e is ClientRequestException && e.response.status == HttpStatusCode.Unauthorized) {
             // refresh token
-            val refreshed = authManager.refreshIfNeeded()
-            if (!refreshed) throw UnauthorizedException()
+//            val refreshed = authManager.refreshIfNeeded()
+//            if (!refreshed) throw UnauthorizedException()
             return block() // retry
         }
         throw e
