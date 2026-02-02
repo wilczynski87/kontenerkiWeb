@@ -1,7 +1,8 @@
 package com.kontenery.controller
 
-import com.kontenery.config.ApiConfig.BASE_URL
+import com.kontenery.config.ApiConfig.baseUrl
 import com.kontenery.model.TokenManager
+import com.kontenery.model.auth.RefreshTokenRequest
 import com.kontenery.model.auth.TokenResponse
 import com.kontenery.serializers.productSerializersModule
 import io.ktor.client.HttpClient
@@ -21,6 +22,7 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.http.encodedPath
 import io.ktor.serialization.kotlinx.json.json
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
 @OptIn(ExperimentalWasmJsInterop::class)
@@ -64,11 +66,10 @@ actual fun createHttpClient(): HttpClient {
                         ?: return@refreshTokens null
 
                     try {
-                        val response: TokenResponse = client.post("$BASE_URL/auth/refresh") {
+                        val response: TokenResponse = client.post("$baseUrl/auth/refresh") {
                             markAsRefreshTokenRequest()
                             contentType(ContentType.Application.Json)
-//                            header(HttpHeaders.Authorization, "Bearer $oldRefreshToken")
-                            setBody(oldRefreshToken)
+                            setBody(RefreshTokenRequest(oldRefreshToken))
                         }.body()
 
                         println("✅ Token refresh successful")
@@ -111,3 +112,4 @@ actual fun createHttpClient(): HttpClient {
 
     }
 }
+

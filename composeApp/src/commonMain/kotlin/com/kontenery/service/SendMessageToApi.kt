@@ -1,17 +1,15 @@
 package com.kontenery.service
 
-import com.kontenery.config.ApiConfig.BASE_URL
+import com.kontenery.config.ApiConfig.baseUrl
 import com.kontenery.data.CSVType
 import com.kontenery.data.MessageRequest
 import io.ktor.client.*
 import io.ktor.client.call.*
-import io.ktor.client.plugins.cookies.HttpCookies
 import io.ktor.client.request.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.*
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
 // jeden wspólny klient
@@ -26,7 +24,7 @@ suspend fun sendCSVMessage(
     message: MessageRequest,
     csvType: CSVType,
 ): MessageRequest {
-    return httpClient.post("$BASE_URL/csv/${csvType.endpoint}") {
+    return httpClient.post("$baseUrl/csv/${csvType.endpoint}") {
         contentType(ContentType.Application.Json)
         setBody(message)
     }.body()
@@ -35,5 +33,5 @@ suspend fun sendCSVMessage(
 // przykład GET
 suspend fun fetchMessages(
 ): List<MessageRequest> {
-    return httpClient.post("$BASE_URL/csv/PeKaOSA").body()
+    return httpClient.post("$baseUrl/csv/PeKaOSA").body()
 }

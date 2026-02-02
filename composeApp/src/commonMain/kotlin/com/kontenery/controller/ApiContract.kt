@@ -1,6 +1,6 @@
 package com.kontenery.controller
 
-import com.kontenery.config.ApiConfig.BASE_URL
+import com.kontenery.config.ApiConfig.baseUrl
 import com.kontenery.library.model.Contract
 import com.kontenery.library.model.ContractDto
 import io.ktor.client.HttpClient
@@ -16,21 +16,21 @@ import io.ktor.http.contentType
 class ApiContract(
     private val httpClient: HttpClient
 ) {
-    suspend fun getContractsByClient(id: Long): List<Contract> = httpClient.get("$BASE_URL/contract/$id/client").body()
+    suspend fun getContractsByClient(id: Long): List<Contract> = httpClient.get("$baseUrl/contract/$id/client").body()
 
-    suspend fun getContractByProductId(id: Long): Contract? = httpClient.get("$BASE_URL/contract/$id/product").body()
+    suspend fun getContractByProductId(id: Long): Contract? = httpClient.get("$baseUrl/contract/$id/product").body()
 
-    suspend fun getContractById(id: Long): Contract? = httpClient.get("$BASE_URL/contract/$id").body()
+    suspend fun getContractById(id: Long): Contract? = httpClient.get("$baseUrl/contract/$id").body()
 
-    suspend fun postContract(contract: ContractDto): Contract = httpClient.post("$BASE_URL/contract") {
+    suspend fun postContract(contract: ContractDto): Contract = httpClient.post("$baseUrl/contract") {
         setBody(contract)
         contentType(ContentType.Application.Json)
     }.body()
 
-    suspend fun putContract(id: Long, contract: ContractDto): Contract = httpClient.put("$BASE_URL/contract/$id") {
+    suspend fun putContract(id: Long, contract: ContractDto): Contract = httpClient.put("$baseUrl/contract/$id") {
         setBody(contract)
         contentType(ContentType.Application.Json)
     }.body()
 
-    suspend fun deleteContract(id: Long): Boolean = httpClient.delete("$BASE_URL/contract/$id").body()
+    suspend fun deleteContract(id: Long): Boolean = httpClient.delete("$baseUrl/contract/$id").body()
 }

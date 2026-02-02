@@ -18,6 +18,7 @@ kotlinx-serialization-json = "1.9.0"
 ktorClientJs = "3.3.3"
 library = "1.0.0"
 ktor-auth = "3.3.3"
+ktor-client-android = "3.3.3"
 
 [libraries]
 jetbrains-material-icons-extended = { module = "org.jetbrains.compose.material:material-icons-extended" }
@@ -42,6 +43,9 @@ material-icons-extended = { module = "org.jetbrains.compose.material:material-ic
 ktor-client-auth = { module = "io.ktor:ktor-client-auth", version.ref = "ktor-auth" }
 #ktor-client-cookies = { module = "io.ktor:ktor-client-cookies", version.ref = "ktorClientJs" }
 
+# Android
+ktor-client-android = { group = "io.ktor", name = "ktor-client-android",  version.ref = "ktor-client-android" }
+ktor-client-logging = { group = "io.ktor", name = "ktor-client-logging",  version.ref = "ktor-client-android" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

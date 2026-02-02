@@ -153,7 +153,7 @@ fun ContractForm(
                 Button(onClick = {
                     println("PutContractToDB $contract")
                     viewModel.putContractToDB(contract)
-                    viewModel.toClientList()
+//                    viewModel.toClientList()
                 }) {
                     Text("Uaktualnij")
                 }

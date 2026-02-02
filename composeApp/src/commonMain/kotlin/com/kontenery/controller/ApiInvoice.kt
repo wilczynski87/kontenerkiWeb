@@ -1,6 +1,6 @@
 package com.kontenery.controller
 
-import com.kontenery.config.ApiConfig.BASE_URL
+import com.kontenery.config.ApiConfig.baseUrl
 import com.kontenery.model.invoice.Invoice
 import com.kontenery.library.utils.errors.InvoiceErrorMessage
 import com.kontenery.model.enums.now
@@ -21,18 +21,18 @@ class ApiInvoice(
     suspend fun postPeriodicInvoice(
         clientId: Long,
         period: String? = null,
-    ): List<InvoiceErrorMessage> = httpClient.post("$BASE_URL/invoice/$clientId") {
+    ): List<InvoiceErrorMessage> = httpClient.post("$baseUrl/invoice/$clientId") {
         parameter("period", period)
     }.body()
 
     suspend fun postPeriodicInvoiceAgain(
         invoiceNumber: String,
-    ): String = httpClient.get("$BASE_URL/invoice/$invoiceNumber/sendAgain").body()
+    ): String = httpClient.get("$baseUrl/invoice/$invoiceNumber/sendAgain").body()
 
 
     suspend fun postPeriodicInvoiceToAllClients(
         period: String? = null,
-    ): List<InvoiceErrorMessage> = httpClient.post("$BASE_URL/invoice/sendInvoices/forAll") {
+    ): List<InvoiceErrorMessage> = httpClient.post("$baseUrl/invoice/sendInvoices/forAll") {
         parameter("period", period)
     }.body()
 
@@ -40,7 +40,7 @@ class ApiInvoice(
        clientId: Long,
        customInvoice: Invoice,
     ): String? =
-        httpClient.post("$BASE_URL/invoice/${clientId}/custom"){
+        httpClient.post("$baseUrl/invoice/${clientId}/custom"){
             contentType(ContentType.Application.Json)
             setBody(customInvoice)
         }.body()
@@ -50,12 +50,12 @@ class ApiInvoice(
         clientId: Long,
         from: String?,
         to: String?,
-    ): List<Invoice> = httpClient.get("$BASE_URL/invoice/${clientId}/forClient") {
+    ): List<Invoice> = httpClient.get("$baseUrl/invoice/${clientId}/forClient") {
         parameter("from", from)
         parameter("to", to)
     }.body()
 
     suspend fun printAllInvoice(
         date: LocalDate? = LocalDate.now()
-    ): Boolean = httpClient.get("$BASE_URL/invoice/${date}/print").body()
+    ): Boolean = httpClient.get("$baseUrl/invoice/${date}/print").body()
 }

@@ -1,6 +1,6 @@
 package com.kontenery.controller
 
-import com.kontenery.config.ApiConfig.BASE_URL
+import com.kontenery.config.ApiConfig.baseUrl
 import com.kontenery.model.Payment
 import com.kontenery.model.PaymentDto
 import io.ktor.client.HttpClient
@@ -20,7 +20,7 @@ class ApiPayments(
         clientId: Long,
         from: String?,
         to: String?
-    ): List<Payment> = httpClient.get("$BASE_URL/payment/${clientId}/byClient") {
+    ): List<Payment> = httpClient.get("$baseUrl/payment/${clientId}/byClient") {
         parameter("clientId", clientId)
         parameter("from", from)
         parameter("to", to)
@@ -28,14 +28,14 @@ class ApiPayments(
 
     suspend fun postPayment(
         paymentDto: PaymentDto
-    ): Payment? = httpClient.post("$BASE_URL/payment") {
+    ): Payment? = httpClient.post("$baseUrl/payment") {
         contentType(ContentType.Application.Json)
         setBody(paymentDto)
     }.body()
 
     suspend fun deletePayment(
         paymentId: Long
-    ): Boolean = httpClient.delete("$BASE_URL/payment/${paymentId}/delete") {
+    ): Boolean = httpClient.delete("$baseUrl/payment/${paymentId}/delete") {
         parameter("paymentId", paymentId)
     }.body()
 

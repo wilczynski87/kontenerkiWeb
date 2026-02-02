@@ -1,6 +1,6 @@
 package com.kontenery.controller
 
-import com.kontenery.config.ApiConfig.BASE_URL
+import com.kontenery.config.ApiConfig.baseUrl
 import com.kontenery.model.ClientBankAccount
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -13,18 +13,18 @@ import io.ktor.client.request.setBody
 class ApiBankAccount(
     private val httpClient: HttpClient
 ) {
-    suspend fun getClientBankAccountsList(clientId: String ): List<ClientBankAccount> = httpClient.get("$BASE_URL/bankAccount/$clientId/getAllForClient") {
+    suspend fun getClientBankAccountsList(clientId: String ): List<ClientBankAccount> = httpClient.get("$baseUrl/bankAccount/$clientId/getAllForClient") {
         parameter("clientId", clientId)
     }.body()
 
-    suspend fun saveClientBankAccount(clientBankAccount: ClientBankAccount): ClientBankAccount = httpClient.post("$BASE_URL/bankAccount/add") {
+    suspend fun saveClientBankAccount(clientBankAccount: ClientBankAccount): ClientBankAccount = httpClient.post("$baseUrl/bankAccount/add") {
         setBody(clientBankAccount)
     }.body()
 
     suspend fun deleteClientBankAccount(
         clientId: String,
         accountNumber: String
-    ): Boolean = httpClient.delete("$BASE_URL/bankAccount/$clientId/$accountNumber/delete") {
+    ): Boolean = httpClient.delete("$baseUrl/bankAccount/$clientId/$accountNumber/delete") {
         parameter("clientId", clientId)
         parameter("accountNumber", accountNumber)
     }.body()

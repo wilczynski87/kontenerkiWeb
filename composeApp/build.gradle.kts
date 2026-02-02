@@ -30,6 +30,7 @@ kotlin {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
             implementation(files("libs/library-1.0.0.jar"))
+            implementation(libs.ktor.client.android)
         }
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -48,6 +49,7 @@ kotlin {
             implementation(compose.material)
             implementation(compose.materialIconsExtended)
             implementation(libs.ktor.client.auth)
+            implementation(libs.ktor.client.logging)
 
         }
         commonTest.dependencies {

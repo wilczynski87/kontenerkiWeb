@@ -193,30 +193,6 @@ fun ParkingApp(
                 }
 
             }
-
-//            if (confirmModal != null) {
-//                ConfirmSending(
-//                    onDismissRequest = { viewModel.closeConfirmationModal() },
-//                    onConfirmation = {
-//                        confirmModal.onConfirmation()
-//                        viewModel.closeConfirmationModal()
-//                    },
-//                    dialogTitle = confirmModal.dialogTitle,
-//                    dialogText = confirmModal.dialogText,
-//                    icon = Icons.Default.Warning,
-//                )
-//            }
-//            if (state.responseErrors.isNotEmpty()) {
-//                ResponseModal(
-//                    onDismissRequest = { viewModel.closeResponseModal() },
-//                    onConfirmation = {
-//                        viewModel.closeResponseModal()
-//                    },
-//                    dialogTitle = "Błąd przy wysyłaniu faktury okresowej",
-//                    dialogText = state.responseErrors,
-//                    icon = Icons.Default.Warning,
-//                )
-//            }
         }
     }
 }
