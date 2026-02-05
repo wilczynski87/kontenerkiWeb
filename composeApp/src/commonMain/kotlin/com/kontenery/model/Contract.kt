@@ -16,7 +16,7 @@ data class Contract(
     @Serializable(with = LocalDateSerializer::class)
     var endDate: LocalDate? = null,
     var netPrice: Double? = null,
-    val vatRate: Double = 23.00,
+    val vatRate: Double? = null,
     var needInvoice: Boolean? = null,
     var deposit: Deposit? = null,
 ) {
@@ -43,7 +43,7 @@ data class ContractDto(
     @Serializable(with = LocalDateSerializer::class)
     var endDate: LocalDate? = null,
     var netPrice: Double? = null,
-    val vatRate: Double = 23.00,
+    val vatRate: Double? = null,
     var needInvoice: Boolean? = null,
     var deposit: Deposit? = null,
 ) {

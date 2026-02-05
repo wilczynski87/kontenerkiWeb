@@ -22,6 +22,7 @@ import com.kontenery.model.ModalData
 import com.kontenery.model.PaymentForFinanceTable
 import com.kontenery.model.PaymentsListForFinanceTable
 import com.kontenery.model.TableRowFinance
+import com.kontenery.model.TokenManager
 import com.kontenery.model.auth.LoginResponse
 import com.kontenery.model.auth.UserCredentials
 import com.kontenery.model.auth.UserInfo
@@ -1238,6 +1239,25 @@ class ParkingAppViewModel(
         }.onFailure { e ->
             _state.update {
                 it.copy(authState = AuthState(isAuthenticated = false, error = "Błędne dane logowania"))
+            }
+        }
+    }
+
+    suspend fun refreshLogin() {
+        println("refreshLogin")
+        if(TokenManager.getRefreshToken().isNullOrBlank()) return
+        println("refreshLogin - token found")
+
+        runCatching {
+            ApiClientsService.auth.refresh()
+        }.onSuccess { user ->
+            getClientsList(0, 100)
+            _state.update {
+                it.copy(authState = AuthState(isAuthenticated = true, loading = false, error = null))
+            }
+        }.onFailure { e ->
+            _state.update {
+                it.copy(authState = AuthState(isAuthenticated = false, error = "Brak autoryzacji", loading = false, user = null))
             }
         }
     }

@@ -19,7 +19,7 @@ data class Position(
         fun toPosition(contract: Contract): Position {
             fun vatCalculate(): Double {
                 val netPrice: Double = contract.netPrice?.round2() ?: return 0.00
-                val vatRate: Double = contract.vatRate.round2()
+                val vatRate: Double = contract.vatRate?.round2() ?: 23.0
                 val vatProcent = (vatRate / 100).round2()
                 return (netPrice * vatProcent).round2()
             }

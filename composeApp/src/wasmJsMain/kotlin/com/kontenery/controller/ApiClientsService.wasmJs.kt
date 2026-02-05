@@ -22,7 +22,6 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.http.encodedPath
 import io.ktor.serialization.kotlinx.json.json
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
 @OptIn(ExperimentalWasmJsInterop::class)

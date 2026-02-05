@@ -5,6 +5,7 @@ import com.kontenery.error.AuthError
 import com.kontenery.model.TokenManager
 import com.kontenery.model.auth.AuthResponse
 import com.kontenery.model.auth.LoginRequest
+import com.kontenery.model.auth.RefreshTokenRequest
 import com.kontenery.model.auth.UserInfo
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -61,13 +62,33 @@ class ApiAuth(
         }
     }
 
-//    suspend fun refresh() = safeRequest {
-//        httpClient.post("$BASE_URL/auth/refresh")
-//    }
-//
-//    suspend fun logout() = safeRequest {
-//        httpClient.post("$BASE_URL/auth/logout")
-//    }
+    suspend fun refresh() : Result<UserInfo> {
+        return try {
+            val response: AuthResponse = httpClient.post("$baseUrl/auth/refresh") {
+                contentType(ContentType.Application.Json)
+                setBody(RefreshTokenRequest(TokenManager.getRefreshToken() ?: ""))
+            }.body()
+
+            // Zapisz tokeny
+            TokenManager.setTokens(
+                response.tokenResponse.accessToken,
+                response.tokenResponse.refreshToken
+            )
+
+            Result.success(UserInfo(
+                id = response.loginResponse.userId,
+                email = "",
+                role = response.loginResponse.role
+            ))
+
+        } catch (e: Exception) {
+            Result.failure(AuthError.Unknown(e))
+        }
+    }
+
+    suspend fun logout() = safeRequest {
+        httpClient.post("$baseUrl/auth/logout")
+    }
 
 
 }

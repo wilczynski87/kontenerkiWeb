@@ -127,7 +127,7 @@ private fun sumOfContracts(contracts: List<Contract>, isGross: Boolean = false):
     var sum: Double = 0.00
     for (contract in contracts) {
         if(isGross) {
-            val price: Double = contract.netPrice?.plus((contract.netPrice!! * (contract.vatRate) / 100.00)) ?: 0.00
+            val price: Double = contract.netPrice?.plus((contract.netPrice!! * (contract.vatRate ?: throw NullPointerException("No vat rate in: sumOfContracts()")) / 100.00)) ?: 0.00
             sum = sum.plus(price)
         } else sum = sum.plus(contract.netPrice ?: 0.00)
     }

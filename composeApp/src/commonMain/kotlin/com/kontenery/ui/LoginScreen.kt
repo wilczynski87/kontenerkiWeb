@@ -20,23 +20,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-//@Composable
-//fun LoginScreen(viewModel: ParkingAppViewModel) {
-//    val state by viewModel.state.collectAsState()
-//
-//    if (state.isLoggedIn) {
-//        Text("Zalogowany")
-//    } else {
-//        Button(onClick = {
-////            scope.launch {
-////                viewModel.login(email, password)
-////            }
-//        }) {
-//            Text("Zaloguj")
-//        }
-//    }
-//}
-
 @Composable
 fun LoginScreen(viewModel: ParkingAppViewModel) {
     var email by remember { mutableStateOf("") }
