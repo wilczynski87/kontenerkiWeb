@@ -4,11 +4,11 @@ import androidx.compose.runtime.*
 import androidx.compose.material3.*
 import com.kontenery.FilePickerButton
 import com.kontenery.PickFileFunc
+import com.kontenery.controller.ApiClientsService
 import com.kontenery.data.BankTransaction
 import com.kontenery.data.CSVType
 import com.kontenery.data.MessageRequest
 import com.kontenery.data.parseBankTransactions
-import com.kontenery.service.sendCSVMessage
 import kotlinx.coroutines.launch
 
 @Composable
@@ -29,10 +29,10 @@ fun MyFilePickerButton(
 
                 file.let {
                     val csvText = it.bytes.decodeToString()
-                    sendCSVMessage(
+                    ApiClientsService.csvPayments.sendCSVMessage(
                         MessageRequest(csvText),
                         csvType ?: CSVType.PEKAOSABUSSINESS,
-                    )
+                        )
                     transactions = parseBankTransactions(csvText)
                 }
             }
@@ -44,7 +44,6 @@ fun MyFilePickerButton(
     lastName?.let { Text("Ostatnio wybrany: $it") }
     if (transactions.isNotEmpty()) {
         Text("Załadowano ${transactions.size} transakcji")
-        // tu możesz np. wyświetlić pierwsze 5 transakcji:
         transactions.forEach { tx ->
             Text("${tx.bookingDate} - ${tx.counterparty} - ${tx.amount} ${tx.currency}")
         }

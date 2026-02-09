@@ -37,11 +37,6 @@ fun PaymentsDownload(viewModel: ParkingAppViewModel, modifier: Modifier) {
             .padding(4.dp)
             .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally
-//        modifier = Modifier
-//            .background(MaterialTheme.colorScheme.primaryContainer)
-//            .safeContentPadding()
-//            .fillMaxSize(),
-//        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         MyFilePickerButton(
             csvType = CSVType.PEKAOSABUSSINESS,
