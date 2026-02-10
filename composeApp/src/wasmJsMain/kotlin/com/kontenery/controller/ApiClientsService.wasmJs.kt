@@ -1,7 +1,7 @@
 package com.kontenery.controller
 
+import com.kontenery.TokenManager
 import com.kontenery.config.ApiConfig.baseUrl
-import com.kontenery.model.TokenManager
 import com.kontenery.model.auth.RefreshTokenRequest
 import com.kontenery.model.auth.TokenResponse
 import com.kontenery.serializers.productSerializersModule

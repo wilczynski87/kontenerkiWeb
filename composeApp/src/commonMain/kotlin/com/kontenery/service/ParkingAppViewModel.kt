@@ -1,5 +1,6 @@
 package com.kontenery.service
 
+import com.kontenery.TokenManager
 import com.kontenery.controller.ApiClientsService
 import com.kontenery.data.AuthState
 import com.kontenery.library.model.Contract
@@ -22,7 +23,6 @@ import com.kontenery.model.ModalData
 import com.kontenery.model.PaymentForFinanceTable
 import com.kontenery.model.PaymentsListForFinanceTable
 import com.kontenery.model.TableRowFinance
-import com.kontenery.model.TokenManager
 import com.kontenery.model.auth.LoginResponse
 import com.kontenery.model.auth.UserCredentials
 import com.kontenery.model.auth.UserInfo

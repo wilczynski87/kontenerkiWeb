@@ -1,8 +1,8 @@
 package com.kontenery.controller
 
+import com.kontenery.TokenManager
 import com.kontenery.config.ApiConfig.baseUrl
 import com.kontenery.error.AuthError
-import com.kontenery.model.TokenManager
 import com.kontenery.model.auth.AuthResponse
 import com.kontenery.model.auth.LoginRequest
 import com.kontenery.model.auth.RefreshTokenRequest
@@ -23,6 +23,8 @@ import kotlinx.io.IOException
 class ApiAuth(
     private val httpClient: HttpClient
 ) {
+    private var refreshAttempts = 0
+    private val MAX_REFRESH_ATTEMPTS = 2
     suspend fun login(email: String, password: String): Result<UserInfo> {
         return try {
             val response: AuthResponse = httpClient.post("$baseUrl/auth/login") {
@@ -35,6 +37,7 @@ class ApiAuth(
                 response.tokenResponse.accessToken,
                 response.tokenResponse.refreshToken
             )
+            refreshAttempts = 0
 
             Result.success(UserInfo(
                 id = response.loginResponse.userId,
@@ -64,9 +67,13 @@ class ApiAuth(
 
     suspend fun refresh() : Result<UserInfo> {
         return try {
+            val refreshToken = TokenManager.getRefreshToken()
+            if (refreshToken.isNullOrEmpty()) {
+                return Result.failure(AuthError.InvalidCredentials)
+            }
             val response: AuthResponse = httpClient.post("$baseUrl/auth/refresh") {
                 contentType(ContentType.Application.Json)
-                setBody(RefreshTokenRequest(TokenManager.getRefreshToken() ?: ""))
+                setBody(RefreshTokenRequest(refreshToken))
             }.body()
 
             // Zapisz tokeny
@@ -74,6 +81,7 @@ class ApiAuth(
                 response.tokenResponse.accessToken,
                 response.tokenResponse.refreshToken
             )
+            refreshAttempts = 0
 
             Result.success(UserInfo(
                 id = response.loginResponse.userId,
@@ -81,6 +89,18 @@ class ApiAuth(
                 role = response.loginResponse.role
             ))
 
+        } catch (e: ClientRequestException) {
+            // Jeśli refresh token jest nieprawidłowy/wygasł
+            if (e.response.status.value == 401 || e.response.status.value == 403) {
+                TokenManager.clearTokens() // wymagaj ponownego logowania
+                Result.failure(AuthError.InvalidCredentials)
+            } else {
+                Result.failure(AuthError.Server)
+            }
+        } catch (e: ServerResponseException) {
+            Result.failure(AuthError.Server)
+        } catch (e: IOException) {
+            Result.failure(AuthError.Network)
         } catch (e: Exception) {
             Result.failure(AuthError.Unknown(e))
         }
@@ -90,33 +110,109 @@ class ApiAuth(
         httpClient.post("$baseUrl/auth/logout")
     }
 
+    private suspend fun attemptRefresh(): Boolean {
+        if (refreshAttempts >= MAX_REFRESH_ATTEMPTS) {
+            TokenManager.clearTokens()
+            return false
+        }
+
+        refreshAttempts++
+        return runCatching {
+            refresh().isSuccess
+        }.getOrDefault(false)
+    }
+
+
+//    suspend fun <T> safeRequest(block: suspend () -> T): T {
+//        var retryCount = 0
+//        val maxRetries = 1
+//
+//        while (retryCount <= maxRetries) {
+//            try {
+//                val response = block()
+//
+//                // Sprawdź status odpowiedzi
+//                when (response.status) {
+//                    HttpStatusCode.Unauthorized -> {
+//                        if (retryCount == 0) {
+//                            // Spróbuj odświeżyć token
+//                            if (TokenManager.getRefreshToken() != null && attemptRefresh()) {
+//                                retryCount++
+//                                continue // spróbuj ponownie z nowym tokenem
+//                            }
+//                        }
+//                        // Jeśli nie udało się odświeżyć lub brak refresh tokena
+//                        TokenManager.clearTokens()
+//                        throw UnauthorizedException()
+//                    }
+//                    else -> {
+//                        if (!response.status.isSuccess()) {
+//                            // Obsłuż inne błędy HTTP
+//                            throw when (response.status) {
+//                                HttpStatusCode.Forbidden -> AuthError.Unauthorized
+//                                else -> RuntimeException("HTTP ${response.status}")
+//                            }
+//                        }
+//                        return response.body()
+//                    }
+//                }
+//            } catch (e: ClientRequestException) {
+//                if (e.response.status == HttpStatusCode.Unauthorized) {
+//                    if (retryCount == 0 && TokenManager.getRefreshToken() != null && attemptRefresh()) {
+//                        retryCount++
+//                        continue
+//                    }
+//                    TokenManager.clearTokens()
+//                    throw UnauthorizedException()
+//                }
+//                throw e
+//            } catch (e: ServerResponseException) {
+//                throw AuthError.Server
+//            } catch (e: IOException) {
+//                throw AuthError.Network
+//            }
+//        }
+//
+//        // Jeśli doszliśmy tutaj, nie udało się odświeżyć
+//        TokenManager.clearTokens()
+//        throw UnauthorizedException()
+//    }
+
+    suspend fun <T> safeRequest(
+        maxRetries: Int = 1,
+        block: suspend () -> T
+    ): T {
+        var retryCount = 0
+        val tokenManager = TokenManager
+
+        while (true) {
+            try {
+                return block()
+            } catch (e: Exception) {
+                val isUnauthorized = when (e) {
+                    is ClientRequestException -> e.response.status == HttpStatusCode.Unauthorized
+                    is UnauthorizedException -> true
+                    else -> false
+                }
+
+                if (isUnauthorized && retryCount < maxRetries && tokenManager.getRefreshToken() != null) {
+                    // Spróbuj odświeżyć token
+                    runCatching {
+                        // Tutaj wywołaj refresh - potrzebujesz dostępu do ApiAuth
+                        // To podejście wymaga przekazania ApiAuth
+                    }
+                    retryCount++
+                    continue
+                }
+
+                if (isUnauthorized) {
+                    tokenManager.clearTokens()
+                }
+                throw e
+            }
+        }
+    }
 
 }
-
-//class AuthManager(private val apiAuth: ApiAuth) {
-//    private val mutex = kotlinx.coroutines.sync.Mutex()
-//
-//    suspend fun refreshIfNeeded(): Boolean = mutex.withLock {
-//        runCatching {
-//            apiAuth.refresh()
-//        }.isSuccess
-//    }
-//}
 
 class UnauthorizedException : RuntimeException()
-
-suspend fun <T> safeRequest(block: suspend () -> T): T {
-    return try {
-        val response = block()
-        // ręczne sprawdzenie statusu, jeśli block zwraca np. HttpResponse
-        response
-    } catch (e: Exception) {
-        if (e is ClientRequestException && e.response.status == HttpStatusCode.Unauthorized) {
-            // refresh token
-//            val refreshed = authManager.refreshIfNeeded()
-//            if (!refreshed) throw UnauthorizedException()
-            return block() // retry
-        }
-        throw e
-    }
-}

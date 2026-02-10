@@ -163,7 +163,6 @@ fun PaymentsTable(
 
             items(rows) { row ->
                 TableDataRow(row, months, viewModel)
-                HorizontalDivider()
             }
         }
     }
