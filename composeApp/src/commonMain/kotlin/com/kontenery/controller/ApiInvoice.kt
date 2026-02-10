@@ -39,7 +39,7 @@ class ApiInvoice(
     suspend fun postCustomInvoice(
        clientId: Long,
        customInvoice: Invoice,
-    ): String? =
+    ): Invoice? =
         httpClient.post("$baseUrl/invoice/${clientId}/custom"){
             contentType(ContentType.Application.Json)
             setBody(customInvoice)

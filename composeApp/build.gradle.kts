@@ -1,6 +1,3 @@
-@file:OptIn(ExperimentalWasmDsl::class)
-
-import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 
@@ -12,7 +9,6 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 }
 
-@OptIn(ExperimentalWasmDsl::class)
 kotlin {
     jvmToolchain(21)
     androidTarget {
@@ -40,24 +36,31 @@ kotlin {
             implementation(compose.ui)
             implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
+            implementation(compose.material)
+            implementation(compose.materialIconsExtended)
+
             implementation(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.androidx.lifecycle.runtimeCompose)
             implementation(libs.kotlinx.datetime)
+//            implementation(libs.kotlinx.coroutines.core)
+
+            // Ktor dependencies
             implementation(libs.ktor.client.core)
             implementation(libs.ktor.client.content.negotiation)
             implementation(libs.ktor.serialization.kotlinx.json)
-            implementation(libs.jetbrains.kotlinx.serialization.json)
-            implementation(compose.material)
-            implementation(compose.materialIconsExtended)
             implementation(libs.ktor.client.auth)
             implementation(libs.ktor.client.logging)
 
+            // Kotlinx Serialization
+            implementation(libs.jetbrains.kotlinx.serialization.json)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
+//            implementation(libs.kotlinx.coroutines.test)
         }
         wasmJsMain.dependencies {
             implementation(libs.ktor.client.js)
+//            implementation(libs.kotlinx.coroutines.core)
         }
     }
 }

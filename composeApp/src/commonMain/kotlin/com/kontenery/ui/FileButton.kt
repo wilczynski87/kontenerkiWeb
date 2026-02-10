@@ -2,6 +2,7 @@ package com.kontenery.ui
 
 import androidx.compose.runtime.*
 import androidx.compose.material3.*
+import androidx.compose.material3.HorizontalDivider
 import com.kontenery.FilePickerButton
 import com.kontenery.PickFileFunc
 import com.kontenery.controller.ApiClientsService
@@ -43,7 +44,8 @@ fun MyFilePickerButton(
 
     lastName?.let { Text("Ostatnio wybrany: $it") }
     if (transactions.isNotEmpty()) {
-        Text("Załadowano ${transactions.size} transakcji")
+        Text("Załadowano ${transactions.size} transakcji:")
+        HorizontalDivider( )
         transactions.forEach { tx ->
             Text("${tx.bookingDate} - ${tx.counterparty} - ${tx.amount} ${tx.currency}")
         }

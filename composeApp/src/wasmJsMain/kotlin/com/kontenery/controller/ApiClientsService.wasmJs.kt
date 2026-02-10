@@ -9,12 +9,14 @@ import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.js.Js
 import io.ktor.client.plugins.ClientRequestException
+import io.ktor.client.plugins.DefaultRequest
 import io.ktor.client.plugins.auth.Auth
 import io.ktor.client.plugins.auth.providers.BearerTokens
 import io.ktor.client.plugins.auth.providers.bearer
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.cookies.AcceptAllCookiesStorage
 import io.ktor.client.plugins.cookies.HttpCookies
+import io.ktor.client.request.accept
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
@@ -23,6 +25,7 @@ import io.ktor.http.contentType
 import io.ktor.http.encodedPath
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
+
 
 @OptIn(ExperimentalWasmJsInterop::class)
 actual fun createHttpClient(): HttpClient {
@@ -38,6 +41,10 @@ actual fun createHttpClient(): HttpClient {
                     serializersModule = productSerializersModule
                 }
             )
+        }
+        install(DefaultRequest) {
+            contentType(ContentType.Application.Json)
+            accept(ContentType.Application.Json)
         }
 
         install(HttpCookies) {

@@ -916,10 +916,29 @@ class ParkingAppViewModel(
 //                var invoiceNew = invoice
 //                var inv = gson.toJson(invoiceNew)
 //                println("saveCustomInvoiceToDB json: $inv")
-                ApiClientsService.invoices.postCustomInvoice(clientId, invoice)
+                val savedInvoice = ApiClientsService.invoices.postCustomInvoice(clientId, invoice)
+                if(savedInvoice != null) {
+                    showConfirmModal(
+                        "Status dodatkowej faktury:",
+                        "Faktura o numerze: ${savedInvoice.invoiceNumber}, zapisana w bazie!",
+                    ) {
+                        closeConfirmationModal()
+
+                        updateClient(clientId)
+                        fetchPaymentsForClient(clientId)
+                        fetchInvoicesForClient(clientId)
+                        toPaymentsMenu()
+                    }
+                }
                 // TODO dać info o zapisanej fakturze
             } catch (e: Exception) {
                 println("saveCustomInvoiceToDB nie udało się wysłać faktury $e")
+                showConfirmModal(
+                    "Status dodatkowej faktury:",
+                    "Błąd przy wysłaniu faktury - dokument nie zapisany!",
+                ) {
+                    closeConfirmationModal()
+                }
             }
         }
     }

@@ -131,6 +131,11 @@ fun InvoiceForm(
                     // TODO jak nie ma id customera to jakiś błąd?
                     val invoice: Invoice = invoice
                     viewModel.postCustomInvoice(client?.id ?: 0, invoice)
+                    viewModel.showConfirmModal(
+                        "Status dodatkowej faktury",
+                        "Wysyłam fakturę do klienta",
+                        viewModel::closeConfirmationModal,
+                    )
                 },
             ) {
                 Text("Wyślij dodatkową fakturę")
