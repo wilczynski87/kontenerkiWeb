@@ -1,49 +1,44 @@
 package com.kontenery
 import kotlinx.browser.localStorage
 
-//actual object TokenManager {
-//    actual fun setTokens(access: String, refresh: String?) {
-//    }
-//
-//    actual fun getAccessToken(): String? {
-//        TODO("Not yet implemented")
-//    }
-//
-//    actual fun getRefreshToken(): String? {
-//        TODO("Not yet implemented")
-//    }
-//
-//    actual fun clearTokens() {
-//    }
-//
-//    actual fun isAuthenticated(): Boolean {
-//        TODO("Not yet implemented")
-//    }
-//}
-
-actual object TokenManager {
-    private const val ACCESS_TOKEN_KEY = "access_token"
-    private const val REFRESH_TOKEN_KEY = "refresh_token"
+actual class TokenManager actual constructor() {
 
     actual fun setTokens(access: String, refresh: String?) {
-        localStorage.setItem(ACCESS_TOKEN_KEY, access)
+        localStorage.setItem("access_token", access)
         if (refresh != null) {
-            localStorage.setItem(REFRESH_TOKEN_KEY, refresh)
+            localStorage.setItem("refresh_token", refresh)
         } else {
-            localStorage.removeItem(REFRESH_TOKEN_KEY)
+            localStorage.removeItem("refresh_token")
         }
     }
 
     actual fun getAccessToken(): String? =
-        localStorage.getItem(ACCESS_TOKEN_KEY)
+        localStorage.getItem("access_token")
 
     actual fun getRefreshToken(): String? =
-        localStorage.getItem(REFRESH_TOKEN_KEY)
+        localStorage.getItem("refresh_token")
 
     actual fun clearTokens() {
-        localStorage.removeItem(ACCESS_TOKEN_KEY)
-        localStorage.removeItem(REFRESH_TOKEN_KEY)
+        localStorage.removeItem("access_token")
+        localStorage.removeItem("refresh_token")
     }
 
     actual fun isAuthenticated(): Boolean = getAccessToken() != null
+
+    // Dodatkowe metody specyficzne dla Wasm
+    fun hasTokens(): Boolean = getAccessToken() != null || getRefreshToken() != null
+
+    fun clearAllAuthData() {
+        clearTokens()
+        localStorage.removeItem("user_email")
+        localStorage.removeItem("user_info")
+    }
+
+    actual companion object {
+        actual val instance: TokenManager by lazy { TokenManager() }
+    }
 }
+
+actual fun logDebug(tag: String, message: String) = println("DEBUG/$tag: $message")
+
+actual fun logError(tag: String, message: String) = println("ERROR/$tag: $message")

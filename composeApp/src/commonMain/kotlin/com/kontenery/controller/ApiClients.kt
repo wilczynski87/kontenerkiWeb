@@ -11,6 +11,7 @@ import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.put
 import io.ktor.client.request.setBody
+import io.ktor.client.statement.bodyAsText
 
 class ApiClients(
     private val httpClient: HttpClient
@@ -25,7 +26,7 @@ class ApiClients(
         }.body()
 
     suspend fun clientListSize(): Long =
-        httpClient.get("$baseUrl/list/clients/count").body()
+        httpClient.get("$baseUrl/list/clients/count").bodyAsText().toLong()
 
     suspend fun getClientData(id: Long): Client =
         httpClient.get("$baseUrl/client/$id/id").body()

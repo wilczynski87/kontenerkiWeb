@@ -14,6 +14,7 @@ import com.kontenery.model.invoice.Invoice
 import com.kontenery.library.model.invoice.Subject
 import com.kontenery.library.model.invoice.Subject.Seller
 import com.kontenery.library.utils.InvoiceType
+import com.kontenery.logDebug
 import com.kontenery.model.Client
 import com.kontenery.model.ClientBankAccount
 import com.kontenery.model.ClientCompanyData
@@ -1238,7 +1239,6 @@ class ParkingAppViewModel(
     }
 
     // AUTH
-
     suspend fun login(email: String, password: String) {
         _state.update {
             it.copy(authState = AuthState(loading = true))
@@ -1247,6 +1247,7 @@ class ParkingAppViewModel(
         runCatching {
             ApiClientsService.auth.login(email, password)
         }.onSuccess { user ->
+            logDebug("login:", user.toString())
             val user: UserInfo = user.getOrNull() ?: throw NullPointerException("User is null")
 
             getClientsList(0, 100)
@@ -1260,44 +1261,6 @@ class ParkingAppViewModel(
                 it.copy(authState = AuthState(isAuthenticated = false, error = "Błędne dane logowania"))
             }
         }
-    }
-
-    suspend fun refreshLogin() {
-        println("refreshLogin")
-        if(TokenManager.getRefreshToken().isNullOrBlank()) return
-        println("refreshLogin - token found")
-
-        runCatching {
-            ApiClientsService.auth.refresh()
-        }.onSuccess { user ->
-            getClientsList(0, 100)
-            _state.update {
-                it.copy(authState = AuthState(isAuthenticated = true, loading = false, error = null))
-            }
-        }.onFailure { e ->
-            _state.update {
-                it.copy(authState = AuthState(isAuthenticated = false, error = "Brak autoryzacji", loading = false, user = null))
-            }
-        }
-    }
-
-    suspend fun logout() {
-//        ApiClientsService.auth.logout()
-        _state.update {
-            it.copy(authState = AuthState())
-        }
-    }
-
-    fun updateCredentials(userCredentials: UserCredentials) {
-        _state.update {
-            it.copy(
-                userCredentials = userCredentials
-            )
-        }
-    }
-
-    fun getCredentials(): UserCredentials? {
-        return state.value.userCredentials
     }
 
 }

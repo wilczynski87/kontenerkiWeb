@@ -4,12 +4,21 @@ interface Platform {
     val name: String
 }
 
-expect object TokenManager {
+expect fun getPlatform(): Platform
+
+expect fun logDebug(tag: String, message: String)
+expect fun logError(tag: String, message: String)
+
+// commonMain
+expect class TokenManager() {
     fun setTokens(access: String, refresh: String?)
     fun getAccessToken(): String?
     fun getRefreshToken(): String?
     fun clearTokens()
     fun isAuthenticated(): Boolean
-}
 
-expect fun getPlatform(): Platform
+    companion object {
+        // Możemy dodać singleton pattern jeśli potrzebujemy
+        val instance: TokenManager
+    }
+}

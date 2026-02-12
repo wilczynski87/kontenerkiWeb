@@ -1,7 +1,8 @@
 package com.kontenery.controller
 
+import com.kontenery.TokenManager
 import com.kontenery.config.ApiConfig.baseUrl
-import com.kontenery.model.TokenManager
+import com.kontenery.logDebug
 import com.kontenery.model.auth.RefreshTokenRequest
 import com.kontenery.model.auth.TokenResponse
 import com.kontenery.serializers.productSerializersModule
@@ -22,6 +23,7 @@ import kotlinx.serialization.json.Json
 
 actual fun createHttpClient(): HttpClient {
     return HttpClient(Android) {
+        val tokenManager = TokenManager.instance
 
         install(ContentNegotiation) {
             json(
@@ -57,9 +59,9 @@ actual fun createHttpClient(): HttpClient {
         install(Auth) {
             bearer {
                 loadTokens {
-                    val access = TokenManager.getAccessToken()
-                    val refresh = TokenManager.getRefreshToken()
-                    println("refresh: $refresh")
+                    val access = tokenManager.getAccessToken()
+                    val refresh = tokenManager.getRefreshToken()
+                    logDebug("tokeny", "🟢 Loading tokens - access: ${access}, refresh: ${refresh}")
 
                     if (access != null) {
                         BearerTokens(
@@ -70,7 +72,7 @@ actual fun createHttpClient(): HttpClient {
                 }
 
                 refreshTokens {
-                    val oldRefreshToken = TokenManager.getRefreshToken()
+                    val oldRefreshToken = tokenManager.getRefreshToken()
                         ?: return@refreshTokens null
 
                     try {
@@ -96,7 +98,7 @@ actual fun createHttpClient(): HttpClient {
 
                         println("✅ Token refresh successful")
 
-                        TokenManager.setTokens(
+                        tokenManager.setTokens(
                             response.accessToken,
                             response.refreshToken
                         )
@@ -113,20 +115,20 @@ actual fun createHttpClient(): HttpClient {
                         } catch (ex: Exception) {
                             // Ignoruj
                         }
-                        TokenManager.clearTokens()
+                        tokenManager.clearTokens()
                         null
                     } catch (e: Exception) {
                         println("❌ Token refresh failed: ${e.message}")
                         e.printStackTrace()
-                        TokenManager.clearTokens()
+                        tokenManager.clearTokens()
                         null
                     }
                 }
 
                 sendWithoutRequest { request ->
                     !request.url.encodedPath.contains("/auth/login") &&
-                            !request.url.encodedPath.contains("/auth/register") &&
-                            !request.url.encodedPath.contains("/auth/refresh")
+                    !request.url.encodedPath.contains("/auth/register") &&
+                    !request.url.encodedPath.contains("/auth/refresh")
                 }
             }
         }

@@ -2,6 +2,8 @@ package com.kontenery
 
 import android.os.Build
 import android.content.Context
+import android.content.SharedPreferences
+import android.util.Log
 
 class AndroidPlatform : Platform {
     override val name: String = "Android ${Build.VERSION.SDK_INT}"
@@ -9,61 +11,53 @@ class AndroidPlatform : Platform {
 
 actual fun getPlatform(): Platform = AndroidPlatform()
 
-//actual object TokenManager {
-//    actual fun setTokens(access: String, refresh: String?) {
-//    }
-//
-//    actual fun getAccessToken(): String? {
-//        TODO("Not yet implemented")
-//    }
-//
-//    actual fun getRefreshToken(): String? {
-//        TODO("Not yet implemented")
-//    }
-//
-//    actual fun clearTokens() {
-//    }
-//
-//    actual fun isAuthenticated(): Boolean {
-//        TODO("Not yet implemented")
-//    }
-//}
+actual class TokenManager actual constructor() {
 
-actual object TokenManager {
-    private const val PREFS_NAME = "auth_prefs"
-    private const val ACCESS_TOKEN_KEY = "access_token"
-    private const val REFRESH_TOKEN_KEY = "refresh_token"
-
-    // W Androidzie potrzebujemy Context
+    // Używamy Application Context przekazanego przez DI
     private var context: Context? = null
 
     fun initialize(context: Context) {
         this.context = context.applicationContext
     }
 
-    private fun getPrefs() = context?.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+    private fun getPrefs(): SharedPreferences? {
+        return context?.getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
+    }
 
     actual fun setTokens(access: String, refresh: String?) {
         getPrefs()?.edit()?.apply {
-            putString(ACCESS_TOKEN_KEY, access)
-            putString(REFRESH_TOKEN_KEY, refresh)
+            putString("access_token", access)
+            putString("refresh_token", refresh)
             apply()
         }
     }
 
     actual fun getAccessToken(): String? =
-        getPrefs()?.getString(ACCESS_TOKEN_KEY, null)
+        getPrefs()?.getString("access_token", null)
 
     actual fun getRefreshToken(): String? =
-        getPrefs()?.getString(REFRESH_TOKEN_KEY, null)
+        getPrefs()?.getString("refresh_token", null)
 
     actual fun clearTokens() {
         getPrefs()?.edit()?.apply {
-            remove(ACCESS_TOKEN_KEY)
-            remove(REFRESH_TOKEN_KEY)
+            remove("access_token")
+            remove("refresh_token")
             apply()
         }
     }
 
     actual fun isAuthenticated(): Boolean = getAccessToken() != null
+
+    actual companion object {
+        // Singleton instance
+        actual val instance: TokenManager by lazy { TokenManager() }
+    }
+}
+
+actual fun logDebug(tag: String, message: String) {
+    Log.d(tag, message)
+}
+
+actual fun logError(tag: String, message: String) {
+    Log.e(tag, message)
 }

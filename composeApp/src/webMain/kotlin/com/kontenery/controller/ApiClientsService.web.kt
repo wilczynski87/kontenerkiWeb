@@ -10,6 +10,7 @@ import io.ktor.client.call.body
 import io.ktor.client.engine.js.Js
 import io.ktor.client.plugins.ClientRequestException
 import io.ktor.client.plugins.DefaultRequest
+import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.auth.Auth
 import io.ktor.client.plugins.auth.providers.BearerTokens
 import io.ktor.client.plugins.auth.providers.bearer
@@ -26,9 +27,9 @@ import io.ktor.http.encodedPath
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 
-
 @OptIn(ExperimentalWasmJsInterop::class)
 actual fun createHttpClient(): HttpClient {
+    val tokenManager = TokenManager.instance
 
     return HttpClient(Js) {
 
@@ -42,6 +43,12 @@ actual fun createHttpClient(): HttpClient {
                 }
             )
         }
+
+        install(HttpTimeout) {
+            requestTimeoutMillis = 15_000
+            connectTimeoutMillis = 10_000
+        }
+
         install(DefaultRequest) {
             contentType(ContentType.Application.Json)
             accept(ContentType.Application.Json)
@@ -50,14 +57,14 @@ actual fun createHttpClient(): HttpClient {
         install(HttpCookies) {
             storage = AcceptAllCookiesStorage()
         }
+
         expectSuccess = false
 
         install(Auth) {
             bearer {
                 loadTokens {
-                    val access = TokenManager.getAccessToken()
-                    val refresh = TokenManager.getRefreshToken()
-                    println("refresh: $refresh")
+                    val access = tokenManager.getAccessToken()
+                    val refresh = tokenManager.getRefreshToken()
 
                     if (access != null) {
                         BearerTokens(
@@ -68,7 +75,7 @@ actual fun createHttpClient(): HttpClient {
                 }
 
                 refreshTokens {
-                    val oldRefreshToken = TokenManager.getRefreshToken()
+                    val oldRefreshToken = tokenManager.getRefreshToken()
                         ?: return@refreshTokens null
 
                     try {
@@ -80,7 +87,7 @@ actual fun createHttpClient(): HttpClient {
 
                         println("✅ Token refresh successful")
 
-                        TokenManager.setTokens(
+                        tokenManager.setTokens(
                             response.accessToken,
                             response.refreshToken
                         )
@@ -98,12 +105,12 @@ actual fun createHttpClient(): HttpClient {
                         } catch (ex: Exception) {
                             // Ignoruj
                         }
-                        TokenManager.clearTokens()
+                        tokenManager.clearTokens()
                         null
                     } catch (e: Exception) {
                         println("❌ Token refresh failed: ${e.message}")
                         e.printStackTrace()
-                        TokenManager.clearTokens()
+                        tokenManager.clearTokens()
                         null
                     }
                 }
@@ -111,11 +118,9 @@ actual fun createHttpClient(): HttpClient {
                 sendWithoutRequest { request ->
                     // Zawsze wysyłaj token (oprócz endpointów auth)
                     !request.url.encodedPath.contains("/auth/login") &&
-                    !request.url.encodedPath.contains("/auth/register")
+                            !request.url.encodedPath.contains("/auth/register")
                 }
             }
         }
-
     }
 }
-
