@@ -6,12 +6,16 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
+import com.google.crypto.tink.aead.AeadConfig
+import com.kontenery.auth.TokenManager
 
 class MainActivity : ComponentActivity() {
+    lateinit var tokenManager: TokenManager
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
-        TokenManager.instance.initialize(this)
+        AeadConfig.register()
+        appContext = applicationContext
 
         setContent {
             App()

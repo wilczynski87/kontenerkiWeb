@@ -1,11 +1,13 @@
 package com.kontenery.controller
 
-import com.kontenery.TokenManager
+import com.kontenery.auth.TokenManager
 import com.kontenery.config.ApiConfig.baseUrl
 import com.kontenery.error.AuthError
+import com.kontenery.logDebug
 import com.kontenery.model.auth.AuthResponse
 import com.kontenery.model.auth.LoginRequest
 import com.kontenery.model.auth.UserInfo
+import com.kontenery.provideSecureTokenStorage
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.ClientRequestException
@@ -20,11 +22,12 @@ import io.ktor.http.contentType
 import kotlinx.io.IOException
 
 class ApiAuth(
+    private val tokenManager: TokenManager,
     private val httpClient: HttpClient
 ) {
-    private val tokenManager = TokenManager.instance
 
     suspend fun login(email: String, password: String): Result<UserInfo> {
+        logDebug("login", "inside ApiAuth.login($email, $password)")
         return try {
             // Tymczasowo wyłącz Auth plugin dla login request
             val response: AuthResponse = httpClient.post("$baseUrl/auth/login") {
@@ -33,6 +36,8 @@ class ApiAuth(
                 // Oznacz, żeby nie dodawać tokena
                 markAsNotRequiringAuth()
             }.body()
+            logDebug("login", "response: $response")
+
 
             // Tokeny zostaną zapisane przez Auth plugin po otrzymaniu odpowiedzi
             // Ale możemy też zapisać ręcznie dla pewności
@@ -40,6 +45,10 @@ class ApiAuth(
                 response.tokenResponse.accessToken,
                 response.tokenResponse.refreshToken
             )
+
+            val tokenManagerInfo = tokenManager.getAccessToken()
+            logDebug("login", "tokenManagerInfo: $tokenManagerInfo")
+
 
             Result.success(UserInfo(
                 id = response.loginResponse.userId,

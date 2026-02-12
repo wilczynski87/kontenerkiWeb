@@ -1,6 +1,6 @@
 package com.kontenery.controller
 
-import com.kontenery.TokenManager
+import com.kontenery.auth.TokenManager
 import com.kontenery.config.ApiConfig.baseUrl
 import com.kontenery.model.auth.RefreshTokenRequest
 import com.kontenery.model.auth.TokenResponse
@@ -28,8 +28,8 @@ import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 
 @OptIn(ExperimentalWasmJsInterop::class)
-actual fun createHttpClient(): HttpClient {
-    val tokenManager = TokenManager.instance
+fun webCreateHttpClient(tokenManager: TokenManager): HttpClient {
+    val tokenManager = tokenManager
 
     return HttpClient(Js) {
 
@@ -118,7 +118,7 @@ actual fun createHttpClient(): HttpClient {
                 sendWithoutRequest { request ->
                     // Zawsze wysyłaj token (oprócz endpointów auth)
                     !request.url.encodedPath.contains("/auth/login") &&
-                            !request.url.encodedPath.contains("/auth/register")
+                    !request.url.encodedPath.contains("/auth/register")
                 }
             }
         }

@@ -34,7 +34,6 @@ fun LoginScreen(viewModel: ParkingAppViewModel) {
             Button(onClick = {
                 // wywołanie login w coroutine
                 CoroutineScope(Dispatchers.Main).launch {
-                    println("LoginScreen: ${UserCredentials(email, password)}")
                     viewModel.login(email, password)
                 }
             }) {

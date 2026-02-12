@@ -1,6 +1,5 @@
 package com.kontenery.service
 
-import com.kontenery.TokenManager
 import com.kontenery.controller.ApiClientsService
 import com.kontenery.data.AuthState
 import com.kontenery.library.model.Contract
@@ -25,7 +24,6 @@ import com.kontenery.model.PaymentForFinanceTable
 import com.kontenery.model.PaymentsListForFinanceTable
 import com.kontenery.model.TableRowFinance
 import com.kontenery.model.auth.LoginResponse
-import com.kontenery.model.auth.UserCredentials
 import com.kontenery.model.auth.UserInfo
 import com.kontenery.model.enums.CurrentScreen
 import com.kontenery.model.enums.endOfCurrentYear
@@ -1240,6 +1238,7 @@ class ParkingAppViewModel(
 
     // AUTH
     suspend fun login(email: String, password: String) {
+        logDebug("login", "Login started")
         _state.update {
             it.copy(authState = AuthState(loading = true))
         }
@@ -1247,7 +1246,7 @@ class ParkingAppViewModel(
         runCatching {
             ApiClientsService.auth.login(email, password)
         }.onSuccess { user ->
-            logDebug("login:", user.toString())
+            logDebug("login", user.toString())
             val user: UserInfo = user.getOrNull() ?: throw NullPointerException("User is null")
 
             getClientsList(0, 100)

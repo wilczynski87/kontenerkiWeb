@@ -1,12 +1,14 @@
 package com.kontenery.controller
 
+import com.kontenery.auth.TokenManager
+import com.kontenery.provideSecureTokenStorage
 import io.ktor.client.HttpClient
-
-expect fun createHttpClient(): HttpClient
+import com.kontenery.createHttpClient
 
 object ApiClientsService {
+    private val tokenManager by lazy { TokenManager(provideSecureTokenStorage()) }
 
-    val httpClient by lazy { createHttpClient() }
+    val httpClient: HttpClient by lazy { createHttpClient(tokenManager) }
 
     val clients by lazy { ApiClients(httpClient) }
     val products by lazy { ApiProduct(httpClient) }
@@ -15,7 +17,7 @@ object ApiClientsService {
     val payments by lazy { ApiPayments(httpClient) }
     val bankAccounts by lazy { ApiBankAccount(httpClient) }
     val paymentsListForFinanceTable by lazy { ApiPaymentsListForFinanceTable(httpClient) }
-    val auth by lazy { ApiAuth(httpClient) }
+    val auth by lazy { ApiAuth(tokenManager, httpClient) }
     val csvPayments by lazy { ApiCsvPayments(httpClient) }
 
 }

@@ -1,6 +1,6 @@
 package com.kontenery.controller
 
-import com.kontenery.TokenManager
+import com.kontenery.auth.TokenManager
 import com.kontenery.config.ApiConfig.baseUrl
 import com.kontenery.logDebug
 import com.kontenery.model.auth.RefreshTokenRequest
@@ -21,9 +21,9 @@ import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import kotlinx.serialization.json.Json
 
-actual fun createHttpClient(): HttpClient {
+fun androidCreateHttpClient(tokenManager: TokenManager): HttpClient {
     return HttpClient(Android) {
-        val tokenManager = TokenManager.instance
+        val tokenManager = tokenManager
 
         install(ContentNegotiation) {
             json(
@@ -140,18 +140,3 @@ actual fun createHttpClient(): HttpClient {
         }
     }
 }
-
-//// Opcjonalnie: konfiguracja dla starszych wersji Androida
-//fun createHttpClientWithCustomEngine(): HttpClient {
-//    return HttpClient(Android.create {
-//        // Konfiguracja dla starszych urządzeń
-//        connectTimeout = 10000
-//        socketTimeout = 30000
-//        connectionSpecs = listOf(
-//            ConnectionSpec.CLEARTEXT,
-//            ConnectionSpec.MODERN_TLS
-//        )
-//    }) {
-//        // ... reszta konfiguracji jak wyżej
-//    }
-//}

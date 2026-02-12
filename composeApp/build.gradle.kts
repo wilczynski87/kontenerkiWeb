@@ -28,6 +28,11 @@ kotlin {
             implementation(libs.androidx.activity.compose)
             implementation(files("libs/library-1.0.0.jar"))
             implementation(libs.ktor.client.android)
+            implementation(libs.ktor.client.logging)
+            implementation(libs.tink.android)
+            implementation(libs.androidx.datastore)
+            implementation(libs.datastore.preferences)
+
         }
         commonMain.dependencies {
             implementation(compose.runtime)
