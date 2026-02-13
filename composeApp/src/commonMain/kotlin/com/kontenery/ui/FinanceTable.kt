@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -18,14 +19,18 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -69,17 +74,17 @@ fun TableCell(
             .width(width)
             .padding(4.dp)
             .clickable {
-            payment?.let { p ->
-                viewModel.showConfirmModal(
-                    dialogTitle = "Potwierdzenie",
-                    dialogText = "Czy chcesz zatwierdzić płatność ${p.amount} z dnia ${p.date}?",
-                    onConfirmation = {
-                        // co się dzieje po potwierdzeniu
-                        println("Potwierdzono płatność: ${p.amount}")
-                    }
-                )
-            }
-        },
+                payment?.let { p ->
+                    viewModel.showConfirmModal(
+                        dialogTitle = "Potwierdzenie",
+                        dialogText = "Czy chcesz zatwierdzić płatność ${p.amount} z dnia ${p.date}?",
+                        onConfirmation = {
+                            // co się dzieje po potwierdzeniu
+                            println("Potwierdzono płatność: ${p.amount}")
+                        }
+                    )
+                }
+            },
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
@@ -92,6 +97,39 @@ fun TableCell(
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.Bold
         )
+    }
+}
+
+@Composable
+fun TableCellButton(
+    width: Dp = 220.dp,
+    bold: Boolean = false,
+    align: Alignment = Alignment.Center,
+    onClick: () -> Unit = {},
+    content: @Composable () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .width(width)
+            .padding(4.dp)
+            .clip(MaterialTheme.shapes.small)
+            .border(
+                width = 1.dp,
+                color = MaterialTheme.colorScheme.outlineVariant,
+                shape = MaterialTheme.shapes.small
+            )
+            .clickable(onClick = onClick)
+            .fillMaxSize()
+            .padding(8.dp),
+        contentAlignment = align
+    ) {
+        ProvideTextStyle(
+            value = LocalTextStyle.current.copy(
+                fontWeight = if (bold) FontWeight.Bold else FontWeight.Normal
+            )
+        ) {
+            content()
+        }
     }
 }
 
@@ -113,7 +151,7 @@ fun TableHeader(months: List<MonthValue>) {
     }
 }
 
-// Wiersz tabeli
+// Wiersz tabeli z płatnościami klientów
 @Composable
 fun TableDataRow(
     row: TableRowFinance,
@@ -122,27 +160,41 @@ fun TableDataRow(
 ) {
     val alfaFinanceTableActive = if (row.isActive) 1f else 0.5f
     val colorFinanceTableActive = if (row.isActive) MaterialTheme.colorScheme.onPrimary else Color.LightGray
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .alpha(alfaFinanceTableActive)
-            .background(colorFinanceTableActive)
-    ) {
-        TableCell(row.name, width = 220.dp)
-
-        months.forEach { date ->
-            val payments = row.values[unifyMonth(date.month)]
-            Column (
-                modifier = Modifier
-            ) {
-                payments?.forEach { payment ->
-                    TableCell(payment = payment, viewModel = viewModel)
-                    HorizontalDivider(modifier = Modifier.fillMaxWidth(), thickness = 1.dp, color = MaterialTheme.colorScheme.onPrimary)
-                }
+    Column {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(IntrinsicSize.Min)
+                .alpha(alfaFinanceTableActive)
+                .background(colorFinanceTableActive)
+        ) {
+            TableCellButton(onClick = {
+                if (row.clientId == null) return@TableCellButton
+                viewModel.updateClient(row.clientId)
+                viewModel.fetchPaymentsForClient(row.clientId)
+                viewModel.fetchInvoicesForClient(row.clientId)
+                viewModel.toPaymentsMenu()
+            }) {
+                Text(row.name)
             }
-            VerticalDivider(modifier = Modifier.fillMaxHeight(), thickness = 1.dp, color = MaterialTheme.colorScheme.onPrimary)
+
+            months.forEachIndexed { index, date ->
+                val payments = row.values[unifyMonth(date.month)]
+                Column(
+                    modifier = Modifier
+                ) {
+                    payments?.forEach { payment ->
+                        TableCell(payment = payment, viewModel = viewModel)
+                    }
+                }
+                if(payments.isNullOrEmpty().not()) VerticalDivider(
+                    modifier = Modifier.fillMaxHeight(),
+                    thickness = 1.dp,
+                    color = MaterialTheme.colorScheme.outlineVariant
+                )
+            }
         }
+        HorizontalDivider(Modifier.fillMaxWidth(), 1.dp, Color.Blue)
     }
 }
 

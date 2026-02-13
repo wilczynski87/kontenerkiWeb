@@ -1236,6 +1236,7 @@ class ParkingAppViewModel(
                 .groupBy { getMonthFinanceFromString(it.date!!) }
 
             TableRowFinance(
+                clientId = it.client?.clientId,
                 name = it.client?.name ?: "brak nazwy!",
                 values = grouped,
                 isActive = it.client?.isActive ?: true
