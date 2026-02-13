@@ -5,6 +5,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import com.kontenery.service.ParkingAppViewModel
 import io.ktor.websocket.Frame
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
 
 @Composable
 fun AuthGate(
@@ -14,7 +16,6 @@ fun AuthGate(
 ) {
     val state by viewModel.state.collectAsState()
     val authState = state.authState
-
 
     when {
         authState.loading -> {

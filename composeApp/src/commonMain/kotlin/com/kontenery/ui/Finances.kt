@@ -103,19 +103,6 @@ fun Finances(
                 months = months,
                 rows = viewModel.rowsFinance()
             )
-//            LazyVerticalGrid(
-//                columns = GridCells.Fixed(3),
-//                modifier = Modifier.fillMaxSize(),
-//                contentPadding = PaddingValues(8.dp),
-//                horizontalArrangement = Arrangement.spacedBy(8.dp),
-//                verticalArrangement = Arrangement.spacedBy(8.dp)
-//            ) {
-//                items(
-//                    sortedClients,
-//                    key = { it.id }
-//                ) { client ->
-//                }
-//            }
         }
         WindowWidthSizeClass.Medium -> {
             Text("Finance - Medium")

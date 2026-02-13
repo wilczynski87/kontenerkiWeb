@@ -1,5 +1,6 @@
 package com.kontenery.service
 
+import com.kontenery.auth.TokenManager
 import com.kontenery.controller.ApiClientsService
 import com.kontenery.data.AuthState
 import com.kontenery.library.model.Contract
@@ -14,6 +15,7 @@ import com.kontenery.library.model.invoice.Subject
 import com.kontenery.library.model.invoice.Subject.Seller
 import com.kontenery.library.utils.InvoiceType
 import com.kontenery.logDebug
+import com.kontenery.logError
 import com.kontenery.model.Client
 import com.kontenery.model.ClientBankAccount
 import com.kontenery.model.ClientCompanyData
@@ -32,6 +34,7 @@ import com.kontenery.model.enums.startOfCurrentYear
 import com.kontenery.model.invoice.Position
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -52,6 +55,9 @@ class ParkingAppViewModel(
 
     private fun initializeUiState() {
         _state.value = ParkingAppState(clientNavRow = 1L)
+        viewModelScope.launch {
+            refreshLogin()
+        }
     }
     /*
         MODAL
@@ -1200,8 +1206,6 @@ class ParkingAppViewModel(
                     clientsWithPayments = ApiClientsService.paymentsListForFinanceTable.getPaymentsListForFinanceTable(page, size)
                 )
             }
-
-            println("clientsWithPayments: ${state.value.clientsWithPayments}")
         }
     }
 
@@ -1219,9 +1223,12 @@ class ParkingAppViewModel(
 
     fun rowsFinance(): List<TableRowFinance> {
         val clientsWithPayments: List<PaymentsListForFinanceTable> = state.value.clientsWithPayments
-        println("rowsFinance: $clientsWithPayments")
+        val sortedList = clientsWithPayments.sortedWith (
+            compareByDescending<PaymentsListForFinanceTable> { it.client?.isActive }
+                .thenBy { it.client?.clientId }
+        )
 
-        return clientsWithPayments.map { it ->
+        return sortedList.map { it ->
             val paymentsInMonth: List<PaymentForFinanceTable> = it.payments
 
             val grouped = paymentsInMonth
@@ -1230,7 +1237,8 @@ class ParkingAppViewModel(
 
             TableRowFinance(
                 name = it.client?.name ?: "brak nazwy!",
-                values = grouped
+                values = grouped,
+                isActive = it.client?.isActive ?: true
             )
         }
 
@@ -1239,6 +1247,7 @@ class ParkingAppViewModel(
     // AUTH
     suspend fun login(email: String, password: String) {
         logDebug("login", "Login started")
+
         _state.update {
             it.copy(authState = AuthState(loading = true))
         }
@@ -1258,6 +1267,34 @@ class ParkingAppViewModel(
         }.onFailure { e ->
             _state.update {
                 it.copy(authState = AuthState(isAuthenticated = false, error = "Błędne dane logowania"))
+            }
+        }
+    }
+
+    suspend fun refreshLogin() {
+        logDebug("login", "refresh started")
+        runCatching {
+            ApiClientsService.auth.verifyToken()
+        }.onSuccess { user ->
+            logDebug("login", "refreshLogin, onSuccess")
+            val clientList = ApiClientsService.clients.getClientList(0, 100)
+            _state.update {
+                it.copy(
+                    authState = AuthState(isAuthenticated = true, user = user.getOrNull(), loading = false),
+                    clients = clientList
+                )
+            }
+        }.onFailure {
+            logError("login", "refresh token failed")
+            _state.update {
+                it.copy(
+                    authState = AuthState(
+                        isAuthenticated = false,
+                        loading = false,
+                        error = "Tokeny nieaktualne",
+                        user = null
+                    )
+                )
             }
         }
     }

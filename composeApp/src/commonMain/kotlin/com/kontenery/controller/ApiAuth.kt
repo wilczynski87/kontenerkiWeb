@@ -6,8 +6,8 @@ import com.kontenery.error.AuthError
 import com.kontenery.logDebug
 import com.kontenery.model.auth.AuthResponse
 import com.kontenery.model.auth.LoginRequest
+import com.kontenery.model.auth.LoginResponse
 import com.kontenery.model.auth.UserInfo
-import com.kontenery.provideSecureTokenStorage
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.ClientRequestException
@@ -85,22 +85,31 @@ class ApiAuth(
         }
     }
 
-    suspend fun verifyToken(): Result<Boolean> {
+    suspend fun verifyToken(): Result<LoginResponse> {
         return try {
             // Proste zapytanie weryfikujące token
-            httpClient.get("$baseUrl/auth/verify") {
-                // Auth plugin automatycznie doda token
-            }
-            Result.success(true)
+            val response = httpClient.get("$baseUrl/auth/verify") {
+                contentType(ContentType.Application.Json)
+            }.body<AuthResponse>()
+
+            val loginResponse = response.loginResponse
+            tokenManager.setTokens(
+                response.tokenResponse.accessToken,
+                response.tokenResponse.refreshToken
+            )
+
+            Result.success(loginResponse)
         } catch (e: ClientRequestException) {
             if (e.response.status == HttpStatusCode.Unauthorized) {
                 tokenManager.clearTokens()
-                Result.success(false)
+                logDebug("login", "verifyToken, Unauthorized $e")
             } else {
-                Result.failure(AuthError.Server)
+                logDebug("login", "verifyToken, 403 $e")
             }
+            throw e
         } catch (e: Exception) {
-            Result.failure(AuthError.Unknown(e))
+            logDebug("login", "verifyToken, not Unauthorized $e")
+            throw e
         }
     }
 

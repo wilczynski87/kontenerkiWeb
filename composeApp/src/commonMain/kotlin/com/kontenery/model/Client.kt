@@ -80,4 +80,5 @@ data class ClientBankAccount(
 data class ClientOnListForFinance(
     val clientId: Long? = null,
     val name: String? = null,
+    val isActive: Boolean? = null,
 )

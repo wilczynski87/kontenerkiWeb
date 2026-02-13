@@ -25,6 +25,7 @@ import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -119,9 +120,14 @@ fun TableDataRow(
     months: List<MonthValue>,
     viewModel: ParkingAppViewModel,
 ) {
+    val alfaFinanceTableActive = if (row.isActive) 1f else 0.5f
+    val colorFinanceTableActive = if (row.isActive) MaterialTheme.colorScheme.onPrimary else Color.LightGray
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .alpha(alfaFinanceTableActive)
+            .background(colorFinanceTableActive)
     ) {
         TableCell(row.name, width = 220.dp)
 

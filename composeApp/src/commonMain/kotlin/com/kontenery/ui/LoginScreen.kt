@@ -18,6 +18,7 @@ import com.kontenery.model.auth.UserCredentials
 import com.kontenery.service.ParkingAppViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 
 @Composable

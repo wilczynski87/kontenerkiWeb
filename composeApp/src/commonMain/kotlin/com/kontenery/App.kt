@@ -11,6 +11,9 @@ import com.kontenery.service.ParkingAppViewModel
 import com.kontenery.ui.AuthGate
 import com.kontenery.ui.LoginScreen
 import com.kontenery.ui.rememberWindowWidthSizeClass
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 @Composable
 fun App() {

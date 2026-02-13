@@ -13,9 +13,14 @@ class ApiPaymentsListForFinanceTable(
     suspend fun getPaymentsListForFinanceTable(
         page: Long?,
         size: Long?
-    ): List<PaymentsListForFinanceTable> = httpClient.get("$baseUrl/list/clientsPayments") {
-        parameter("page", page)
-        parameter("size", size)
-    }.body()
+    ): List<PaymentsListForFinanceTable> {
+        val results: List<PaymentsListForFinanceTable> =  httpClient.get("$baseUrl/list/clientsPayments") {
+            parameter("page", page)
+            parameter("size", size)
+        }.body()
+//        println("getPaymentsListForFinanceTable:")
+//        results.forEach { println("${it.client?.name} - ${it.client?.isActive}") }
+        return results
+    }
 
 }
