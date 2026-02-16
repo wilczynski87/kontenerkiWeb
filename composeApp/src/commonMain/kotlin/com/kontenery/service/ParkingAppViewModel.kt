@@ -1,7 +1,8 @@
 package com.kontenery.service
 
-import com.kontenery.auth.TokenManager
 import com.kontenery.controller.ApiClientsService
+import com.kontenery.controller.ApiClientsService.clients
+import com.kontenery.controller.ApiClientsService.healthCheck
 import com.kontenery.data.AuthState
 import com.kontenery.library.model.Contract
 import com.kontenery.library.model.Deposit
@@ -34,7 +35,6 @@ import com.kontenery.model.enums.startOfCurrentYear
 import com.kontenery.model.invoice.Position
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -49,6 +49,11 @@ class ParkingAppViewModel(
     private val _state = MutableStateFlow(ParkingAppState())
     val state: StateFlow<ParkingAppState> = _state.asStateFlow()
 
+    private var currentPage = 0
+    private var isLoading = false
+    private var endReached = false
+    private val pageSize = 20
+
     init {
         initializeUiState()
     }
@@ -56,6 +61,7 @@ class ParkingAppViewModel(
     private fun initializeUiState() {
         _state.value = ParkingAppState(clientNavRow = 1L)
         viewModelScope.launch {
+            serverHealthCheck()
             refreshLogin()
         }
     }
@@ -97,6 +103,26 @@ class ParkingAppViewModel(
     }
 
     /*
+        Server Helathcheck
+     */
+    fun serverHealthCheck() {
+        viewModelScope.launch {
+            try {
+                val healthStatus: String = healthCheck.healthCheck()
+                logDebug("serverHealthCheck","serverHealthCheck: $healthStatus")
+                _state.update { currentState ->
+                    currentState.copy(serverHealthStatus = "server online")
+                }
+            } catch (e: Exception) {
+                logDebug("serverHealthCheck","serverHealthCheck: $e")
+                _state.update { currentState ->
+                    currentState.copy(serverHealthStatus = "brak połączenia z serverem")
+                }
+            }
+        }
+    }
+
+    /*
         BACK BUTTON
      */
 
@@ -129,6 +155,10 @@ class ParkingAppViewModel(
         }
     }
 
+    /*
+        ClientOnList
+     */
+
     fun toggleClientNavRow(clientId: Long) {
         if (clientId == state.value.clientNavRow) {
             _state.update { currentState ->
@@ -141,30 +171,71 @@ class ParkingAppViewModel(
         }
     }
 
+//    fun getClientsList(page: Int, size: Int) {
+//        val page: Int? = null
+//        val size: Int = 10
+//        viewModelScope.launch {
+//            try {
+//                val clientsCount: Long = ApiClientsService.clients.clientListSize()
+//                val pagesCount: Int = (clientsCount / size).toInt()
+//                _state.update { currentState ->
+//                    currentState.copy(clients = mutableListOf())
+//                }
+//                for(i in 0..pagesCount) {
+//                    val clients: List<ClientOnList> = ApiClientsService.clients.getClientList(i, size)
+////                    println("getClientsList", "dane: $clients")
+//                    _state.update { currentState ->
+//                        currentState.copy(
+//                            clients = (currentState.clients + clients).distinctBy { it.id }
+//                        )
+//                    }
+//                }
+//            } catch (e: Exception) {
+//                println("getClientsList nie udało się pobrać danych $e")
+//                _state.update { currentState ->
+//                    currentState.copy(clientListError = true)
+//                }
+//            }
+//        }
+//    }
+
     fun getClientsList(page: Int, size: Int) {
-        val page: Int? = null
-        val size: Int = 10
+        if (isLoading || endReached) return
+
         viewModelScope.launch {
+            isLoading = true
+
             try {
-                val clientsCount: Long = ApiClientsService.clients.clientListSize()
-                val pagesCount: Int = (clientsCount / size).toInt()
-                _state.update { currentState ->
-                    currentState.copy(clients = mutableListOf())
-                }
-                for(i in 0..pagesCount) {
-                    val clients: List<ClientOnList> = ApiClientsService.clients.getClientList(i, size)
-//                    println("getClientsList", "dane: $clients")
-                    _state.update { currentState ->
-                        currentState.copy(
-                            clients = (currentState.clients + clients).distinctBy { it.id }
-                        )
+                while(isLoading && !endReached) {
+                    logDebug("getClientsList", "getClientsList: $currentPage, isLoading: $isLoading, endReached: $endReached")
+
+                    val newClients = ApiClientsService.clients.getClientList(currentPage, pageSize)
+
+                    if (newClients.isEmpty()) {
+                        endReached = true
+                    } else {
+                        _state.update { currentState ->
+                            val merged = (currentState.clients + newClients)
+                                .associateBy { it.id }
+                                .values
+                                .toList()
+
+                            currentState.copy( clients = merged )
+                        }
+                        currentPage++
                     }
                 }
+
+
             } catch (e: Exception) {
-                println("getClientsList nie udało się pobrać danych $e")
+                println("getClientsList error: $e")
+
                 _state.update { currentState ->
                     currentState.copy(clientListError = true)
                 }
+
+            } finally {
+                isLoading = false
             }
         }
     }
@@ -226,18 +297,18 @@ class ParkingAppViewModel(
     ) {
         viewModelScope.launch {
             try {
-//                println("fetchForClientPayments:", "clientId: $clientId, from: $from, to: $to")
+//                logDebug("fetchPaymentsForClient:", "clientId: $clientId, from: $from, to: $to")
                 val payments = ApiClientsService.payments.getPaymentsForClient(
                     clientId,
                     from.toString(),
                     to.toString()
                 )
-                println("fetchForClientPayments dane: $payments")
+//                logDebug("fetchForClientPayments", "dane: $payments")
                 _state.update { currentState ->
                     currentState.copy(payments = payments)
                 }
             } catch (e: Exception) {
-                println("fetchForClientPayments Can not tech invoices: $e")
+                logError("fetchPaymentsForClient","Can not fetch payments: $e")
             }
         }
     }
@@ -1198,6 +1269,17 @@ class ParkingAppViewModel(
 
     // FINANCE
     // FINANCE LIST
+//    fun fetchListClientsFinance(page: Long = 0, size: Long = 100) {
+//        // TODO fetch list + update state
+//        viewModelScope.launch {
+//            _state.update { currentState ->
+//                currentState.copy(
+//                    clientsWithPayments = ApiClientsService.paymentsListForFinanceTable.getPaymentsListForFinanceTable(page, size)
+//                )
+//            }
+//        }
+//    }
+
     fun fetchListClientsFinance(page: Long = 0, size: Long = 100) {
         // TODO fetch list + update state
         viewModelScope.launch {
@@ -1278,11 +1360,10 @@ class ParkingAppViewModel(
             ApiClientsService.auth.verifyToken()
         }.onSuccess { user ->
             logDebug("login", "refreshLogin, onSuccess")
-            val clientList = ApiClientsService.clients.getClientList(0, 100)
+            getClientsList(0, 100)
             _state.update {
                 it.copy(
                     authState = AuthState(isAuthenticated = true, user = user.getOrNull(), loading = false),
-                    clients = clientList
                 )
             }
         }.onFailure {

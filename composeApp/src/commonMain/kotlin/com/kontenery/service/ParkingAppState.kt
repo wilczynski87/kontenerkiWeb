@@ -43,6 +43,7 @@ data class ParkingAppState(
     val payment: PaymentDto? = null,
     val enabledChangeClient: Boolean? = true,
     val forDate: LocalDate? = LocalDate.now(),
+    val serverHealthStatus: String? = null,
 
     val confirmModal: ModalData? = null,
 

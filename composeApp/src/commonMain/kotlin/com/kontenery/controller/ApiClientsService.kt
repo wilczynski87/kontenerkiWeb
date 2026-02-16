@@ -20,4 +20,6 @@ object ApiClientsService {
     val auth by lazy { ApiAuth(tokenManager, httpClient) }
     val csvPayments by lazy { ApiCsvPayments(httpClient) }
 
+    val healthCheck by lazy { ApiHealthCheck(httpClient) }
+
 }
