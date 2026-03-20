@@ -1,7 +1,6 @@
 package com.kontenery.service
 
 import com.kontenery.controller.ApiClientsService
-import com.kontenery.controller.ApiClientsService.clients
 import com.kontenery.controller.ApiClientsService.healthCheck
 import com.kontenery.data.AuthState
 import com.kontenery.library.model.Contract
@@ -33,6 +32,11 @@ import com.kontenery.model.enums.endOfCurrentYear
 import com.kontenery.model.enums.now
 import com.kontenery.model.enums.startOfCurrentYear
 import com.kontenery.model.invoice.Position
+import com.kontenery.util.endOfYear
+import com.kontenery.util.getMonthFinanceFromString
+import com.kontenery.util.startOfYear
+import com.kontenery.util.to2Decimals
+import com.kontenery.util.toDoublePl
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -316,14 +320,14 @@ class ParkingAppViewModel(
     fun fetchInvoicesForClient(clientId: Long, from: LocalDate? = LocalDate.startOfCurrentYear(), to: LocalDate? = LocalDate.endOfCurrentYear()) {
         viewModelScope.launch {
             try {
-                println("fetchForClientInvoices from: $from, to: $to, clientId: $clientId")
+//                println("fetchForClientInvoices from: $from, to: $to, clientId: $clientId")
                 val invoices: List<Invoice> =
                     ApiClientsService.invoices.fetchInvoicesForClient(
                         clientId,
                         from.toString(),
                         to.toString(),
                     )
-                println("fetchForClientInvoices: dane: $invoices")
+//                println("fetchForClientInvoices: dane: $invoices")
                 _state.update { currentState ->
                     currentState.copy(
                         invoices = invoices
@@ -1280,13 +1284,55 @@ class ParkingAppViewModel(
 //        }
 //    }
 
-    fun fetchListClientsFinance(page: Long = 0, size: Long = 100) {
-        // TODO fetch list + update state
+    fun fetchListClientsFinance(page: Long = 0, size: Long = 20, fromDate: LocalDate? = null, toDate: LocalDate? = null) {
+        var isLoading = false
+        var endReached = false
+        var currentPage = page
+//        logDebug("Finance", "page: $page, size: $size, fromDate: $fromDate, toDate: $toDate, isLoading: $isLoading, endReached: $endReached")
+
+        if (isLoading || endReached) return
+
         viewModelScope.launch {
-            _state.update { currentState ->
-                currentState.copy(
-                    clientsWithPayments = ApiClientsService.paymentsListForFinanceTable.getPaymentsListForFinanceTable(page, size)
-                )
+            isLoading = true
+
+            try {
+                while(isLoading && !endReached) {
+                    logDebug("Finance", "fetchListClientsFinance: $currentPage, isLoading: $isLoading, endReached: $endReached")
+
+                    val newClientsWithPayments = ApiClientsService.paymentsListForFinanceTable.getPaymentsListForFinanceTable(currentPage, size, fromDate, toDate)
+
+                    if (newClientsWithPayments.isEmpty()) {
+                        endReached = true
+                    } else {
+                        _state.update { currentState ->
+                            val merged = (currentState.clientsWithPayments + newClientsWithPayments)
+                                .associateBy { it.client?.clientId }
+                                .values
+                                .toList()
+
+                            currentState.copy(
+                                clientsWithPayments = merged,
+                                financeTable = rowsFinance(merged)
+                            )
+                        }
+                        currentPage++
+                    }
+                }
+            } catch (e: Exception) {
+                println("getClientsList error: $e")
+
+                _state.update { currentState ->
+                    currentState.copy(clientListError = true)
+                }
+
+            } finally {
+                _state.update { currentState ->
+                    currentState.copy(
+                        financeTable = rowsFinance()
+                    )
+                }
+                endReached = false
+                isLoading = false
             }
         }
     }
@@ -1303,8 +1349,8 @@ class ParkingAppViewModel(
         }
     }
 
-    fun rowsFinance(): List<TableRowFinance> {
-        val clientsWithPayments: List<PaymentsListForFinanceTable> = state.value.clientsWithPayments
+    fun rowsFinance(clientsWithPayments: List<PaymentsListForFinanceTable>? = null): List<TableRowFinance> {
+        val clientsWithPayments: List<PaymentsListForFinanceTable> = clientsWithPayments ?: state.value.clientsWithPayments
         val sortedList = clientsWithPayments.sortedWith (
             compareByDescending<PaymentsListForFinanceTable> { it.client?.isActive }
                 .thenBy { it.client?.clientId }
@@ -1321,10 +1367,40 @@ class ParkingAppViewModel(
                 clientId = it.client?.clientId,
                 name = it.client?.name ?: "brak nazwy!",
                 values = grouped,
-                isActive = it.client?.isActive ?: true
+                isActive = it.client?.isActive ?: true,
+                prevYearsBalance = it.lastYearsBalance,
+                clientOverdue = it.clientOverdue,
             )
         }
 
+    }
+
+    fun onFinanceYearChange(year: Int) {
+        viewModelScope.launch {
+            fetchListClientsFinance(0, 100, startOfYear(year), endOfYear(year))
+            _state.update { currentState ->
+                currentState.copy(financeYear = year)
+            }
+        }
+    }
+    fun changeFinanceYear(year: Int) {
+        _state.update { currentState ->
+            currentState.copy(financeYear = year)
+        }
+    }
+    fun changeFinanceYearPaymentsMenu(year: Int) {
+        val from = LocalDate.parse("${year}-01-01")
+        val to = if(year == LocalDate.now().year) LocalDate.now()
+            else LocalDate.parse("${year}-12-31")
+        val clientId = state.value.client?.id ?: return
+
+        viewModelScope.launch {
+            fetchInvoicesForClient(clientId, from, to)
+            fetchPaymentsForClient(clientId, from, to)
+        }
+        _state.update { currentState ->
+            currentState.copy(financeYear = year)
+        }
     }
 
     // AUTH

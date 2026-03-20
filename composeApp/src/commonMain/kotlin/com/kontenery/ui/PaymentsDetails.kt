@@ -96,7 +96,11 @@ fun HeaderPayments(date: LocalDate, columnWidths: MutableList<Int>) {
 }
 
 @Composable
-fun BodyPayments(payments: List<Payment>, viewModel: ParkingAppViewModel, columnWidths: MutableList<Int>) {
+fun BodyPayments(
+    payments: List<Payment>,
+    viewModel: ParkingAppViewModel,
+    columnWidths: MutableList<Int>
+) {
     Column {
         payments.forEach { payment ->
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -127,6 +131,9 @@ fun BodyPayments(payments: List<Payment>, viewModel: ParkingAppViewModel, column
                     }
                 }
             }
+        }
+        Row {
+
         }
     }
 }

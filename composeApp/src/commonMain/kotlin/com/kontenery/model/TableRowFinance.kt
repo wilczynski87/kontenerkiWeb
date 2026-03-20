@@ -7,5 +7,7 @@ data class TableRowFinance(
     val clientId: Long?,
     val name: String,
     val values: Map<String, List<PaymentForFinanceTable?>>, // month -> amount
-    val isActive: Boolean
+    val isActive: Boolean,
+    val prevYearsBalance: Double?,
+    val clientOverdue: Double?,
 )

@@ -37,8 +37,8 @@ import com.kontenery.model.Client
 import com.kontenery.model.ClientOnList
 import com.kontenery.model.enums.now
 import com.kontenery.service.ParkingAppViewModel
-import com.kontenery.service.isDigitsOnly
-import com.kontenery.service.toDoublePl
+import com.kontenery.util.isDigitsOnly
+import com.kontenery.util.toDoublePl
 
 @Composable
 fun PaymentForm(

@@ -13,6 +13,8 @@ import com.kontenery.model.ClientBankAccount
 import com.kontenery.model.ClientOnList
 import com.kontenery.model.ModalData
 import com.kontenery.model.PaymentsListForFinanceTable
+import com.kontenery.model.PrevYearBalance
+import com.kontenery.model.TableRowFinance
 import com.kontenery.model.auth.UserCredentials
 import com.kontenery.model.enums.CurrentScreen
 import com.kontenery.model.enums.now
@@ -44,6 +46,8 @@ data class ParkingAppState(
     val enabledChangeClient: Boolean? = true,
     val forDate: LocalDate? = LocalDate.now(),
     val serverHealthStatus: String? = null,
+    val financeYear: Int? = LocalDate.now().year,
+    val prevYearsBalance: PrevYearBalance? = null,
 
     val confirmModal: ModalData? = null,
 
@@ -55,5 +59,6 @@ data class ParkingAppState(
     val responseErrors: List<ErrorMessage> = listOf(),
     val submeters: List<Submeter> = listOf(),
     val clientsWithPayments: List<PaymentsListForFinanceTable> = listOf(),
+    val financeTable: List<TableRowFinance> = listOf(),
 
     )

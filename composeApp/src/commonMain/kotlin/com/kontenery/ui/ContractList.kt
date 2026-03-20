@@ -29,7 +29,7 @@ import com.kontenery.library.model.Contract
 import com.kontenery.model.Client
 import com.kontenery.model.enums.now
 import com.kontenery.service.ParkingAppViewModel
-import com.kontenery.service.to2Decimals
+import com.kontenery.util.to2Decimals
 import kotlinx.datetime.LocalDate
 
 @Composable

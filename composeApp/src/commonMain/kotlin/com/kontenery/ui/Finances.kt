@@ -29,7 +29,9 @@ import com.kontenery.model.PaymentForFinanceTable
 import com.kontenery.model.TableRowFinance
 import com.kontenery.model.enums.ClientFilter
 import com.kontenery.model.enums.WindowWidthSizeClass
+import com.kontenery.model.enums.now
 import com.kontenery.service.ParkingAppViewModel
+import kotlinx.datetime.LocalDate
 
 @Composable
 fun Finances(
@@ -39,6 +41,8 @@ fun Finances(
 ) {
     val state by viewModel.state.collectAsState()
     val clients: List<ClientOnList> = state.clients
+    val financeYear: Int = state.financeYear ?: LocalDate.now().year
+    val financeTable: List<TableRowFinance> = state.financeTable
 
     var selectedFilter by remember { mutableStateOf(ClientFilter.ALL) }
     var query by remember { mutableStateOf("") }
@@ -92,7 +96,7 @@ fun Finances(
             Text("Finance - Expanded")
             val months: List<MonthValue> = Month.entries.map {
                 MonthValue(
-                    it.number.toString() + "-" + "2026",
+                    it.number.toString() + "-" + financeYear,
                     it.polishName
                 )
             }
@@ -101,7 +105,7 @@ fun Finances(
                 viewModel,
                 modifier = modifier,
                 months = months,
-                rows = viewModel.rowsFinance()
+                rows = financeTable
             )
         }
         WindowWidthSizeClass.Medium -> {

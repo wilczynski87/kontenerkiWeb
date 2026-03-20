@@ -4,7 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalDensity
 import com.kontenery.model.enums.WindowWidthSizeClass
-import com.kontenery.service.calculateWidthSizeClass
+import com.kontenery.util.calculateWidthSizeClass
 
 @Composable
 fun rememberWindowWidthSizeClass(): WindowWidthSizeClass {

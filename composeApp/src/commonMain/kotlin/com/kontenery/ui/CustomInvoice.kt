@@ -38,8 +38,8 @@ import com.kontenery.model.invoice.Invoice
 import com.kontenery.model.enums.now
 import com.kontenery.model.invoice.Position
 import com.kontenery.service.ParkingAppViewModel
-import com.kontenery.service.isDigitsOnly
-import com.kontenery.service.to2Decimals
+import com.kontenery.util.isDigitsOnly
+import com.kontenery.util.to2Decimals
 import kotlinx.datetime.LocalDate
 
 @Composable

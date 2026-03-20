@@ -78,4 +78,6 @@ data class PaymentForFinanceTable(
 data class PaymentsListForFinanceTable(
     val client: ClientOnListForFinance? = null,
     val payments: List<PaymentForFinanceTable> = listOf(),
+    val lastYearsBalance: Double? = null,
+    val clientOverdue: Double? = null,
 )

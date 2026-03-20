@@ -1,4 +1,4 @@
-package com.kontenery.service
+package com.kontenery.util
 
 import com.kontenery.model.enums.WindowWidthSizeClass
 import kotlinx.datetime.LocalDate
@@ -73,3 +73,12 @@ fun unifyMonth(input: String): String {
 
     return "$monthStr.$yearStr"
 }
+
+fun LocalDate.startOfYear(): LocalDate =
+    LocalDate(this.year, 1, 1)
+fun LocalDate.endOfYear(): LocalDate =
+    LocalDate(this.year, 12, 31)
+fun startOfYear(date: Int): LocalDate =
+    LocalDate(date, 1, 1)
+fun endOfYear(date: Int): LocalDate =
+    LocalDate(date, 12, 31)

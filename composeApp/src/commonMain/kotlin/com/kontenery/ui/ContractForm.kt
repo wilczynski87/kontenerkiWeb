@@ -35,8 +35,8 @@ import com.kontenery.model.Product
 import com.kontenery.model.Client
 import com.kontenery.model.ClientOnList
 import com.kontenery.service.ParkingAppViewModel
-import com.kontenery.service.to2Decimals
-import com.kontenery.service.toDoublePl
+import com.kontenery.util.to2Decimals
+import com.kontenery.util.toDoublePl
 import kotlinx.datetime.LocalDate
 
 @Composable

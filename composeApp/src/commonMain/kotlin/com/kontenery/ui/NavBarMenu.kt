@@ -23,7 +23,9 @@ import com.kontenery.library.utils.InvoiceType
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import com.kontenery.model.ModalData
+import com.kontenery.model.enums.now
 import com.kontenery.service.ParkingAppViewModel
+import kotlinx.datetime.LocalDate
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -101,7 +103,7 @@ fun Drawer(
                     selected = false,
                     onClick = {
                         toggleDrawer(scope, drawerState)
-                        viewModel.fetchListClientsFinance()
+                        viewModel.fetchListClientsFinance(toDate = LocalDate.now())
                         viewModel.toFinanceList()
                     }
                 )
