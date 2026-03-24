@@ -23,6 +23,15 @@ services:
 #        max-size: "10m"
 #        max-file: "3"
 
+  api:
+    build:
+      context: ../KONTENERKIAPI
+      dockerfile: Dockerfile
+    container_name: kontenerkiapi
+    restart: unless-stopped
+    networks:
+      - web-network
+
 networks:
   web-network:
     driver: bridge
