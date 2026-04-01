@@ -31,7 +31,7 @@ data class Client(
 @Serializable
 data class ClientPersonalData(
     val id: Long? = null,
-    var firstName: String? = null,
+    val firstName: String? = null,
     var lastName: String? = null,
     var pesel: String? = null,
     var passport: String? = null,

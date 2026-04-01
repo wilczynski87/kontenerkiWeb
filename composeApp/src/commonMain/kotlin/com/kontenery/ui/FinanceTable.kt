@@ -107,9 +107,9 @@ fun TableCell(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         if(payment?.amount == 0.00) {
-            Text(Month.fromString(payment.date ?: "")?.polishName ?: "brak daty" )
+//            Text(Month.fromString(payment.date ?: "")?.polishName ?: "brak daty" )
             Spacer(modifier = Modifier.height(1.dp))
-            Text("BRAK")
+//            Text("BRAK")
         } else {
             Text(
                 text = payment?.date ?: "",
