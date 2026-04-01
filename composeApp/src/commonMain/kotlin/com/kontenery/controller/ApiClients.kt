@@ -12,6 +12,8 @@ import io.ktor.client.request.post
 import io.ktor.client.request.put
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
+import io.ktor.http.ContentType
+import io.ktor.http.contentType
 
 class ApiClients(
     private val httpClient: HttpClient
@@ -38,6 +40,7 @@ class ApiClients(
 
     suspend fun updateClient(id: Long, clientData: Client): Client =
         httpClient.put("$baseUrl/client/$id") {
+            contentType(ContentType.Application.Json)
             setBody(clientData)
         }.body()
 

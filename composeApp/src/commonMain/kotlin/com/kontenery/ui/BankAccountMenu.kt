@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.kontenery.model.Client
 import com.kontenery.model.ClientBankAccount
+import com.kontenery.model.ClientEvent
 import com.kontenery.service.ParkingAppViewModel
 
 @Composable
@@ -139,7 +140,7 @@ fun AccountForm(
                 onClick = {
                     val iban = currentBankAccount?.bankAccount!!
                     viewModel.addBankAccount(iban, client)
-                    if(client?.id != null) viewModel.updateClient(client.id)
+//                    if(client?.id != null) viewModel.fetchClient(client.id)
                     viewModel.newEmptyBankAccount()
                 }
             ) { Text("Dodaj") }

@@ -310,7 +310,7 @@ fun ClientNavRow(clientId: Long, viewModel: ParkingAppViewModel, modifier: Modif
         // faktury i wplaty
         TextButton(
             onClick = {
-                viewModel.updateClient(clientId)
+                viewModel.fetchClient(clientId)
                 viewModel.fetchPaymentsForClient(clientId)
                 viewModel.fetchInvoicesForClient(clientId)
                 viewModel.toPaymentsMenu()
@@ -330,7 +330,7 @@ fun ClientNavRow(clientId: Long, viewModel: ParkingAppViewModel, modifier: Modif
 
         // Umowy z klientem
         TextButton(onClick = {
-            viewModel.updateClient(clientId)
+            viewModel.fetchClient(clientId)
             viewModel.fetchContractsForClient(clientId)
             viewModel.toContractList()
         }

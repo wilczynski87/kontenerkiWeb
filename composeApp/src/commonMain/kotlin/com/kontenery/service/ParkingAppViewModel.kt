@@ -19,6 +19,7 @@ import com.kontenery.logError
 import com.kontenery.model.Client
 import com.kontenery.model.ClientBankAccount
 import com.kontenery.model.ClientCompanyData
+import com.kontenery.model.ClientEvent
 import com.kontenery.model.ClientOnList
 import com.kontenery.model.ClientPersonalData
 import com.kontenery.model.ModalData
@@ -273,23 +274,44 @@ class ParkingAppViewModel(
         }
     }
 
-    fun updateClient(client: Client) {
-        _state.update { currentState ->
-            currentState.copy(client = client)
+//    fun updateClient(client: Client) {
+//        _state.update { currentState ->
+//            currentState.copy(client = client)
+//        }
+//    }
+    fun updateClient(update: (Client) -> Client) {
+        _state.value.client?.let { client ->
+            _state.update { currentState ->
+                currentState.copy(client = update(client))
+            }
         }
     }
 
-    fun updateClient(clientId: Long?) {
+//    fun updateClient(clientId: Long?) {
+//        viewModelScope.launch {
+//            try {
+//                val client: Client = ApiClientsService.clients.getClientData(clientId!!)
+//
+//                // fetch client data by Id
+//                _state.update { currentState ->
+//                    currentState.copy(client = client)
+//                }
+//            } catch (e: Exception) {
+//                println("updateClientError $e")
+//            }
+//        }
+//    }
+    fun fetchClient(clientId: Long?) {
+        if (clientId == null) return
+
         viewModelScope.launch {
             try {
-                val client: Client = ApiClientsService.clients.getClientData(clientId!!)
-
-                // fetch client data by Id
+                val client: Client = ApiClientsService.clients.getClientData(clientId)
                 _state.update { currentState ->
                     currentState.copy(client = client)
                 }
             } catch (e: Exception) {
-                println("updateClientError $e")
+                println("fetchClientError: $e")
             }
         }
     }
@@ -405,15 +427,15 @@ class ParkingAppViewModel(
                 val stateClient: Client? = state.value.client
 
                 if (stateClient != null && stateClient.id != null) {
-                    val client: Client = ApiClientsService.clients.updateClient(
+                    val updatedClient: Client = ApiClientsService.clients.updateClient(
                         stateClient.id,
-                        state.value.client!!
+                        stateClient
                     )
 
-                    println("putClient zaktualizowano klienta: $client")
+                    println("putClient zaktualizowano klienta: $updatedClient")
 
                     _state.update { currentState ->
-                        currentState.copy(client = client)
+                        currentState.copy(client = updatedClient)
                     }
                 } else println("putClient nie udało się zaktualizować klienta: $stateClient")
 
@@ -1004,7 +1026,7 @@ class ParkingAppViewModel(
                     ) {
                         closeConfirmationModal()
 
-                        updateClient(clientId)
+                        fetchClient(clientId)
                         fetchPaymentsForClient(clientId)
                         fetchInvoicesForClient(clientId)
                         toPaymentsMenu()
@@ -1455,6 +1477,109 @@ class ParkingAppViewModel(
                 )
             }
         }
+    }
+
+    fun onClientEvent(event: ClientEvent) {
+        when (event) {
+            is ClientEvent.Personal -> handlePersonal(event)
+            is ClientEvent.Company -> handleCompany(event)
+            is ClientEvent.AddressEvent -> handleAddress(event)
+            is ClientEvent.Bank -> handleBank(event)
+
+            is ClientEvent.InvoiceTitleChanged -> updateClient {
+                it.copy(invoiceTitle = event.value)
+            }
+
+            ClientEvent.ToggleActive -> updateClient {
+                it.copy(isActive = !(it.isActive ?: false))
+            }
+
+            ClientEvent.Save -> save()
+            ClientEvent.Update -> update()
+        }
+    }
+
+    private fun handlePersonal(event: ClientEvent.Personal) {
+        updateClient { client ->
+            val p = client.clientPrivate ?: ClientPersonalData()
+
+            client.copy(
+                clientPrivate = when (event) {
+                    is ClientEvent.Personal.FirstNameChanged -> p.copy(firstName = event.value)
+                    is ClientEvent.Personal.LastNameChanged -> p.copy(lastName = event.value)
+                    is ClientEvent.Personal.PeselChanged -> p.copy(pesel = event.value)
+                    is ClientEvent.Personal.PassportChanged -> p.copy(passport = event.value)
+                    is ClientEvent.Personal.PhoneChanged -> p.copy(phone = event.value)
+                    is ClientEvent.Personal.EmailChanged -> p.copy(email = event.value)
+                    is ClientEvent.Personal.SalutationChanged -> p.copy(salutation = event.value)
+                }
+            )
+        }
+    }
+
+    private fun handleCompany(event: ClientEvent.Company) {
+        updateClient { client ->
+            val c = client.clientCompany ?: ClientCompanyData()
+
+            client.copy(
+                clientCompany = when (event) {
+                    is ClientEvent.Company.NameChanged -> c.copy(name = event.value)
+                    is ClientEvent.Company.NipChanged -> c.copy(nip = event.value)
+                    is ClientEvent.Company.KrsChanged -> c.copy(krs = event.value)
+                    is ClientEvent.Company.PhoneChanged -> c.copy(phone = event.value)
+                    is ClientEvent.Company.EmailChanged -> c.copy(email = event.value)
+
+                    ClientEvent.Company.ToggleInvoice ->
+                        c.copy(needInvoice = !(c.needInvoice ?: false))
+                }
+            )
+        }
+    }
+
+    private fun handleAddress(event: ClientEvent.AddressEvent) {
+        updateClient { client ->
+            when (event) {
+
+                is ClientEvent.AddressEvent.PersonalAddressChanged -> {
+                    val p = client.clientPrivate ?: ClientPersonalData()
+                    client.copy(clientPrivate = p.copy(address = event.address))
+                }
+
+                is ClientEvent.AddressEvent.CompanyAddressChanged -> {
+                    val c = client.clientCompany ?: ClientCompanyData()
+                    client.copy(clientCompany = c.copy(address = event.address))
+                }
+            }
+        }
+    }
+
+    private fun handleBank(event: ClientEvent.Bank) {
+        updateClient { client ->
+            val list = client.bankAccounts.orEmpty().toMutableList()
+
+            when (event) {
+                is ClientEvent.Bank.Add -> list.add(event.account)
+                is ClientEvent.Bank.Remove -> list.remove(event.account)
+                is ClientEvent.Bank.Update -> {
+                    if (event.index in list.indices) {
+                        list[event.index] = event.value
+                    }
+                }
+            }
+
+            client.copy(bankAccounts = list)
+        }
+    }
+
+    private fun save() {
+        val client = state.value.client ?: return
+        saveClient(client)
+        toClientList()
+    }
+
+    private fun update() {
+        putClient()
+        toClientList()
     }
 
 }

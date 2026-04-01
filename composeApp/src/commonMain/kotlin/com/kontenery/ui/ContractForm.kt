@@ -391,7 +391,7 @@ fun AddContract(
         ) {
             TextButton(
                 onClick = {
-                    if(client != null) viewModel.updateClient(client)
+                    if(client != null) viewModel.updateClient { client }
                     if(product != null) viewModel.updateProduct(product)
                     viewModel.updateContract(Contract(client = client, product = product))
                     viewModel.getProductsList()

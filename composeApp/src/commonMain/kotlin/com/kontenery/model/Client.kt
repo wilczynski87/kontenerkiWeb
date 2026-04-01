@@ -32,13 +32,13 @@ data class Client(
 data class ClientPersonalData(
     val id: Long? = null,
     val firstName: String? = null,
-    var lastName: String? = null,
-    var pesel: String? = null,
-    var passport: String? = null,
-    var address: Address? = null,
-    var phone: String? = null,
-    var email: String? = null,
-    var salutation: String = "Drogi Kliencie"
+    val lastName: String? = null,
+    val pesel: String? = null,
+    val passport: String? = null,
+    val address: Address? = null,
+    val phone: String? = null,
+    val email: String? = null,
+    val salutation: String? = "Drogi Kliencie",
 )
 
 @Serializable

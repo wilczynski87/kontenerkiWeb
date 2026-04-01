@@ -265,7 +265,7 @@ fun TableDataRow(
         ) {
             TableCellButton(onClick = {
                     if (row.clientId == null) return@TableCellButton
-                    viewModel.updateClient(row.clientId)
+                    viewModel.fetchClient(row.clientId)
                     viewModel.fetchPaymentsForClient(row.clientId)
                     viewModel.fetchInvoicesForClient(row.clientId)
                     viewModel.toPaymentsMenu()
