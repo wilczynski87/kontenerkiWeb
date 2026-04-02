@@ -82,7 +82,17 @@ fun ContractForm(
                 enabled = clientEditable,
             )
         }
-        OutlinedCard(modifier = Modifier.fillMaxWidth().padding(4.dp)) {
+        OutlinedCard(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(4.dp),
+            colors = CardDefaults.outlinedCardColors(
+                containerColor = if (productEditable)
+                    MaterialTheme.colorScheme.surfaceVariant
+                else
+                    MaterialTheme.colorScheme.surface
+            )
+        ) {
             Text("Produkt: ",
                 modifier = Modifier.padding(4.dp))
             ProductDropdown(
@@ -124,7 +134,7 @@ fun ContractForm(
             viewModel,
             modifier
         )
-        println("need invoice ${contract.client?.needInvoice()}")
+//        println("need invoice ${contract.client?.needInvoice()}")
         BillType(
             needInvoice = contract.client?.needInvoice(),
             toggleInvoice = {
@@ -159,9 +169,9 @@ fun ContractForm(
                 }
             } else {
                 Button(onClick = {
-                    println("saveContractToDB $contract")
+                    println("saveContractToDB in contractForm: $contract")
                     viewModel.saveContractToDB(contract)
-                    viewModel.toClientList()
+//                    viewModel.toClientList()
                 }) {
                     Text("Podpisz")
                 }

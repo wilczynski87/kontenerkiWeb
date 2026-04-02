@@ -38,13 +38,19 @@ fun DepositOptionSelector(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { viewModel.depositChange(deposit.copy(type)) }
+                    .clickable {
+                        viewModel.depositChange(deposit.copy(type = type))
+                        println("deosit type: ${deposit}")
+                    }
                     .padding(vertical = 4.dp)
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     RadioButton(
                         selected = deposit.type == type,
-                        onClick = { viewModel.depositChange(deposit.copy(type = type)) }
+                        onClick = {
+                            viewModel.depositChange(deposit.copy(type = type))
+                            println("deosit value: ${deposit}")
+                        }
                     )
                     Text(
                         text = type.displayName,

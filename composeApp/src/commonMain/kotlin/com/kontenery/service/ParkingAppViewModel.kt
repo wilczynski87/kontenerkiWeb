@@ -82,13 +82,29 @@ class ParkingAppViewModel(
     fun showConfirmModal(
         dialogTitle: String,
         dialogText: String,
-        onConfirmation: () -> Unit
+        onConfirmation: () -> Unit,
     ) {
         _state.update { it.copy(
             confirmModal = ModalData(
                 dialogTitle = dialogTitle,
                 dialogText = dialogText,
-                onConfirmation = onConfirmation
+                onConfirmation = onConfirmation,
+            )
+        ) }
+    }
+
+    fun showErrorModal(
+        dialogTitle: String,
+        dialogText: String,
+        onDismissRequest: () -> Unit = {closeConfirmationModal()},
+        onConfirmation: () -> Unit,
+    ) {
+        _state.update { it.copy(
+            confirmModal = ModalData(
+                dialogTitle = dialogTitle,
+                dialogText = dialogText,
+                onConfirmation = onConfirmation,
+                onDismissRequest = onDismissRequest,
             )
         ) }
     }
@@ -717,13 +733,13 @@ class ParkingAppViewModel(
                 val contract: Contract =
                     ApiClientsService.contracts.getContractByProductId(productId)
                         ?: throw NullPointerException("Can not find contract with id: $productId")
-                println("fetchContractByProductId $contract")
+//                println("fetchContractByProductId $contract")
 
                 updateContract(contract)
 
                 toContractMenu(contract.id, productEnabled = false, clientEnabled = true)
 
-            } catch (e: Exception) {
+            } catch (e: Throwable) {
                 println("fetchContractsForClient nie udało się pobrać danych $e")
             }
         }
@@ -736,14 +752,24 @@ class ParkingAppViewModel(
             try {
 //                println("saveContractToDB Przed zapisem: $contract")
                 println("saveContractToDB rzed zapisem: ${contract.toContractDTO()}")
-                val contract: Contract =
-                    ApiClientsService.contracts.postContract(contract.toContractDTO())
-//                println("saveContractToDB zapisano umowę: $contract")
-
-                _state.update { currentState ->
-                    currentState.copy(contract = contract)
+                val result = ApiClientsService.contracts.postContract(contract.toContractDTO())
+                if(result.isSuccess) {
+                    _state.update { currentState ->
+                        currentState.copy(contract = result.getOrNull())
+                    }
+                    println("saveContractToDB zapisano umowę: $result")
+                    toClientList()
+                } else {
+                    println("Zapisanie kontratu nie pykło... ${result.exceptionOrNull()}")
+                    showErrorModal(
+                        "Zapisanie kontratu nie pykło, ponieważ:",
+                        "${result.exceptionOrNull()}",
+                    ) {
+                        closeConfirmationModal()
+                        toClientList()
+                    }
                 }
-            } catch (e: Exception) {
+            } catch (e: Throwable) {
                 println("saveContractToDB nie udało się pobrać danych $e")
             }
         }
@@ -783,7 +809,7 @@ class ParkingAppViewModel(
      */
     fun depositChange(newDeposit: Deposit) {
         var contract: Contract? = state.value.contract ?: return
-        contract = contract?.copy(deposit = newDeposit)
+        contract = contract!!.copy(deposit = newDeposit)
         _state.update { currentState ->
             currentState.copy(contract = contract)
         }

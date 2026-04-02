@@ -10,6 +10,7 @@ import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.put
 import io.ktor.client.request.setBody
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 
@@ -22,10 +23,28 @@ class ApiContract(
 
     suspend fun getContractById(id: Long): Contract? = httpClient.get("$baseUrl/contract/$id").body()
 
-    suspend fun postContract(contract: ContractDto): Contract = httpClient.post("$baseUrl/contract") {
-        setBody(contract)
-        contentType(ContentType.Application.Json)
-    }.body()
+//    suspend fun postContract(contract: ContractDto): Contract = httpClient.post("$baseUrl/contract") {
+//        setBody(contract)
+//        contentType(ContentType.Application.Json)
+//    }.body()
+    suspend fun postContract(contract: ContractDto): Result<Contract> {
+        return try {
+            val response = httpClient.post("$baseUrl/contract") {
+                setBody(contract)
+                contentType(ContentType.Application.Json)
+            }
+            if (response.status.value in 200..299) {
+                Result.success(response.body())
+            } else {
+                val errorText = response.bodyAsText()
+                println("postContract error: $errorText")
+                Result.failure(Exception(errorText))
+            }
+        } catch (e: Throwable) {
+            println(e)
+            Result.failure(e)
+        }
+    }
 
     suspend fun putContract(id: Long, contract: ContractDto): Contract = httpClient.put("$baseUrl/contract/$id") {
         setBody(contract)

@@ -29,7 +29,8 @@ data class Contract(
             endDate = endDate,
             netPrice = netPrice,
             vatRate = vatRate,
-            needInvoice = needInvoice
+            needInvoice = needInvoice,
+            deposit = deposit
         )
 }
 

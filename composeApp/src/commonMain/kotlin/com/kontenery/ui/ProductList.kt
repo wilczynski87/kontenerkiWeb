@@ -36,6 +36,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.kontenery.library.model.Contract
 import com.kontenery.model.Product
 import com.kontenery.model.Product.Container
 import com.kontenery.model.Product.Yard
@@ -231,11 +232,13 @@ fun ProductNavRow(
             Button(
                 modifier = Modifier.padding(end = 4.dp),
                 onClick = {
-//                    viewModel.fetchContractByProductId(product.id!!)
-//                    if(clientId != null) viewModel.fetchClientForContract(clientId)
-//                    viewModel.toContractMenu()
-                    viewModel.getContractByProductId(product.id!!)
-                    viewModel.toContractMenu()
+                    if(clientId == null) {
+                        viewModel.updateContract(Contract(product = product))
+                        viewModel.toAddContract(productEnabled = false)
+                    } else {
+                        viewModel.getContractByProductId(product.id!!)
+                    }
+//                    println("umowa: ${Contract(product = product)}")
                 }
             ) {
                 Text("Umowa")
