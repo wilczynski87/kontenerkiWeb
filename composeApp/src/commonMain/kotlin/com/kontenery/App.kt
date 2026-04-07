@@ -13,11 +13,11 @@ import com.kontenery.ui.LoginScreen
 import com.kontenery.ui.rememberWindowWidthSizeClass
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
-
+val scope = MainScope()
 @Composable
 fun App() {
-    val scope = rememberCoroutineScope()
     val viewModel = remember { ParkingAppViewModel(scope) }
     val widthClass = rememberWindowWidthSizeClass()
 
