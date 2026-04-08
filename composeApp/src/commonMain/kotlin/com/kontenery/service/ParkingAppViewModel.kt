@@ -25,6 +25,7 @@ import com.kontenery.model.ClientPersonalData
 import com.kontenery.model.ModalData
 import com.kontenery.model.PaymentForFinanceTable
 import com.kontenery.model.PaymentsListForFinanceTable
+import com.kontenery.model.PrevYearBalance
 import com.kontenery.model.TableRowFinance
 import com.kontenery.model.auth.LoginResponse
 import com.kontenery.model.auth.UserInfo
@@ -45,7 +46,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.minus
 import kotlin.text.toDouble
 
 class ParkingAppViewModel(
@@ -373,6 +376,25 @@ class ParkingAppViewModel(
                 }
             } catch (e: Exception) {
                 println("fetchInvoicesForClient nie udało się pobrać danych $e")
+            }
+        }
+    }
+
+    fun fetchClientFinance(
+        clientId: Long,
+        from: LocalDate? = LocalDate.startOfCurrentYear(),
+        to: LocalDate? = LocalDate.endOfCurrentYear()
+    ) {
+        viewModelScope.launch {
+            try {
+                val clientFinance: PrevYearBalance = ApiClientsService.clients.clientFinance(clientId, from, to)
+                    ?: throw NullPointerException("Can not fetch client finance")
+                _state.update { currentState ->
+                    currentState.copy(prevYearsBalance = clientFinance)
+                }
+
+            } catch (e: Exception) {
+                println("fetchClientFinance nie udało się pobrać danych $e")
             }
         }
     }
@@ -1445,6 +1467,9 @@ class ParkingAppViewModel(
         viewModelScope.launch {
             fetchInvoicesForClient(clientId, from, to)
             fetchPaymentsForClient(clientId, from, to)
+            fetchClientFinance(clientId, from.minus(1, DateTimeUnit.YEAR),
+                LocalDate(year = (to.year - 1), month = 12, day = 31)
+            )
         }
         _state.update { currentState ->
             currentState.copy(financeYear = year)

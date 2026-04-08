@@ -49,8 +49,10 @@ import com.kontenery.model.enums.ClientFilter
 import com.kontenery.model.enums.WindowWidthSizeClass
 import com.kontenery.model.enums.now
 import com.kontenery.service.ParkingAppViewModel
+import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.minus
 import kotlinx.datetime.number
 import kotlinx.datetime.todayIn
 import kotlin.enums.EnumEntries
@@ -286,6 +288,10 @@ fun <T : Enum<T>> FilterButtons(
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ClientNavRow(clientId: Long, viewModel: ParkingAppViewModel, modifier: Modifier = Modifier) {
+    val state by viewModel.state.collectAsState()
+    val from: LocalDate = LocalDate(year = state.financeYear ?: LocalDate.now().year, month = 1, 1).minus(1, DateTimeUnit.YEAR)
+    val to: LocalDate = LocalDate(year = state.financeYear ?: LocalDate.now().year, month = 12, 31).minus(1, DateTimeUnit.YEAR)
+
     FlowRow(modifier = modifier.fillMaxWidth()
         , verticalArrangement = Arrangement.Center
         , horizontalArrangement = Arrangement.SpaceAround)
@@ -313,6 +319,7 @@ fun ClientNavRow(clientId: Long, viewModel: ParkingAppViewModel, modifier: Modif
                 viewModel.fetchClient(clientId)
                 viewModel.fetchPaymentsForClient(clientId)
                 viewModel.fetchInvoicesForClient(clientId)
+                viewModel.fetchClientFinance(clientId, from, to)
                 viewModel.toPaymentsMenu()
             }
             , modifier = modifier

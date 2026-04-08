@@ -42,77 +42,9 @@ import com.kontenery.model.enums.startOfCurrentYear
 import com.kontenery.service.ParkingAppViewModel
 import com.kontenery.util.formatLocalDate
 import com.kontenery.util.to2Decimals
+import kotlinx.datetime.minus
 import kotlinx.datetime.number
 
-//@Composable
-//fun PaymentsMenu(
-//    viewModel: ParkingAppViewModel,
-//    windowSize: WindowWidthSizeClass,
-//    modifier: Modifier = Modifier
-//) {
-//    val state by viewModel.state.collectAsState()
-//    val client: Client? = state.client
-//    val invoices: List<Invoice> = state.invoices
-//    val payments: List<Payment> = state.payments
-//    val financeYear: Int = state.financeYear ?: LocalDate.now().year
-//    val from = LocalDate.parse("${financeYear}-01-01")
-//    val to = if(financeYear == LocalDate.now().year) LocalDate.now()
-//        else LocalDate.parse("${financeYear}-12-31")
-////    println("financeYear: $financeYear, from: $from, to: $to")
-//
-//    Column(
-//        modifier = modifier
-//            .padding(horizontal = 16.dp)
-//            .fillMaxSize()
-//            .verticalScroll(rememberScrollState())
-//    ) {
-//        FlowRow(
-//            modifier = Modifier.fillMaxWidth(),
-//            horizontalArrangement = Arrangement.Center
-//        ) {
-//            Text(
-//                text = "Płatności dla:",
-//                modifier = Modifier
-//                    .padding(horizontal = 4.dp, vertical = 4.dp)
-//                    .wrapContentSize(align = Alignment.Center)
-//                , textAlign = TextAlign.Center
-//                , style = MaterialTheme.typography.headlineMedium
-//            )
-//            ClientLinkName(viewModel, client)
-//        }
-//
-//        Row(modifier = Modifier.fillMaxWidth()) {
-//            Column {
-//                YearPager(financeYear, onYearChange = {
-////                    println("Zmiana roku: $it")
-//                    viewModel.changeFinanceYearPaymentsMenu(it)
-//                })
-//                PaymentsTable(viewModel, invoices, payments, from, to)
-//            }
-//        }
-//
-//        Row(modifier = Modifier
-//            .fillMaxWidth()
-//            , verticalAlignment = CenterVertically
-//            , horizontalArrangement = Arrangement.End
-//        ) {
-//            Button(
-//                onClick = {
-//                    viewModel.newPaymentState(clientId = client?.id)
-//                    viewModel.toPaymentForm(false)
-//                    viewModel.setGoBack(CurrentScreen.PAYMENT_MENU, CurrentScreen.PAYMENT_FORM)
-//                }
-//                , modifier = Modifier
-//            ) { Text("Dodaj płatność") }
-//        }
-//        PaymentsDetails(viewModel)
-//        Box(
-//            modifier = Modifier.fillMaxWidth()
-//        ) {
-//            InvoicesTable(viewModel, windowSize)
-//        }
-//    }
-//}
 @Composable
 fun PaymentsMenu(
     viewModel: ParkingAppViewModel,
@@ -128,7 +60,8 @@ fun PaymentsMenu(
     val financeYear: Int = state.financeYear ?: LocalDate.now().year
     val from = LocalDate.parse("${financeYear}-01-01")
     val to = if (financeYear == LocalDate.now().year) LocalDate.now()
-    else LocalDate.parse("${financeYear}-12-31")
+        else LocalDate.parse("${financeYear}-12-31")
+    val prevYearsBalance = state.prevYearsBalance
 
     LazyColumn(
         modifier = modifier
@@ -164,6 +97,17 @@ fun PaymentsMenu(
                     )
                     PaymentsTable(viewModel, invoices, payments, from, to)
                 }
+            }
+        }
+
+        // FOOTER
+        item {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = CenterVertically,
+                horizontalArrangement = Arrangement.End
+            ) {
+                PaymentsFooter(prevYearsBalance?.from?.year, prevYearsBalance?.documentBalance, prevYearsBalance?.income, prevYearsBalance?.totalBalance)
             }
         }
 
@@ -229,6 +173,42 @@ fun PaymentsTable(
             payments = payments,
             from = from,
             to = to,
+        )
+    }
+}
+
+@Composable
+fun PaymentsFooter(
+    year: Int?,
+    invoices: Double?,
+    payments: Double?,
+    total: Double?
+) {
+    val columnWeight = listOf(1f, 1f, 1f, 1f)
+    Row(modifier = Modifier.fillMaxWidth()) {
+        Text(
+            text = "${year ?: " - "}",
+            modifier = Modifier
+                .weight(columnWeight[0])
+                .padding(4.dp), style = MaterialTheme.typography.bodyMedium
+        )
+        Text(
+            text = "${invoices ?: " - "}",
+            modifier = Modifier
+                .weight(columnWeight[0])
+                .padding(4.dp), style = MaterialTheme.typography.bodyMedium
+        )
+        Text(
+            text = "${payments ?: " - "}",
+            modifier = Modifier
+                .weight(columnWeight[0])
+                .padding(4.dp), style = MaterialTheme.typography.bodyMedium
+        )
+        Text(
+            text = "${total ?: " - "}",
+            modifier = Modifier
+                .weight(columnWeight[0])
+                .padding(4.dp), style = MaterialTheme.typography.bodyMedium
         )
     }
 }
