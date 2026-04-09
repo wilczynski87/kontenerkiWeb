@@ -10,7 +10,7 @@ androidx-core = "1.17.0"
 androidx-espresso = "3.7.0"
 androidx-lifecycle = "2.9.6"
 androidx-testExt = "1.3.0"
-composeMultiplatform = "1.10.0"
+composeMultiplatform = "1.10.3"
 composeCompiler = "1.6.10"
 junit = "4.13.2"
 kotlin = "2.3.10"
@@ -22,6 +22,8 @@ kotlinx-serialization-json = "1.10.0"
 library = "1.0.0"
 tink-android = "1.20.0"
 datastore = "1.2.0"
+material3 = "1.9.0"
+material-icons-extended = "1.7.3"
 
 [libraries]
 jetbrains-material-icons-extended = { module = "org.jetbrains.compose.material:material-icons-extended" }
@@ -59,16 +61,14 @@ ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktorVer" 
 compose-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "composeMultiplatform" }
 compose-foundation = { module = "org.jetbrains.compose.foundation:foundation", version.ref = "composeMultiplatform" }
 compose-material = { module = "org.jetbrains.compose.material:material", version.ref = "composeMultiplatform" }
-compose-material3 = { module = "org.jetbrains.compose.material3:material3", version.ref = "composeMultiplatform" }
+compose-material3 = { module = "org.jetbrains.compose.material3:material3", version.ref = "material3" }
 compose-ui = { module = "org.jetbrains.compose.ui:ui", version.ref = "composeMultiplatform" }
 compose-ui-tooling = { module = "org.jetbrains.compose.ui:ui-tooling", version.ref = "composeMultiplatform" }
 compose-ui-tooling-preview = { module = "org.jetbrains.compose.ui:ui-tooling-preview", version.ref = "composeMultiplatform" }
-compose-material-icons-extended = { module = "org.jetbrains.compose.material:material-icons-extended", version.ref = "composeMultiplatform" }
+compose-material-icons-extended = { module = "org.jetbrains.compose.material:material-icons-extended", version.ref = "material-icons-extended" }
 compose-resources = { module = "org.jetbrains.compose.components:components-resources", version.ref = "composeMultiplatform" }
-material-icons-extended = { module = "org.jetbrains.compose.material:material-icons-extended" }
 
-
-library = { module = "composeApp.libs.library-:library", version.ref = "library" }
+#library = { module = "composeApp.libs.library-:library", version.ref = "library" }
 
 # Android
 ktor-client-android = { group = "io.ktor", name = "ktor-client-android",  version.ref = "ktorVer" }
