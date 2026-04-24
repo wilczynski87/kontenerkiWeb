@@ -1,5 +1,6 @@
 package com.kontenery.service
 
+import com.kontenery.config.ApiConfig.baseUrl
 import com.kontenery.controller.ApiClientsService
 import com.kontenery.controller.ApiClientsService.healthCheck
 import com.kontenery.data.AuthState
@@ -13,7 +14,7 @@ import com.kontenery.model.Product.Yard
 import com.kontenery.model.invoice.Invoice
 import com.kontenery.library.model.invoice.Subject
 import com.kontenery.library.model.invoice.Subject.Seller
-import com.kontenery.library.utils.InvoiceType
+import com.kontenery.model.enums.InvoiceType
 import com.kontenery.logDebug
 import com.kontenery.logError
 import com.kontenery.model.Client
@@ -26,6 +27,8 @@ import com.kontenery.model.ModalData
 import com.kontenery.model.PaymentForFinanceTable
 import com.kontenery.model.PaymentsListForFinanceTable
 import com.kontenery.model.PrevYearBalance
+import com.kontenery.model.Reading
+import com.kontenery.model.Submeter
 import com.kontenery.model.TableRowFinance
 import com.kontenery.model.auth.LoginResponse
 import com.kontenery.model.auth.UserInfo
@@ -33,6 +36,7 @@ import com.kontenery.model.enums.CurrentScreen
 import com.kontenery.model.enums.endOfCurrentYear
 import com.kontenery.model.enums.now
 import com.kontenery.model.enums.startOfCurrentYear
+import com.kontenery.model.invoice.InvoiceFeature
 import com.kontenery.model.invoice.Position
 import com.kontenery.util.endOfYear
 import com.kontenery.util.getMonthFinanceFromString
@@ -52,7 +56,7 @@ import kotlinx.datetime.minus
 import kotlin.text.toDouble
 
 class ParkingAppViewModel(
-    private val viewModelScope: CoroutineScope
+    private val coroutineScope: CoroutineScope
 ) {
     private val _state = MutableStateFlow(ParkingAppState())
     val state: StateFlow<ParkingAppState> = _state.asStateFlow()
@@ -68,7 +72,7 @@ class ParkingAppViewModel(
 
     private fun initializeUiState() {
         _state.value = ParkingAppState(clientNavRow = 1L)
-        viewModelScope.launch {
+        coroutineScope.launch {
             serverHealthCheck()
             refreshLogin()
         }
@@ -130,10 +134,10 @@ class ParkingAppViewModel(
         Server Helathcheck
      */
     fun serverHealthCheck() {
-        viewModelScope.launch {
+        coroutineScope.launch {
             try {
                 val healthStatus: String = healthCheck.healthCheck()
-                logDebug("serverHealthCheck","serverHealthCheck: $healthStatus")
+                logDebug("serverHealthCheck","serverHealthCheck: $healthStatus, baseUrl: $baseUrl")
                 _state.update { currentState ->
                     currentState.copy(serverHealthStatus = "server online")
                 }
@@ -226,7 +230,7 @@ class ParkingAppViewModel(
     fun getClientsList(page: Int, size: Int) {
         if (isLoading || endReached) return
 
-        viewModelScope.launch {
+        coroutineScope.launch {
             isLoading = true
 
             try {
@@ -272,7 +276,7 @@ class ParkingAppViewModel(
 
     fun toClientData(idClient: Long? = null) {
         // fech client data by Id
-        viewModelScope.launch {
+        coroutineScope.launch {
             try {
                 val client: Client = if (idClient != null) {
                     ApiClientsService.clients.getClientData(idClient)
@@ -323,7 +327,7 @@ class ParkingAppViewModel(
     fun fetchClient(clientId: Long?) {
         if (clientId == null) return
 
-        viewModelScope.launch {
+        coroutineScope.launch {
             try {
                 val client: Client = ApiClientsService.clients.getClientData(clientId)
                 _state.update { currentState ->
@@ -340,7 +344,7 @@ class ParkingAppViewModel(
         from: LocalDate? = LocalDate.startOfCurrentYear(),
         to: LocalDate? = LocalDate.endOfCurrentYear()
     ) {
-        viewModelScope.launch {
+        coroutineScope.launch {
             try {
 //                logDebug("fetchPaymentsForClient:", "clientId: $clientId, from: $from, to: $to")
                 val payments = ApiClientsService.payments.getPaymentsForClient(
@@ -359,7 +363,7 @@ class ParkingAppViewModel(
     }
 
     fun fetchInvoicesForClient(clientId: Long, from: LocalDate? = LocalDate.startOfCurrentYear(), to: LocalDate? = LocalDate.endOfCurrentYear()) {
-        viewModelScope.launch {
+        coroutineScope.launch {
             try {
 //                println("fetchForClientInvoices from: $from, to: $to, clientId: $clientId")
                 val invoices: List<Invoice> =
@@ -385,7 +389,7 @@ class ParkingAppViewModel(
         from: LocalDate? = LocalDate.startOfCurrentYear(),
         to: LocalDate? = LocalDate.endOfCurrentYear()
     ) {
-        viewModelScope.launch {
+        coroutineScope.launch {
             try {
                 val clientFinance: PrevYearBalance = ApiClientsService.clients.clientFinance(clientId, from, to)
                     ?: throw NullPointerException("Can not fetch client finance")
@@ -411,7 +415,7 @@ class ParkingAppViewModel(
     }
 
     fun dispose() {
-        viewModelScope.cancel()
+        coroutineScope.cancel()
     }
 
 
@@ -460,7 +464,7 @@ class ParkingAppViewModel(
 
     fun putClient() {
         // save client to DB (update)
-        viewModelScope.launch {
+        coroutineScope.launch {
             try {
                 val stateClient: Client? = state.value.client
 
@@ -485,7 +489,7 @@ class ParkingAppViewModel(
 
     fun saveClient(client: Client) {
         var client: Client = client
-        viewModelScope.launch {
+        coroutineScope.launch {
             try {
                 val savedClient: Client = ApiClientsService.clients.saveClient(client)
                 println("saveClient zapisano klienta: $savedClient")
@@ -500,7 +504,7 @@ class ParkingAppViewModel(
     }
 
     fun fetchClientForContract(clientId: Long){
-        viewModelScope.launch {
+        coroutineScope.launch {
             try {
                 val client: Client? = ApiClientsService.clients.getClientData(clientId)
                 println("fetchClientForContract  $client")
@@ -517,7 +521,7 @@ class ParkingAppViewModel(
         Product methods
     */
     fun getProductsList(page: Int = 0, size: Int = 100) {
-        viewModelScope.launch {
+        coroutineScope.launch {
             try {
                 val products: List<Product> =
                     ApiClientsService.products.getProductList(page, size)
@@ -534,7 +538,7 @@ class ParkingAppViewModel(
 
     fun saveProduct(product: Product) {
         println("sendProductToServer zapisuje produkt: $product")
-        viewModelScope.launch {
+        coroutineScope.launch {
             try {
                 val savedProduct = if (product.id == null) postToServer(product)
                 else putToServer(product)
@@ -693,7 +697,7 @@ class ParkingAppViewModel(
     }
 
     fun fetchContractsForClient(clientId: Long) {
-        viewModelScope.launch {
+        coroutineScope.launch {
             try {
                 val contracts: List<Contract> =
                     ApiClientsService.contracts.getContractsByClient(clientId)
@@ -708,7 +712,7 @@ class ParkingAppViewModel(
     }
 
     fun fetchContractById(contractId: Long) {
-        viewModelScope.launch {
+        coroutineScope.launch {
             try {
                 val contract: Contract =
                     ApiClientsService.contracts.getContractById(contractId)
@@ -723,7 +727,7 @@ class ParkingAppViewModel(
     }
 
     fun fetchContractByProductId(productId: Long) {
-        viewModelScope.launch {
+        coroutineScope.launch {
             try {
                 val contract: Contract =
                     ApiClientsService.contracts.getContractByProductId(productId)
@@ -750,7 +754,7 @@ class ParkingAppViewModel(
     }
 
     fun getContractByProductId(productId: Long) {
-        viewModelScope.launch {
+        coroutineScope.launch {
             try {
                 val contract: Contract =
                     ApiClientsService.contracts.getContractByProductId(productId)
@@ -770,7 +774,7 @@ class ParkingAppViewModel(
     // TODO POPRAWIć - daje 400
     fun saveContractToDB(contract: Contract) {
         // save contract to DB
-        viewModelScope.launch {
+        coroutineScope.launch {
             try {
 //                println("saveContractToDB Przed zapisem: $contract")
                 println("saveContractToDB rzed zapisem: ${contract.toContractDTO()}")
@@ -799,7 +803,7 @@ class ParkingAppViewModel(
 
     fun putContractToDB(contract: Contract) {
         // update contract to DB
-        viewModelScope.launch {
+        coroutineScope.launch {
             try {
                 println("putContractToDB Przed zapisem: $contract")
                 val contract: Contract = ApiClientsService.contracts.putContract(
@@ -816,7 +820,7 @@ class ParkingAppViewModel(
     }
 
     fun deleteContract(id: Long) {
-        viewModelScope.launch {
+        coroutineScope.launch {
             try {
                 val response = ApiClientsService.contracts.deleteContract(id)
                 //            if(response.not()) uruchomić modal z błędem lub sukcesem
@@ -848,7 +852,7 @@ class ParkingAppViewModel(
     */
     fun sendPeriodicInvoice(clientId: Long) {
 //        println("sendPeriodicInvoice", clientId.toString())
-        viewModelScope.launch {
+        coroutineScope.launch {
             try {
                 val response = ApiClientsService.invoices.postPeriodicInvoice(
                     clientId)
@@ -865,7 +869,7 @@ class ParkingAppViewModel(
 
     // TODO obsługa odpowiedzi do napisania
     fun postPeriodicInvoiceAgain(invoiceNumber: String) {
-        viewModelScope.launch {
+        coroutineScope.launch {
             try {
                 val response = ApiClientsService.invoices.postPeriodicInvoiceAgain(invoiceNumber)
                 println("postPeriodicInvoiceAgain resp for: $invoiceNumber:\n $response")
@@ -880,7 +884,7 @@ class ParkingAppViewModel(
 
     fun sendPeriodicInvoiceToAllClients(period: LocalDate = LocalDate.now()) {
         println("sendPeriodicInvoiceToAllClients period: $period")
-        viewModelScope.launch {
+        coroutineScope.launch {
             try {
                 val response = ApiClientsService.invoices.postPeriodicInvoiceToAllClients(period.toString())
                 println("sendPeriodicInvoiceForAll errors: $response")
@@ -985,27 +989,6 @@ class ParkingAppViewModel(
             )
         }
     }
-    fun sumSum() {
-        val positions: List<Position> = state.value.invoice?.products ?: listOf()
-        val sumPrice = positions.sumOf { it.price?.toDoubleOrNull() ?: 0.0 }
-        val sumVat = positions.sumOf { it.vatAmount?.toDoubleOrNull() ?: 0.0 }
-        val sumWithVat = positions.sumOf { it.priceWithVat?.toDoubleOrNull() ?: 0.0 }
-    }
-
-    fun updateProductToInvoice(position: Position) {
-        var invoice: Invoice = state.value.invoice ?: throw NullPointerException("Invoice is null, for: updateProductToInvoice")
-
-        var newProducts = invoice.products
-
-        println("products old: " + invoice.products.toString())
-        println("products new: $newProducts")
-
-        _state.update { currentState ->
-            currentState.copy(
-                invoice = invoice.copy(products = newProducts.plus(position)),
-            )
-        }
-    }
 
     fun removeProductFromInvoice(index: Int) {
         var invoice: Invoice = state.value.invoice ?: throw NullPointerException("Invoice is null, for: removeProductFromInvoice")
@@ -1059,7 +1042,7 @@ class ParkingAppViewModel(
 
     fun postCustomInvoice(clientId: Long, invoice: Invoice) {
         // save invoice to DB
-        viewModelScope.launch {
+        coroutineScope.launch {
             try {
 //                val invoice: Invoice = state.value.invoice ?: throw NullPointerException("Invoice is null, for: postCustomInvoice")
                 println("saveCustomInvoiceToDB $invoice")
@@ -1095,7 +1078,7 @@ class ParkingAppViewModel(
 
     fun updateCustomerToInvoice(clientId: Long) {
         val invoice: Invoice = state.value.invoice ?: throw NullPointerException("Invoice is null, for: updateCustomerToInvoice")
-        viewModelScope.launch {
+        coroutineScope.launch {
             try {
                 val client: Client = ApiClientsService.clients.getClientData(clientId)
                 val needInvoice: Boolean = client.needInvoice()
@@ -1120,6 +1103,67 @@ class ParkingAppViewModel(
             } catch (e: Exception) {
                 println("updateClientError ${e.toString()}")
             }
+        }
+    }
+
+    // UTILITY
+    fun toUtility() {
+        _state.update { currentState ->
+            currentState.copy(
+                currentScreen = CurrentScreen.UTILITY
+            )
+        }
+    }
+
+    fun choseInvoice(invoiceFeature: InvoiceFeature) {
+        _state.update { currentState ->
+            currentState.copy(
+                invoiceFeature = invoiceFeature
+            )
+        }
+    }
+
+    fun fetchSubmetersForClient(clientId: Long) {
+        coroutineScope.launch {
+            ApiClientsService.utilities.fetchSubmetersForClient(clientId)
+                .onSuccess { result ->
+                    _state.update { state ->
+                        state.copy(
+                            submeters = result
+                        )
+                    }
+                }
+                .onFailure { e ->
+                    println("Error when fetchSubmetersForClient: ${e.message}")
+                    _state.update { state ->
+                        state.copy(
+                            // TODO po utworzeniu endpointu na backendze - odblokować
+//                            submeters = emptyList()
+                        )
+                    }
+                }
+        }
+    }
+
+    fun postSubmeterReading(submeterId: Long, newReading: Reading) {
+        coroutineScope.launch {
+            ApiClientsService.utilities.addReadingToSubmeter(submeterId, newReading)
+                .onSuccess { result ->
+                    if (result.clientId == null) throw NullPointerException("No client Id for submeter")
+                    _state.update { state ->
+                        state.copy(
+                            submeters = ApiClientsService.utilities.fetchSubmetersForClient(result.clientId).getOrNull() ?: emptyList()
+                        )
+                    }
+                }
+                .onFailure { e ->
+                    println("Could not add Reading to submeter: $e")
+                    showErrorModal(
+                        "Could not add reading",
+                        "${e.message}",
+                        onConfirmation = {closeConfirmationModal()},
+                    )
+                }
         }
     }
 
@@ -1153,7 +1197,7 @@ class ParkingAppViewModel(
         }
     }
     fun fetchClientForPayment(clientId: Long) {
-        viewModelScope.launch {
+        coroutineScope.launch {
             try {
                 val client: Client? = ApiClientsService.clients.getClientData(clientId)
                 println("fetchClientForPayment $client")
@@ -1169,7 +1213,7 @@ class ParkingAppViewModel(
     }
 
     fun postPaymentToDB(payment: PaymentDto) {
-        viewModelScope.launch {
+        coroutineScope.launch {
             try {
                 println("postPayment $payment")
                 val paymentSaved = ApiClientsService.payments.postPayment(payment)
@@ -1179,7 +1223,7 @@ class ParkingAppViewModel(
         }
     }
     fun postPaymentToApiWithResponse(payment: PaymentDto) {
-        viewModelScope.launch {
+        coroutineScope.launch {
             try {
                 println("postPayment $payment")
                 val paymentSaved = ApiClientsService.payments.postPayment(payment)
@@ -1193,7 +1237,7 @@ class ParkingAppViewModel(
     }
 
     fun deletePayment(paymentId: String) {
-        viewModelScope.launch {
+        coroutineScope.launch {
             try {
                 println("deletePayment $paymentId")
                 val paymentDeleted = ApiClientsService.payments.deletePayment(paymentId.toLong())
@@ -1204,7 +1248,7 @@ class ParkingAppViewModel(
         }
     }
     fun deletePaymentAndRefreshClient(paymentId: String, clientId: Long?) {
-        viewModelScope.launch {
+        coroutineScope.launch {
             try {
                 println("deletePayment $paymentId")
                 val paymentDeleted = ApiClientsService.payments.deletePayment(paymentId.toLong())
@@ -1236,7 +1280,7 @@ class ParkingAppViewModel(
     }
 
     fun updateBankAccount(bankAccount: ClientBankAccount? = null) {
-        viewModelScope.launch {
+        coroutineScope.launch {
             val client: Client? = state.value.client
             val currentDate: LocalDate = LocalDate.now()
             val oldBankAccount: ClientBankAccount = state.value.bankAccount ?: ClientBankAccount(client = client, createdAt = currentDate)
@@ -1261,7 +1305,7 @@ class ParkingAppViewModel(
     }
 
     fun addBankAccount(bankAccountNumber: String, client: Client?) {
-        viewModelScope.launch {
+        coroutineScope.launch {
             try {
                 if(client == null) throw NullPointerException("Client is null")
                 val bankAccount = ClientBankAccount(
@@ -1286,7 +1330,7 @@ class ParkingAppViewModel(
     }
 
     fun deleteBankAccount(bankAccountNumber: String, client: Client?) {
-        viewModelScope.launch {
+        coroutineScope.launch {
             try {
                 val accountNumber = bankAccountNumber.filterNot { it.isWhitespace() }
                 val clientId: Long = client?.id ?: throw NullPointerException("Client is null")
@@ -1318,7 +1362,7 @@ class ParkingAppViewModel(
 
     // Drukuj faktury okresowe
     fun printAllInvoices(date: LocalDate? = LocalDate.now()){
-        viewModelScope.launch {
+        coroutineScope.launch {
             val isPrinting = ApiClientsService.invoices.printAllInvoice(date)
             println("isPrinting $isPrinting")
         }
@@ -1362,7 +1406,7 @@ class ParkingAppViewModel(
 
         if (isLoading || endReached) return
 
-        viewModelScope.launch {
+        coroutineScope.launch {
             isLoading = true
 
             try {
@@ -1446,7 +1490,7 @@ class ParkingAppViewModel(
     }
 
     fun onFinanceYearChange(year: Int) {
-        viewModelScope.launch {
+        coroutineScope.launch {
             fetchListClientsFinance(0, 100, startOfYear(year), endOfYear(year))
             _state.update { currentState ->
                 currentState.copy(financeYear = year)
@@ -1464,7 +1508,7 @@ class ParkingAppViewModel(
             else LocalDate.parse("${year}-12-31")
         val clientId = state.value.client?.id ?: return
 
-        viewModelScope.launch {
+        coroutineScope.launch {
             fetchInvoicesForClient(clientId, from, to)
             fetchPaymentsForClient(clientId, from, to)
             fetchClientFinance(clientId, from.minus(1, DateTimeUnit.YEAR),

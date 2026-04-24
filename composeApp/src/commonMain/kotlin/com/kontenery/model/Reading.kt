@@ -1,4 +1,4 @@
-package com.kontenery.library.model
+package com.kontenery.model
 
 
 import com.kontenery.library.serializers.LocalDateSerializer
@@ -11,7 +11,7 @@ data class Reading(
     val id: Long? = null,
     val submeterId: Long? = null,
     val utilityType: UtilityType? = null,
-    val reading: String? = null,
+    val reading: Double? = null,
     @Serializable(with = LocalDateSerializer::class)
     val date: LocalDate? = null,
     val currentUnitPriceNet: Double? = null

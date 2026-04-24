@@ -14,6 +14,11 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.Button
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuAnchorType
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -34,9 +39,13 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.kontenery.model.enums.InvoiceType
+import com.kontenery.model.enums.WindowWidthSizeClass
 import com.kontenery.model.invoice.Invoice
 import com.kontenery.model.enums.now
+import com.kontenery.model.invoice.InvoiceFeature
 import com.kontenery.model.invoice.Position
+import com.kontenery.service.ParkingAppState
 import com.kontenery.service.ParkingAppViewModel
 import com.kontenery.util.isDigitsOnly
 import com.kontenery.util.to2Decimals
@@ -44,106 +53,42 @@ import kotlinx.datetime.LocalDate
 
 @Composable
 fun InvoiceForm(
-    viewModel: ParkingAppViewModel
-    , modifier: Modifier = Modifier
+    windowWidthSizeClass: WindowWidthSizeClass = WindowWidthSizeClass.Compact,
+    viewModel: ParkingAppViewModel,
+    modifier: Modifier = Modifier
         .fillMaxSize()
 ) {
     val state by viewModel.state.collectAsState()
-    val invoice: Invoice = state.invoice ?: return
-    val clients = state.clients
-    val client = state.client
-    var expandedClients by remember { mutableStateOf(false) }
+    val invoiceType = state.invoiceFeature.invoiceType
 
-    // set default customer to invoice
-    LaunchedEffect(Unit) {
-        if (client?.id != null)
-            client.id.let {
-                viewModel.ensureInvoiceCustomer()
-            }
-    }
-
-    Column(
-        modifier = Modifier
-            .padding(horizontal = 16.dp)
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-    ) {
+    Column {
         Row(
-            modifier.fillMaxWidth()
-            , horizontalArrangement = Arrangement.SpaceAround
+            modifier
+                .padding(16.dp)
+                .fillMaxWidth()
         ) {
-            Text("Wystaw nieokresową fakturę:")
+            InvoiceTypeDropdown(
+                state.invoiceFeature.invoiceType
+            ) { type ->
+                viewModel.choseInvoice(InvoiceFeature(type))
+            }
         }
-        Row() {
-            OutlinedCard(modifier = Modifier.fillMaxWidth().padding(4.dp)) {
-                Text("Klient: ",
-                    modifier = Modifier.padding(4.dp))
-                ClientsDropdown(
-                    chosenClient = client,
-                    selectClient = { selectedClient ->
-                        viewModel.updateCustomerToInvoice(selectedClient)
-//                        println(
-//                            "ClientsDropdown selectedClient: $selectedClient, viewModel: $invoice"
-//                        )
-                    },
-                    clients = clients,
-                    expanded = expandedClients,
-                    toggleExpanded = { expandedClients = !expandedClients },
+        when(invoiceType) {
+            InvoiceType.OTHER -> CustomInvoiceForm(
+                viewModel,
+                state
+            )
+
+            InvoiceType.UTILITIES -> {
+                UtilitiesChoice(
+                    viewModel,
+                    state
                 )
             }
-        }
-        Row() {
-            BillType(
-                needInvoice = client?.needInvoice() == true,
-                enabled = false,
-                toggleInvoice = { needInvoice: Boolean ->
-                    viewModel.sellerForInvoiceUpdate()
-                }
-            )
-        }
-        Row() {
-            ChooseDate(
-                title = "Data wystawienia",
-                date = LocalDate.now(),
-                updateDate = { date ->
-                    viewModel.updateInvoice(invoice.copy(invoiceDate = LocalDate.parse(date)))
-                }
-            )
-        }
-        Row() {
-            OutlinedTextField(
-                value = invoice.invoiceTitle ?: "",
-                onValueChange = {
-                    viewModel.updateInvoice(invoice.copy(invoiceTitle = it))
-                },
-                label = { Text("Tytuł faktury: ") },
-                modifier = Modifier.fillMaxWidth()
-            )
+
+            else -> {}
         }
 
-        Row {
-            ProductsTable(viewModel)
-        }
-
-        Row() {
-            Button(
-                onClick = {
-                    // TODO jak nie ma id customera to jakiś błąd?
-                    val invoice: Invoice = invoice
-                    viewModel.postCustomInvoice(client?.id ?: 0, invoice)
-                    viewModel.showConfirmModal(
-                        "Status dodatkowej faktury",
-                        "Wysyłam fakturę do klienta",
-                        viewModel::closeConfirmationModal,
-                    )
-                },
-            ) {
-                Text("Wyślij dodatkową fakturę")
-            }
-        }
-        Row {
-            ProductForm(viewModel)
-        }
     }
 }
 
@@ -387,3 +332,153 @@ fun ProductForm(
 //
 //    InvoiceForm(viewModel)
 //}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun InvoiceTypeDropdown(
+    selected: InvoiceType,
+    onSelectedChange: (InvoiceType) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = !expanded }
+    ) {
+        OutlinedTextField(
+            value = selected.name,
+            onValueChange = {},
+            readOnly = true,
+            label = { Text("Typ faktury") },
+            trailingIcon = {
+                ExposedDropdownMenuDefaults.TrailingIcon(expanded)
+            },
+            modifier = Modifier
+                .menuAnchor(
+                    type = ExposedDropdownMenuAnchorType.PrimaryNotEditable,
+                    enabled = true
+                )
+                .fillMaxWidth()
+        )
+
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            InvoiceType.entries.forEach { type ->
+                if(type == InvoiceType.PERIODIC) null
+                DropdownMenuItem(
+                    text = { Text(type.name) },
+                    onClick = {
+                        onSelectedChange(type)
+                        expanded = false
+                    }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun CustomInvoiceForm(
+    viewModel: ParkingAppViewModel,
+    state: ParkingAppState,
+    modifier: Modifier = Modifier,
+) {
+    val invoice: Invoice = state.invoice ?: return
+    val clients = state.clients
+    val client = state.client
+    var expandedClients by remember { mutableStateOf(false) }
+
+    // set default customer to invoice
+    LaunchedEffect(Unit) {
+        if (client?.id != null)
+            client.id.let {
+                viewModel.ensureInvoiceCustomer()
+            }
+    }
+
+    Column(
+        modifier = Modifier
+            .padding(horizontal = 16.dp)
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+    ) {
+        Row(
+            modifier.fillMaxWidth()
+            , horizontalArrangement = Arrangement.SpaceAround
+        ) {
+            Text("Wystaw nieokresową fakturę:")
+        }
+        Row() {
+            OutlinedCard(modifier = Modifier.fillMaxWidth().padding(4.dp)) {
+                Text("Klient: ",
+                    modifier = Modifier.padding(4.dp))
+                ClientsDropdown(
+                    chosenClient = client,
+                    selectClient = { selectedClient ->
+                        viewModel.updateCustomerToInvoice(selectedClient)
+//                        println(
+//                            "ClientsDropdown selectedClient: $selectedClient, viewModel: $invoice"
+//                        )
+                    },
+                    clients = clients,
+                    expanded = expandedClients,
+                    toggleExpanded = { expandedClients = !expandedClients },
+                )
+            }
+        }
+        Row() {
+            BillType(
+                needInvoice = client?.needInvoice() == true,
+                enabled = false,
+                toggleInvoice = { needInvoice: Boolean ->
+                    viewModel.sellerForInvoiceUpdate()
+                }
+            )
+        }
+        Row() {
+            ChooseDate(
+                title = "Data wystawienia",
+                date = LocalDate.now(),
+                updateDate = { date ->
+                    viewModel.updateInvoice(invoice.copy(invoiceDate = LocalDate.parse(date)))
+                }
+            )
+        }
+        Row() {
+            OutlinedTextField(
+                value = invoice.invoiceTitle ?: "",
+                onValueChange = {
+                    viewModel.updateInvoice(invoice.copy(invoiceTitle = it))
+                },
+                label = { Text("Tytuł faktury: ") },
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+
+        Row {
+            ProductsTable(viewModel)
+        }
+
+        Row() {
+            Button(
+                onClick = {
+                    // TODO jak nie ma id customera to jakiś błąd?
+                    val invoice: Invoice = invoice
+                    viewModel.postCustomInvoice(client?.id ?: 0, invoice)
+                    viewModel.showConfirmModal(
+                        "Status dodatkowej faktury",
+                        "Wysyłam fakturę do klienta",
+                        viewModel::closeConfirmationModal,
+                    )
+                },
+            ) {
+                Text("Wyślij dodatkową fakturę")
+            }
+        }
+        Row {
+            ProductForm(viewModel)
+        }
+    }
+}

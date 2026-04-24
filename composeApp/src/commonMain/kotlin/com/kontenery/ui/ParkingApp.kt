@@ -23,6 +23,8 @@ import com.kontenery.service.ParkingAppState
 import com.kontenery.service.ParkingAppViewModel
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Warning
+import com.example.parkingandroidview.ui.Utilites
+import com.kontenery.model.enums.UtilityType
 
 @Composable
 fun ParkingApp(
@@ -164,7 +166,12 @@ fun ParkingApp(
                                 modifier = modifier.padding(innerPadding)
                             )
                         }
-
+                        CurrentScreen.UTILITY -> {
+                            Utilites(
+                                viewModel = viewModel,
+                                modifier = modifier.padding(innerPadding)
+                            )
+                        }
                     }
                 }
 

@@ -19,7 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.kontenery.library.utils.InvoiceType
+import com.kontenery.model.enums.InvoiceType
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import com.kontenery.model.ModalData
@@ -170,6 +170,14 @@ fun Drawer(
                     onClick = {
                         toggleDrawer(scope, drawerState)
                         viewModel.toUploadPayments()
+                    }
+                )
+                NavigationDrawerItem(
+                    label = { Text(text = "Media") },
+                    selected = false,
+                    onClick = {
+                        toggleDrawer(scope, drawerState)
+                        viewModel.toUtility()
                     }
                 )
             }

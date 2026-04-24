@@ -22,12 +22,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.kontenery.library.model.Reading
-import com.kontenery.library.model.Submeter
+import com.kontenery.model.Submeter
 import com.kontenery.service.ParkingAppViewModel
-import kotlinx.datetime.DateTimeUnit
-import kotlinx.datetime.LocalDate
-import kotlinx.datetime.minus
 
 @Composable
 fun Utilites(

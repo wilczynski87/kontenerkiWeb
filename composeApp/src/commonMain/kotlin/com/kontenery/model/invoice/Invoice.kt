@@ -2,7 +2,7 @@ package com.kontenery.model.invoice
 
 import com.kontenery.library.model.invoice.Subject
 import com.kontenery.library.serializers.LocalDateSerializer
-import com.kontenery.library.utils.InvoiceType
+import com.kontenery.model.enums.InvoiceType
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.Serializable
 

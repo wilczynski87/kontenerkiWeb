@@ -1,4 +1,4 @@
-package com.kontenery.library.model
+package com.kontenery.model
 
 import com.kontenery.model.enums.UtilityType
 import kotlinx.serialization.Serializable

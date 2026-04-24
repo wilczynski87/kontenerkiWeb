@@ -60,6 +60,7 @@ class AndroidSecureTokenStorage(
     }
 }
 
+@Suppress("DEPRECATION")
 private fun createAead(context: Context): Aead {
     AeadConfig.register()
 
@@ -70,5 +71,7 @@ private fun createAead(context: Context): Aead {
         .build()
         .keysetHandle
 
-    return keysetHandle.getPrimitive(Aead::class.java)
+//    val aead: Aead = keysetHandle.getPrimitive(Aead::class)
+    val aead: Aead = keysetHandle.getPrimitive(Aead::class.java)
+    return aead
 }
