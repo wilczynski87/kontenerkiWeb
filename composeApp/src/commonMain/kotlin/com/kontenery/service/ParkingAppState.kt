@@ -56,6 +56,7 @@ data class ParkingAppState(
     val prevYearsBalance: PrevYearBalance? = null,
     val invoiceFeature: InvoiceFeature = InvoiceFeature(InvoiceType.UTILITIES),
     val reading: Reading? = null,
+    val submeter: Submeter? = fakeSubmeter[2],
 
     val confirmModal: ModalData? = null,
 

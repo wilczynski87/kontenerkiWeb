@@ -177,6 +177,7 @@ fun Drawer(
                     selected = false,
                     onClick = {
                         toggleDrawer(scope, drawerState)
+                        viewModel.fetchSubmeters()
                         viewModel.toUtility()
                     }
                 )

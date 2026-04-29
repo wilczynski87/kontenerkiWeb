@@ -15,7 +15,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -30,8 +29,6 @@ import com.kontenery.model.enums.now
 import com.kontenery.model.invoice.Invoice
 import com.kontenery.service.ParkingAppState
 import com.kontenery.service.ParkingAppViewModel
-import com.kontenery.ui.SubmeterRow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.datetime.LocalDate
 
 @OptIn(ExperimentalMaterial3Api::class)

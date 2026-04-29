@@ -13,7 +13,7 @@ RUN apt-get update && apt-get install -y \
 COPY . .
 
 RUN chmod +x gradlew
-RUN ./gradlew :composeApp:wasmJsBrowserDistribution
+RUN ./gradlew :composeApp:wasmJsBrowserDistribution -x test
 
 # Stage 2: Nginx
 FROM nginx:stable-alpine

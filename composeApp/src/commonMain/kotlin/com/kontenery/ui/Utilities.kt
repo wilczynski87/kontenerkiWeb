@@ -1,7 +1,9 @@
-package com.example.parkingandroidview.ui
+package com.kontenery.ui
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -23,18 +25,23 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.kontenery.model.Submeter
+import com.kontenery.model.enums.InvoiceType
+import com.kontenery.model.enums.UtilityIcon
 import com.kontenery.service.ParkingAppViewModel
 
 @Composable
-fun Utilites(
+fun Utilities(
     viewModel: ParkingAppViewModel,
     modifier: Modifier = Modifier
 ) {
     val state by viewModel.state.collectAsState()
     val submeters: List<Submeter> = state.submeters
     var expandedSubmeterId by remember { mutableStateOf<Long?>(null) }
+//    var expandedSubmeter by remember { mutableStateOf<Submeter?>(null) }
     var showDialogForSubmeterId by remember { mutableStateOf<Long?>(null) }
     var newReading by remember { mutableStateOf("") }
+
+    Box(modifier) {
 
     LazyColumn {
         items(submeters) { submeter ->
@@ -47,8 +54,13 @@ fun Utilites(
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(text = "Lokalizacja: ${submeter.location}")
-                    Text(text = "Typ: ${submeter.utilityType?.polishName}")
+                    Row {
+                        UtilityIcon(submeter.utilityType)
+                        Text("${submeter.number}")
+                    }
                     Text(text = "Odczytów: ${submeter.readings.size}")
+                    Text("Klient: ${submeter.clientId}")
+                    ClientNameLoader(submeter.clientId, { id -> viewModel.getClientNameById(id!!) })
                 }
 
                 // Menu po kliknięciu
@@ -59,8 +71,19 @@ fun Utilites(
                     DropdownMenuItem(
                         text = { Text("Dodaj odczyt") },
                         onClick = {
+                            viewModel.createNewInvoice(InvoiceType.UTILITIES)
+                            viewModel.toAddInvoice()
+                            if(submeter.clientId != null) viewModel.updateCustomerToInvoice(submeter.clientId)
+                            // TODO przenieś do wystawienia faktury dla danego klienta!!!
                             expandedSubmeterId = null
-                            showDialogForSubmeterId = submeter.id
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("Dane podlicznika") },
+                        onClick = {
+                            if(submeter.id != null) viewModel.fetchSubmeter(submeter.id)
+                            viewModel.toReadings()
+                            expandedSubmeterId = null
                         }
                     )
                 }
@@ -69,93 +92,18 @@ fun Utilites(
     }
 
     // Dialog do dodania nowego odczytu
-    if (showDialogForSubmeterId != null) {
-        AlertDialog(
-            onDismissRequest = { showDialogForSubmeterId = null },
-            title = { Text("Nowy odczyt") },
-            text = {
-                OutlinedTextField(
-                    value = newReading,
-                    onValueChange = { newReading = it },
-                    label = { Text("Odczyt") }
-                )
-            },
-            confirmButton = {
-                TextButton(onClick = {
-                    showDialogForSubmeterId?.let { id ->
-//                        onAddReading(id, newReading)
-                    }
-                    newReading = ""
-                    showDialogForSubmeterId = null
-                }) {
-                    Text("Zapisz")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDialogForSubmeterId = null }) {
-                    Text("Anuluj")
-                }
-            }
-        )
+
     }
 }
-
-//@Preview(showBackground = true)
-//@Composable
-//fun SubmeterScreen() {
-//    val submeters = listOf(
-//        Submeter(
-//            id = 1,
-//            clientId = 101,
-//            location = "Piwnica",
-//            utilityType = UtilityType.WATER,
-//            readings = listOf(
-//                Reading(1, 1, UtilityType.WATER, "123.4", LocalDate.now().minus(10, DateTimeUnit.DAY), BigDecimal("5.20")),
-//                Reading(2, 1, UtilityType.WATER, "127.8", LocalDate.now(), BigDecimal("5.30"))
-//            )
-//        ),
-//        Submeter(
-//            id = 2,
-//            clientId = 102,
-//            location = "Kuchnia",
-//            utilityType = UtilityType.ELECTRICITY,
-//            readings = listOf(
-//                Reading(3, 2, UtilityType.ELECTRICITY, "3200", LocalDate.now().minus(15, DateTimeUnit.DAY), BigDecimal("0.85")),
-//                Reading(4, 2, UtilityType.ELECTRICITY, "3400", LocalDate.now(), BigDecimal("0.90"))
-//            )
-//        ),
-//        Submeter(
-//            id = 3,
-//            clientId = 103,
-//            location = "Garaż",
-//            utilityType = UtilityType.ELECTRICITY,
-//            readings = listOf(
-//                Reading(5, 3, UtilityType.ELECTRICITY, "56.7", LocalDate.now().minus(20, DateTimeUnit.DAY), BigDecimal("3.15")),
-//                Reading(6, 3, UtilityType.ELECTRICITY, "63.1", LocalDate.now(), BigDecimal("3.20"))
-//            )
-//        ),
-//        Submeter(
-//            id = 4,
-//            clientId = 104,
-//            location = "Łazienka",
-//            utilityType = UtilityType.WATER,
-//            readings = listOf(
-//                Reading(
-//                    7,
-//                    4,
-//                    UtilityType.WATER,
-//                    "44.0",
-//                    LocalDate.now().minus(5, DateTimeUnit.DAY),
-//                    BigDecimal("5.10")
-//                )
-//            )
-//        )
-//    )
-//    val viewModel = ParkingAppViewModel()
-//    val state = ParkingAppState(submeters = submeters)
-//    viewModel.setState(state)
-//
-//    Utilites(
-//        viewModel
-//    )
-//}
+@Composable
+fun ClientNameLoader(
+    clientId: Long?,
+    getClientName: (Long?) -> String?,
+    modifier: Modifier = Modifier
+) {
+    if(clientId == null) Text("Licznik nieprzypisany")
+    else {
+        val name = getClientName(clientId) ?: "Brak nazwy klienta dla id: $clientId"
+        Text("Klient: $name", modifier)
+    }
+}

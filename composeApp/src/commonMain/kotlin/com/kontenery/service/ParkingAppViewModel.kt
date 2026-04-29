@@ -28,7 +28,6 @@ import com.kontenery.model.PaymentForFinanceTable
 import com.kontenery.model.PaymentsListForFinanceTable
 import com.kontenery.model.PrevYearBalance
 import com.kontenery.model.Reading
-import com.kontenery.model.Submeter
 import com.kontenery.model.TableRowFinance
 import com.kontenery.model.auth.LoginResponse
 import com.kontenery.model.auth.UserInfo
@@ -295,6 +294,11 @@ class ParkingAppViewModel(
                 println("Złe dane nie udało się pobrać danych $e")
             }
         }
+    }
+
+    fun getClientNameById(clientId: Long): String? {
+        val clientsList = state.value.clients
+        return clientsList.find { it.id == clientId }?.name
     }
 
 //    fun updateClient(client: Client) {
@@ -920,7 +924,8 @@ class ParkingAppViewModel(
         }
     }
 
-    fun createNewInvoice(invoiceType: InvoiceType? = null) {
+    fun createNewInvoice(invoiceType: InvoiceType? = null, clientId: Long? = null) {
+        val client = null
         val positions = mutableListOf<Position>()
         val invoice = Invoice(
             invoiceNumber = null,
@@ -1115,6 +1120,14 @@ class ParkingAppViewModel(
         }
     }
 
+    fun toReadings() {
+        _state.update { currentState ->
+            currentState.copy(
+                currentScreen = CurrentScreen.READINGS
+            )
+        }
+    }
+
     fun choseInvoice(invoiceFeature: InvoiceFeature) {
         _state.update { currentState ->
             currentState.copy(
@@ -1163,6 +1176,24 @@ class ParkingAppViewModel(
                         "${e.message}",
                         onConfirmation = {closeConfirmationModal()},
                     )
+                }
+        }
+    }
+
+    fun fetchSubmeters() {
+        coroutineScope.launch {
+            ApiClientsService.utilities.getAllSubmeters()
+        }
+    }
+    fun fetchSubmeter(submeterId: Long) {
+        coroutineScope.launch {
+            ApiClientsService.utilities.getSubmeter(submeterId)
+                .onSuccess {
+                    _state.update { state ->
+                        state.copy(submeter = it)
+                    }
+                }.onFailure { e ->
+                    println("fetchSubmeter error: ${e.message}")
                 }
         }
     }
