@@ -4,6 +4,7 @@ import com.kontenery.config.ApiConfig.baseUrl
 import com.kontenery.model.invoice.Invoice
 import com.kontenery.library.utils.errors.InvoiceErrorMessage
 import com.kontenery.model.enums.now
+import com.kontenery.model.invoice.InvoiceSend
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
@@ -27,7 +28,17 @@ class ApiInvoice(
 
     suspend fun postPeriodicInvoiceAgain(
         invoiceNumber: String,
-    ): String = httpClient.get("$baseUrl/invoice/$invoiceNumber/sendAgain").body()
+    ): Result<InvoiceSend> {
+        return try {
+            val result: InvoiceSend = httpClient.post("$baseUrl/invoice/sendAgain") {
+                setBody(invoiceNumber)
+            }.body()
+
+            Result.success(result)
+        } catch (e: Throwable) {
+            Result.failure(e)
+        }
+    }
 
 
     suspend fun postPeriodicInvoiceToAllClients(

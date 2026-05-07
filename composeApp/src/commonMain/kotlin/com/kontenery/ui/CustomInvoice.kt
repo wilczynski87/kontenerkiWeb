@@ -96,12 +96,11 @@ fun InvoiceForm(
 @Composable
 fun ProductsTable(
     viewModel: ParkingAppViewModel,
+    positions: List<Position> = listOf(),
     modifier: Modifier = Modifier
         .horizontalScroll(rememberScrollState())
         .defaultMinSize(minWidth = 600.dp)
 ) {
-    val state by viewModel.state.collectAsState()
-    val positions: List<Position> = state.invoice?.products ?: listOf()
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -386,6 +385,7 @@ fun CustomInvoiceForm(
     modifier: Modifier = Modifier,
 ) {
     val invoice: Invoice = state.invoice ?: return
+    val positions: List<Position> = invoice.products
     val clients = state.clients
     val client = state.client
     var expandedClients by remember { mutableStateOf(false) }
@@ -424,7 +424,7 @@ fun CustomInvoiceForm(
                     },
                     clients = clients,
                     expanded = expandedClients,
-                    toggleExpanded = { expandedClients = !expandedClients },
+                    onExpandedChange = { expandedClients = !expandedClients },
                 )
             }
         }
@@ -458,7 +458,7 @@ fun CustomInvoiceForm(
         }
 
         Row {
-            ProductsTable(viewModel)
+            ProductsTable(viewModel, positions)
         }
 
         Row() {

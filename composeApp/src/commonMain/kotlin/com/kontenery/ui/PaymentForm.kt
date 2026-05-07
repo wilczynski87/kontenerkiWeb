@@ -37,6 +37,7 @@ import com.kontenery.model.Client
 import com.kontenery.model.ClientOnList
 import com.kontenery.model.enums.now
 import com.kontenery.service.ParkingAppViewModel
+import com.kontenery.ui.ClientsListDropdown
 import com.kontenery.util.isDigitsOnly
 import com.kontenery.util.toDoublePl
 
@@ -88,19 +89,14 @@ fun PaymentForm(
                 .fillMaxWidth()
                 .padding(4.dp)
         ) {
-            Text("Klient: ",
-                modifier = Modifier.padding(4.dp))
-            ClientsDropdown(
-                chosenClient = client,
-                selectClient = { selectedClient ->
-                    viewModel.fetchClientForPayment(selectedClient)
-                },
+            ClientsListDropdown(
+                client = client,
                 clients = clients,
                 expanded = expandedClients,
-                toggleExpanded = { expandedClients = !expandedClients },
-                enabled = changeClient,
-                modifier = Modifier
-                    .fillMaxWidth()
+                onExpandedChange = { expandedClients = !expandedClients },
+                onSelect = { selectedClient ->
+                    viewModel.fetchClientForPayment(selectedClient)
+                },
             )
         }
         // KWOTA wpłaty

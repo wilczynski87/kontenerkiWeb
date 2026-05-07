@@ -61,13 +61,12 @@ fun ContractForm(
             .padding(4.dp)
             .verticalScroll(rememberScrollState())
     ) {
-
-        OutlinedCard(modifier = Modifier.fillMaxWidth().padding(4.dp)) {
-            Text("Klient: ",
-                modifier = Modifier.padding(4.dp))
-            ClientsDropdown(
-                chosenClient = contract.client,
-                selectClient = { selectedClient ->
+        ClientsListDropdown(
+            client = client,
+            clients = clients,
+            expanded = expandedClients,
+            onExpandedChange = { expandedClients = !expandedClients },
+            onSelect = { selectedClient ->
                     viewModel.fetchClientForContract(selectedClient)
                     viewModel.updateContract(
                         contract.copy(
@@ -76,12 +75,7 @@ fun ContractForm(
                         )
                     )
                 },
-                clients = clients,
-                expanded = expandedClients,
-                toggleExpanded = { expandedClients = !expandedClients },
-                enabled = clientEditable,
-            )
-        }
+        )
         OutlinedCard(
             modifier = Modifier
                 .fillMaxWidth()
@@ -284,18 +278,73 @@ fun ProductRow(
     }
 }
 
+//@Composable
+//fun ClientsDropdown(
+//    chosenClient: Client? = null,
+//    selectClient: (clientId: Long) -> Unit = {},
+//    clients: List<ClientOnList>,
+//    expanded: Boolean = false,
+//    modifier: Modifier = Modifier,
+//    onExpandedChange: () -> Unit = { expanded = it },
+//    enabled: Boolean = true,
+//) {
+//    // TODO dodaj guzik - Aktywni
+//    var search by remember { mutableStateOf("") }
+//    val filtered = remember(clients, search) {
+//        clients
+//            .filter { it.name.contains(search, ignoreCase = true) }
+//            .sortedBy { it.name }
+//    }
+//
+//    Box(modifier = modifier) {
+//        TextButton(
+//            onClick = {toggleExpanded()}
+//            , enabled = enabled
+//        ) {
+//            Text(
+//                text = chosenClient?.id?.let {
+//                    findById(it, clients)?.name ?: "Wybierz klienta"
+//                } ?: "Wybierz klienta"
+//            )
+//        }
+//        DropdownMenu(
+//            expanded = expanded,
+//            onDismissRequest = { toggleExpanded() }
+//        ) {
+//
+//            OutlinedTextField(
+//                value = search,
+//                onValueChange = { search = it },
+//                label = { Text("Znajdź klienta") },
+//                modifier = Modifier.fillMaxWidth(),
+//                singleLine = true
+//            )
+//
+//            filtered.forEach { client ->
+//                DropdownMenuItem(
+//                    text = { Text(client.name) },
+//                    onClick = {
+//                        selectClient(client.id)
+//                        toggleExpanded()
+//                    }
+//                )
+//            }
+//        }
+//    }
+//}
+
 @Composable
 fun ClientsDropdown(
     chosenClient: Client? = null,
-    selectClient: (clientId: Long) -> Unit = {},
+    selectClient: (Long) -> Unit = {},
     clients: List<ClientOnList>,
-    expanded: Boolean = false,
+    expanded: Boolean,
+    onExpandedChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
-    toggleExpanded: () -> Unit = {},
     enabled: Boolean = true,
 ) {
-    // TODO dodaj guzik - Aktywni
     var search by remember { mutableStateOf("") }
+
     val filtered = remember(clients, search) {
         clients
             .filter { it.name.contains(search, ignoreCase = true) }
@@ -303,28 +352,31 @@ fun ClientsDropdown(
     }
 
     Box(modifier = modifier) {
+
         TextButton(
-            onClick = {toggleExpanded()}
-            , enabled = enabled
+            onClick = { onExpandedChange(true) },
+            enabled = enabled
         ) {
-            OutlinedCard(modifier = modifier) {
-                if(chosenClient == null)
-                    Text("Wybierz klienta: ")
-                else
-                    Text(findById(chosenClient.id!!, clients)?.name.toString())
-            }
+            Text(
+                text = chosenClient?.id
+                    ?.let { id ->
+                        clients.find { it.id == id }?.name ?: "Wybierz klienta"
+                    }
+                    ?: "Wybierz klienta"
+            )
         }
+
         DropdownMenu(
             expanded = expanded,
-            onDismissRequest = { toggleExpanded() }
+            onDismissRequest = { onExpandedChange(false) }
         ) {
 
             OutlinedTextField(
                 value = search,
                 onValueChange = { search = it },
                 label = { Text("Znajdź klienta") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true
+                singleLine = true,
+                modifier = Modifier.padding(8.dp)
             )
 
             filtered.forEach { client ->
@@ -332,7 +384,7 @@ fun ClientsDropdown(
                     text = { Text(client.name) },
                     onClick = {
                         selectClient(client.id)
-                        toggleExpanded()
+                        onExpandedChange(false)
                     }
                 )
             }

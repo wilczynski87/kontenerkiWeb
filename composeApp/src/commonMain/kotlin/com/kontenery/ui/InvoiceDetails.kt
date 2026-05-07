@@ -48,192 +48,6 @@ import com.kontenery.service.ParkingAppViewModel
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.number
 
-//@Composable
-//fun InvoicesTable(
-//    viewModel: ParkingAppViewModel,
-//    windowSize: WindowWidthSizeClass,
-//    modifier: Modifier = Modifier
-//) {
-//    val state by viewModel.state.collectAsState()
-//    val forDate: LocalDate = state.forDate ?: LocalDate.now()
-//    val invoices: List<Invoice> = state.invoices
-//        .filter {
-//            it.invoiceDate!! >= LocalDate.startOfCurrentMonth(forDate) &&
-//            it.invoiceDate <= LocalDate.endOfCurrentMonth(forDate)
-//        }
-//
-//    val columnWidths = remember {
-//        mutableStateListOf(
-//            200, // invoiceNumberWidth
-//            200, // dateWidth
-//            200, // sendDateWidth
-//            140, // priceWidth
-//            120,  // vatWidth
-//            140, // totalWidth
-//            210, // paymentDateWidth
-//            190, // mainAccountWidth
-//            170, // customerWidth
-//            210, // sellerWidth
-//            160, // typeWidth
-//            150, // titleWidth
-//            100,  // vatApplyWidth
-//            160   // actionWidth
-//        )
-//    }
-//
-//    val tableWidth by remember {
-//        derivedStateOf { columnWidths.sum() }
-//    }
-//    val modifierWidth = Modifier.width(with(LocalDensity.current) { tableWidth.toDp() })
-//
-//    val scrollState = rememberScrollState()
-//
-////        println(columnWidths)
-////        println(tableWidth)
-//    Column(
-//        modifier = modifier
-//            .padding(8.dp)
-////            .horizontalScroll(scrollState)
-//    ) {
-//        Box(
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .clipToBounds()
-//                .horizontalScroll(scrollState)
-//        ) {
-//            Column(
-//                modifier = Modifier.width(with(LocalDensity.current) { tableWidth.toDp() })
-//            ) {
-//
-//
-//            Row(
-//                modifier = modifierWidth
-////            .fillMaxWidth(),
-//            ) {
-//                Text(
-//                    text = "Faktury za ${Month.fromNumber(forDate.month.number)?.polishName}:",
-//                    textAlign = TextAlign.Center,
-//                )
-//            }
-//            HorizontalDivider(
-//                modifier = modifierWidth,
-////                .fillMaxWidth(),
-//                color = Color.LightGray,
-//                thickness = 0.5.dp
-//            )
-//
-//            // Nagłówek
-//            Row(
-//                modifier = modifierWidth,
-//            ) {
-//                TableHeaderCell("Nr faktury", 0, columnWidths)
-//                TableHeaderCell("Data", 1, columnWidths)
-//                TableHeaderCell("Wysłano do klienta", 2, columnWidths)
-//                TableHeaderCell("Cena netto", 3, columnWidths)
-//                TableHeaderCell("VAT", 4, columnWidths)
-//                TableHeaderCell("Cena brutto", 5, columnWidths)
-//                TableHeaderCell("Dzień płatności", 6, columnWidths)
-//                TableHeaderCell("Konto", 7, columnWidths)
-//                TableHeaderCell("Klient", 8, columnWidths)
-//                TableHeaderCell("Sprzedawca", 9, columnWidths)
-//                TableHeaderCell("Typ", 10, columnWidths)
-//                TableHeaderCell("Tytuł", 11, columnWidths)
-//                TableHeaderCell("VAT", 12, columnWidths)
-//                TableHeaderCell("Wyślij ponownie", 13, columnWidths)
-//            }
-//            HorizontalDivider(
-//                modifier = modifierWidth,
-//                color = Color.LightGray,
-//                thickness = 0.5.dp
-//            )
-//
-//            // Body
-//            invoices.forEach { invoice ->
-//                val accountType =
-//                    SellerAccount.fromAccountNumber("PL${invoice.mainAccount}")?.name ?: ""
-//                Row(
-//                    modifier = modifierWidth, verticalAlignment = Alignment.CenterVertically
-//                ) {
-//                    TableBodyCell(invoice.invoiceNumber ?: "", 0, columnWidths)
-//                    TableBodyCell(invoice.invoiceDate?.toString() ?: "", 1, columnWidths)
-//                    TableBodyCell(invoice.invoiceSendToClient?.toString() ?: "", 2, columnWidths)
-//                    TableBodyCell(invoice.priceSum ?: "", 3, columnWidths)
-//                    TableBodyCell(invoice.vatAmountSum ?: "", 4, columnWidths)
-//                    TableBodyCell(invoice.priceWithVatSum ?: "", 5, columnWidths)
-//                    TableBodyCell(invoice.paymentDay?.toString() ?: "", 6, columnWidths)
-//                    TableBodyCell(accountType, 7, columnWidths)
-//                    TableBodyCell(invoice.customer?.name ?: "", 8, columnWidths)
-//                    TableBodyCell(invoice.seller?.name ?: "", 9, columnWidths)
-//                    TableBodyCell(invoice.type ?: "", 10, columnWidths)
-//                    TableBodyCell(invoice.invoiceTitle ?: "", 11, columnWidths)
-//                    TableBodyCell(if (invoice.vatApply) "Tak" else "Nie", 12, columnWidths)
-//                    TableBodyCell(13, columnWidths) {
-//                        if (invoice.invoiceNumber != null)
-//                            IconButton(onClick = {
-//                                viewModel.createConfirmationModal(
-//                                    ModalData(
-//                                        onDismissRequest = { viewModel.closeConfirmationModal() },
-//                                        onConfirmation = {
-//                                            viewModel.postPeriodicInvoiceAgain(invoice.invoiceNumber)
-//                                            viewModel.closeConfirmationModal()
-//                                        },
-//                                        dialogTitle = "Wyślij ponownie",
-//                                        dialogText = "Czy wysłać fakturę nr: ${invoice.invoiceNumber} ponownie?",
-//                                        icon = Icons.Default.Info
-//                                    )
-//                                )
-//                            }) {
-//                                Icon(Icons.Default.Email, contentDescription = "email again")
-//                            }
-//                    }
-//                }
-//                HorizontalDivider(
-//                    modifier = Modifier
-//                        .width(with(LocalDensity.current) { tableWidth.toDp() }),
-//                    color = Color.LightGray,
-//                    thickness = 0.5.dp
-//                )
-//            }
-//        }}
-//    }
-////    }
-//}
-
-//@Composable
-//fun TableHeaderCell(text: String, index: Int, columnWidths: MutableList<Int>) {
-//    Text(
-//        text,
-//        fontWeight = FontWeight.Bold,
-//        textAlign = TextAlign.Center,
-//        modifier = Modifier
-//            .padding(4.dp)
-//            .sharedWidthModifier(index, columnWidths)
-//    )
-//}
-//
-//@Composable
-//fun TableBodyCell(text: String, index: Int, columnWidths: MutableList<Int>) {
-//    Text(
-//        text,
-//        textAlign = TextAlign.Center,
-//        modifier = Modifier
-//            .padding(4.dp)
-//            .sharedWidthModifier(index, columnWidths)
-//    )
-//}
-//
-//@Composable
-//fun TableBodyCell(index: Int, columnWidths: MutableList<Int>, content: @Composable () -> Unit) {
-//    Box(
-//        modifier = Modifier
-//            .padding(4.dp)
-//            .sharedWidthModifier(index, columnWidths),
-//        contentAlignment = Alignment.Center
-//    ) {
-//        content()
-//    }
-//}
-
 @Composable
 fun InvoicesTable(
     viewModel: ParkingAppViewModel,
@@ -269,10 +83,13 @@ fun InvoicesTable(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(max = 600.dp) // 🔹 tutaj ustalamy max wysokość scrolla
+                .heightIn(max = 600.dp)
                 .horizontalScroll(horizontalScrollState)
         ) {
-            Column(modifier = Modifier.width(tableWidth)) {
+            Column(
+                modifier = Modifier
+                    .width(tableWidth)
+            ) {
 
                 // HEADER
                 Row {

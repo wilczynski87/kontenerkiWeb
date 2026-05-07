@@ -1,5 +1,6 @@
 package com.kontenery.service
 
+import androidx.compose.runtime.mutableStateMapOf
 import com.kontenery.data.AuthState
 import com.kontenery.library.model.Contract
 import com.kontenery.model.Reading
@@ -56,7 +57,8 @@ data class ParkingAppState(
     val prevYearsBalance: PrevYearBalance? = null,
     val invoiceFeature: InvoiceFeature = InvoiceFeature(InvoiceType.UTILITIES),
     val reading: Reading? = null,
-    val submeter: Submeter? = fakeSubmeter[2],
+    val submeter: Submeter? = null,
+    val submitContentMap: Map<String, SubmitContent> = emptyMap(),
 
     val confirmModal: ModalData? = null,
 
@@ -66,20 +68,26 @@ data class ParkingAppState(
     val invoices: List<Invoice> = listOf(),
     val payments: List<Payment> = listOf(),
     val responseErrors: List<ErrorMessage> = listOf(),
-    val submeters: List<Submeter> = fakeSubmeter,  // fakeSubmeter,
+    val submeters: List<Submeter> = emptyList(),  // fakeSubmeter,
     val clientsWithPayments: List<PaymentsListForFinanceTable> = listOf(),
     val financeTable: List<TableRowFinance> = listOf(),
 )
 
+data class SubmitContent(
+    val isLoading: Boolean = false,
+    val errors: List<String> = emptyList(),
+) {
+}
+
 val fakeReadings1 = listOf<Reading>(
-    Reading(1, 1, UtilityType.ELECTRICITY, 0.00, LocalDate.now(), 1.00)
+    Reading(1, 1, UtilityType.ELECTRICITY, "0.00", LocalDate.now(), 1.00)
 )
 val fakeReadings2 = listOf<Reading>(
-    Reading(2, 2, UtilityType.WATER, 0.00, LocalDate.now(), 5.00)
+    Reading(2, 2, UtilityType.WATER, "0.00", LocalDate.now(), 5.00)
 )
 val fakeReadings3 = listOf<Reading>(
-    Reading(3, 3, UtilityType.ELECTRICITY, 0.00, LocalDate.now(), 1.00),
-    Reading(4, 3, UtilityType.ELECTRICITY, 10.00, LocalDate.now().plus(1, DateTimeUnit.DAY), 1.00)
+    Reading(3, 3, UtilityType.ELECTRICITY, "0.00", LocalDate.now(), 1.00),
+    Reading(4, 3, UtilityType.ELECTRICITY, "10.00", LocalDate.now().plus(1, DateTimeUnit.DAY), 1.00)
 )
 
 val fakeSubmeter = listOf<Submeter>(

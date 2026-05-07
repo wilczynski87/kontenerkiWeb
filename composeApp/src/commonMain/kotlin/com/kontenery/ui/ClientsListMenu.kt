@@ -27,6 +27,8 @@ import androidx.compose.material3.DividerDefaults
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -44,6 +46,7 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.kontenery.model.Client
 import com.kontenery.model.ClientOnList
 import com.kontenery.model.enums.ClientFilter
 import com.kontenery.model.enums.WindowWidthSizeClass
@@ -428,3 +431,42 @@ private fun checkLastInvoiceSend(client: ClientOnList): Boolean {
 //        ClientsListWithFilter(viewModel)
 //    }
 //}
+
+@Composable
+fun ClientsListDropdown(
+    client: Client?,
+    clients: List<ClientOnList>,
+    modifier: Modifier = Modifier,
+    expanded: Boolean,
+    onExpandedChange: (Boolean) -> Unit,
+    enabled: Boolean = true,
+    onSelect: (Long) -> Unit,
+) {
+    OutlinedCard(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(4.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(12.dp)
+        ) {
+
+            Text(
+                text = "Klient",
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            Spacer(Modifier.height(8.dp))
+
+            ClientsDropdown(
+                chosenClient = client,
+                selectClient = onSelect,
+                clients = clients,
+                expanded = expanded,
+                onExpandedChange = onExpandedChange,
+                enabled = enabled,
+            )
+        }
+    }
+}

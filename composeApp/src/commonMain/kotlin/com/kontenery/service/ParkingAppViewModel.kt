@@ -1,5 +1,6 @@
 package com.kontenery.service
 
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.kontenery.config.ApiConfig.baseUrl
 import com.kontenery.controller.ApiClientsService
 import com.kontenery.controller.ApiClientsService.healthCheck
@@ -28,6 +29,7 @@ import com.kontenery.model.PaymentForFinanceTable
 import com.kontenery.model.PaymentsListForFinanceTable
 import com.kontenery.model.PrevYearBalance
 import com.kontenery.model.Reading
+import com.kontenery.model.Submeter
 import com.kontenery.model.TableRowFinance
 import com.kontenery.model.auth.LoginResponse
 import com.kontenery.model.auth.UserInfo
@@ -36,6 +38,7 @@ import com.kontenery.model.enums.endOfCurrentYear
 import com.kontenery.model.enums.now
 import com.kontenery.model.enums.startOfCurrentYear
 import com.kontenery.model.invoice.InvoiceFeature
+import com.kontenery.model.invoice.InvoiceSend
 import com.kontenery.model.invoice.Position
 import com.kontenery.util.endOfYear
 import com.kontenery.util.getMonthFinanceFromString
@@ -874,14 +877,19 @@ class ParkingAppViewModel(
     // TODO obsługa odpowiedzi do napisania
     fun postPeriodicInvoiceAgain(invoiceNumber: String) {
         coroutineScope.launch {
-            try {
-                val response = ApiClientsService.invoices.postPeriodicInvoiceAgain(invoiceNumber)
-                println("postPeriodicInvoiceAgain resp for: $invoiceNumber:\n $response")
-//                _state.update { currentState ->
-//                    currentState.copy(responseErrors = response)
-//                }
-            } catch (e: Exception) {
-                println("postPeriodicInvoiceAgain nie udało się wysłać faktury nr: $invoiceNumber ponownie $e")
+            println("postPeriodicInvoiceAgain resp for: $invoiceNumber:\n")
+            ApiClientsService.invoices.postPeriodicInvoiceAgain(invoiceNumber).onSuccess { invoiceSend ->
+                showConfirmModal(
+                    dialogTitle = "Faktura wysłana ponownie",
+                    dialogText = "numer: ${invoiceSend.invoiceNumber} \ndla klienta: ${invoiceSend.forClient} \n wysłana: ${invoiceSend.sendLastTime}",
+                    onConfirmation = {}
+                )
+            }.onFailure { e ->
+                showErrorModal(
+                    dialogTitle = "Faktura NIE wysłana ponownie...",
+                    dialogText = "${e.message}",
+                    onConfirmation = {}
+                )
             }
         }
     }
@@ -972,9 +980,9 @@ class ParkingAppViewModel(
         )
     }
 
-    fun addProductToInvoice() {
+    fun addProductToInvoice(position: Position? = null) {
         val invoice: Invoice = state.value.invoice ?: throw NullPointerException("Invoice is null, for: addProductToInvoice")
-        val newPosition: Position = state.value.position ?: throw NullPointerException("NewProduct is null, for: addProductToInvoice")
+        val newPosition: Position = position ?: state.value.position ?: throw NullPointerException("NewProduct is null, for: addProductToInvoice")
 
         val positions: List<Position> = state.value.invoice?.products?.plus(newPosition) ?: listOf(newPosition)
         val sumPrice = positions.sumOf { it.price?.toDoublePl() ?: 0.0 }
@@ -1128,6 +1136,14 @@ class ParkingAppViewModel(
         }
     }
 
+    fun toSubmeter() {
+        _state.update { currentState ->
+            currentState.copy(
+                currentScreen = CurrentScreen.ADD_SUBMETER
+            )
+        }
+    }
+
     fun choseInvoice(invoiceFeature: InvoiceFeature) {
         _state.update { currentState ->
             currentState.copy(
@@ -1161,11 +1177,11 @@ class ParkingAppViewModel(
     fun postSubmeterReading(submeterId: Long, newReading: Reading) {
         coroutineScope.launch {
             ApiClientsService.utilities.addReadingToSubmeter(submeterId, newReading)
-                .onSuccess { result ->
-                    if (result.clientId == null) throw NullPointerException("No client Id for submeter")
+                .onSuccess { submeter ->
+                    if (submeter.clientId == null) throw NullPointerException("No client Id for submeter")
                     _state.update { state ->
                         state.copy(
-                            submeters = ApiClientsService.utilities.fetchSubmetersForClient(result.clientId).getOrNull() ?: emptyList()
+                            submeter = submeter,
                         )
                     }
                 }
@@ -1182,7 +1198,11 @@ class ParkingAppViewModel(
 
     fun fetchSubmeters() {
         coroutineScope.launch {
-            ApiClientsService.utilities.getAllSubmeters()
+            println("fetchSubmeters")
+            val submeters = ApiClientsService.utilities.getAllSubmeters()
+                _state.update { state ->
+                    state.copy(submeters = submeters)
+                }
         }
     }
     fun fetchSubmeter(submeterId: Long) {
@@ -1196,6 +1216,144 @@ class ParkingAppViewModel(
                     println("fetchSubmeter error: ${e.message}")
                 }
         }
+    }
+
+    fun postSubmeter(submeter: Submeter) {
+        coroutineScope.launch {
+            ApiClientsService.utilities.postSubmeter(submeter)
+                .onSuccess { submeters ->
+                    _state.update { state ->
+                        state.copy(
+                            submeters = submeters,
+                            currentScreen = CurrentScreen.READINGS
+                        )
+                    }
+                }.onFailure { e ->
+                    println("fetchSubmeter error: ${e.message}")
+                }
+        }
+    }
+
+    fun updateSubmeter(submeterId: Long, submeter: Submeter) {
+        coroutineScope.launch {
+            ApiClientsService.utilities.putSubmeter(submeterId, submeter)
+                .onSuccess {
+                    _state.update { state ->
+                        state.copy(submeter = it)
+                    }
+                }.onFailure { e ->
+                    println("fetchSubmeter error: ${e.message}")
+                }
+        }
+    }
+
+    fun updateSubmeterClient(clientId: Long, submeter: Submeter) {
+        coroutineScope.launch {
+            try {
+                val submeterId = submeter.id ?: throw NullPointerException("Brak id podlicznika")
+
+                ApiClientsService.utilities.putSubmeter(submeterId, submeter)
+                    .onSuccess { submeter ->
+                        val client: Client? = ApiClientsService.clients.getClientData(clientId)
+                        println("fetchClientSubmeter $client")
+                        _state.update { state ->
+                            state.copy(
+                                client = client,
+                                submeter = submeter
+                            )
+                        }
+                    }.onFailure { e ->
+                        println("fetchSubmeter error: ${e.message}")
+                    }
+            } catch (e: Exception) {
+                println("fetchClientById nie udało się odnaleźć danych, o id: $clientId,\n $e")
+            }
+        }
+    }
+
+    fun checkReading(clientId: Long, reading: Reading) {
+        coroutineScope.launch {
+            val submitContentMap = state.value.submitContentMap.toMutableMap()
+            val submitContent: Map<String, SubmitContent> = mapOf("checkReading" to SubmitContent(true))
+            _state.update { state ->
+                state.copy(submitContentMap = submitContentMap.plus(submitContent))
+            }
+
+            ApiClientsService.utilities.checkReading(clientId, reading)
+                .onSuccess { reading ->
+                    val submitContentMap = state.value.submitContentMap.toMutableMap()
+                    submitContentMap.remove("checkReading")
+                    _state.update { state ->
+                        state.copy(reading = reading, submitContentMap = submitContentMap)
+                    }
+                }
+                .onFailure { e ->
+                    println("error: checkReading")
+                    val submitContent: Map<String, SubmitContent> = mapOf("checkReading" to SubmitContent(false, listOf(e.message ?: "")))
+                    _state.update { state ->
+                        state.copy(submitContentMap = submitContentMap.plus(submitContent))
+                    }
+                }
+        }
+    }
+
+    fun deleteReading(submeterId: Long, readingId: Long) {
+        coroutineScope.launch {
+            try {
+                ApiClientsService.utilities.deleteReadingToSubmeter(readingId)
+                    .onSuccess {
+                        ApiClientsService.utilities.getSubmeter(submeterId)
+                            .onSuccess { submeter ->
+                                _state.update { state ->
+                                    state.copy(
+                                        submeter = submeter
+                                    )
+                                }
+                            }
+                            .onFailure { e ->
+                                println(e)
+                                throw e
+                            }
+                    }.onFailure { e ->
+                        println(e)
+                        throw e
+                    }
+
+            } catch (e: Throwable) {
+                println("deleteReading ERROR $readingId, $e")
+            }
+        }
+    }
+
+    // TODO
+    fun createPositionFromReading(clientId: Long, reading: Reading) {
+        val submitContentMap = state.value.submitContentMap.toMutableMap()
+        val key = "createProductFromReading-${reading.utilityType?.name}-$clientId"
+        val submitContentToAdd = SubmitContent(true)
+        _state.update { state ->
+            state.copy(submitContentMap = submitContentMap.plus(key to submitContentToAdd))
+        }
+
+        coroutineScope.launch {
+            ApiClientsService.utilities.createPositionFromReading(clientId, reading)
+                .onSuccess { position ->
+                    println("position add to invoice: $position")
+//                    val products: MutableList<Position> = state.value.invoice?.products?.toMutableList() ?: mutableListOf()
+//                    val invoice = state.value.invoice?.copy(products = products.plus(position))
+                    _state.update { state ->
+                        state.copy(submitContentMap = submitContentMap, position = position)
+                    }.also {
+                        addProductToInvoice()
+                    }
+                }
+                .onFailure { e ->
+                    println("error: checkReading")
+                    _state.update { state ->
+                        state.copy(submitContentMap = submitContentMap.plus(key to SubmitContent(false, listOf(e.message ?: ""))))
+                    }
+                }
+        }
+
     }
 
     /*

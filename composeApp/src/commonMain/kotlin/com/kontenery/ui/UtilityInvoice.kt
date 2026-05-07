@@ -27,6 +27,7 @@ import com.kontenery.model.enums.UtilityIcon
 import com.kontenery.model.enums.UtilityType
 import com.kontenery.model.enums.now
 import com.kontenery.model.invoice.Invoice
+import com.kontenery.model.invoice.Position
 import com.kontenery.service.ParkingAppState
 import com.kontenery.service.ParkingAppViewModel
 import kotlinx.datetime.LocalDate
@@ -315,6 +316,7 @@ fun UtilitiesChoice(
     val clients: List<ClientOnList> = state.clients
     val client: Client? = state.client
     val invoice: Invoice = state.invoice ?: return
+    val positions: List<Position> = invoice.products
     val submeters: List<Submeter> = state.submeters
     var expandedClients by remember { mutableStateOf(false) }
 
@@ -331,23 +333,17 @@ fun UtilitiesChoice(
             Text("Wystaw fakturę za media:")
         }
         Row {
-            OutlinedCard(modifier = Modifier.fillMaxWidth().padding(4.dp)) {
-                Text("Klient: ",
-                    modifier = Modifier.padding(4.dp))
-                ClientsDropdown(
-                    chosenClient = client,
-                    selectClient = { selectedClient ->
-                        viewModel.updateCustomerToInvoice(selectedClient)
-                        viewModel.fetchSubmetersForClient(selectedClient)
-//                        println(
-//                            "ClientsDropdown selectedClient: $selectedClient, viewModel: $invoice"
-//                        )
-                    },
-                    clients = clients,
-                    expanded = expandedClients,
-                    toggleExpanded = { expandedClients = !expandedClients },
-                )
-            }
+            ClientsListDropdown(
+                client = client,
+                clients = clients,
+                expanded = expandedClients,
+                onExpandedChange = { expandedClients = !expandedClients },
+//                enabled = false,
+                onSelect = { selectedClient ->
+                    viewModel.updateCustomerToInvoice(selectedClient)
+                    viewModel.fetchSubmetersForClient(selectedClient)
+                },
+            )
         }
         Row() {
             BillType(
@@ -378,10 +374,12 @@ fun UtilitiesChoice(
             )
         }
         Row {
+            ProductsTable(viewModel, positions)
+        }
+        Row {
             Button(
                 onClick = {
                     // TODO jak nie ma id customera to jakiś błąd?
-                    val invoice: Invoice = invoice
                     viewModel.postCustomInvoice(client?.id ?: 0, invoice)
                     viewModel.showConfirmModal(
                         "Status dodatkowej faktury",
@@ -394,7 +392,7 @@ fun UtilitiesChoice(
             }
         }
 
-        ClientsUtilitiesReaders(viewModel, submeters)
+        ClientsUtilitiesReaders(viewModel, submeters.filter { it.clientId == client?.id })
 
     }
 }
@@ -442,10 +440,10 @@ fun SubmeterTable(
         HorizontalDivider(Modifier, DividerDefaults.Thickness, DividerDefaults.color)
 
         Column {
-            submeters.forEach { item ->
+            submeters.forEach { submeter ->
                 SubmeterRow(
-                    submeter = item,
-                    addReading = { submeterId, reading -> viewModel.postSubmeterReading(submeterId, reading) },
+                    submeter = submeter,
+                    addReading = { submeterId, reading -> viewModel.createPositionFromReading(submeterId, reading) },
                     columnWeights,
                 )
             }
@@ -462,7 +460,7 @@ fun SubmeterRow(
 ) {
     val lastReading = submeter.readings.maxByOrNull { it.date ?: LocalDate.now() }
     var value by remember { mutableStateOf("") }
-    var price by remember { mutableStateOf("") }
+    var price by remember { mutableStateOf(lastReading?.currentUnitPriceNet.toString()) }
 
     Row(
         modifier = Modifier
@@ -475,7 +473,7 @@ fun SubmeterRow(
 
         UtilityIcon(submeter.utilityType, modifier = Modifier.weight(columnWeights["type"]!!))
 
-        Text(lastReading?.reading.toString() ?: "-", modifier = Modifier.weight(columnWeights["last"]!!))
+        Text(lastReading?.reading ?: "-", modifier = Modifier.weight(columnWeights["last"]!!))
 
         var readingError by remember { mutableStateOf(false) }
 
@@ -488,7 +486,7 @@ fun SubmeterRow(
                 readingError = when {
                     it.isBlank() -> true
                     parsed == null -> true
-                    parsed < (lastReading?.reading ?: 0.0) -> true
+                    parsed < (lastReading?.reading?.toDoubleOrNull() ?: 0.0) -> true
                     else -> false
                 }
             },
@@ -543,7 +541,7 @@ fun SubmeterRow(
                     Reading(
                         submeterId = id,
                         utilityType = submeter.utilityType,
-                        reading = readingValue,
+                        reading = readingValue.toString(),
                         date = LocalDate.now(),
                         currentUnitPriceNet = priceValue
                     )
@@ -556,7 +554,7 @@ fun SubmeterRow(
                 .padding(start = 4.dp),
 //                .weight(2f),
         ) {
-            Text("Zapisz")
+            Text("Odczyt")
         }
     }
 }

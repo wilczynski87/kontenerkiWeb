@@ -11,7 +11,7 @@ data class Reading(
     val id: Long? = null,
     val submeterId: Long? = null,
     val utilityType: UtilityType? = null,
-    val reading: Double? = null,
+    val reading: String? = null,
     @Serializable(with = LocalDateSerializer::class)
     val date: LocalDate? = null,
     val currentUnitPriceNet: Double? = null

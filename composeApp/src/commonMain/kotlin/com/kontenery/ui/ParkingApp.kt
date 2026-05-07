@@ -177,6 +177,13 @@ fun ParkingApp(
                                 modifier = modifier.padding(innerPadding)
                             )
                         }
+                        CurrentScreen.ADD_SUBMETER -> {
+                            AddSubmeterScreen(
+                                widthSizeClass = windowSize,
+                                viewModel = viewModel,
+                                modifier = modifier.padding(innerPadding)
+                            )
+                        }
                     }
                 }
 
