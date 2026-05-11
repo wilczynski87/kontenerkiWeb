@@ -121,7 +121,7 @@ fun BodyPayments(
                                         payment.fromClient?.id
                                     )
                                 },
-                                dialogTitle = "Wyślij ponownie",
+                                dialogTitle = "Płatność",
                                 dialogText = "Czy usunąć płatność z dnia: ${payment.date}?",
                                 icon = Icons.Default.Delete
                             )

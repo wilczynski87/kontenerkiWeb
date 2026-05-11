@@ -28,6 +28,7 @@ kotlin {
     sourceSets {
         androidMain.dependencies {
             implementation(libs.androidx.activity.compose)
+            implementation(libs.androidx.startup)
             implementation(libs.ktor.client.android)
             implementation(libs.ktor.client.logging)
             implementation(libs.tink.android)
