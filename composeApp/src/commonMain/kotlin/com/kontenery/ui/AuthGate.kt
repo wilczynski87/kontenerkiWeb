@@ -1,12 +1,10 @@
 package com.kontenery.ui
 
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import com.kontenery.service.ParkingAppViewModel
-import io.ktor.websocket.Frame
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.coroutineScope
 
 @Composable
 fun AuthGate(
@@ -19,8 +17,7 @@ fun AuthGate(
 
     when {
         authState.loading -> {
-            // można dać spinner
-            Frame.Text("Loading…")
+            Text("Loading...")
         }
         authState.isAuthenticated -> {
             // użytkownik zalogowany → renderuj całą stronę

@@ -42,7 +42,7 @@ androidx-lifecycle-runtimeCompose = { module = "org.jetbrains.androidx.lifecycle
 # Security for Android
 tink-android = { module = "com.google.crypto.tink:tink-android", version.ref = "tink-android" }
 androidx-datastore = { module = "androidx.datastore:datastore", version.ref = "datastore" }
-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version = "datastore" }
+datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastore" }
 
 # KotlinX
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinxDatetime" }
