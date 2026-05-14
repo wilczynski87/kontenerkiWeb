@@ -10,6 +10,7 @@ import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
@@ -37,6 +38,10 @@ fun ParkingApp(
     val goBack: () -> Unit = { viewModel.goBack() }
     val scope = rememberCoroutineScope()
 
+    LaunchedEffect(state.currentScreen, state.triggerScreen) {
+        viewModel.checkGoBack()
+    }
+
     Drawer(
         viewModel = viewModel,
         scope = scope,
@@ -63,7 +68,6 @@ fun ParkingApp(
                 Crossfade(
                     targetState = state.currentScreen, label = "cross fade"
                 ) { screen ->
-                    viewModel.checkGoBack() // check every time if menu can allow to go back
                     when (screen) {
                         CurrentScreen.CLIENTS_LIST -> {
                             ClientTable(
