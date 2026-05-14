@@ -39,6 +39,10 @@ fun PaymentsDownload(viewModel: ParkingAppViewModel, modifier: Modifier) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         MyFilePickerButton(
+            csvType = CSVType.NEST,
+            pickFile = { pickFile() },
+        )
+        MyFilePickerButton(
             csvType = CSVType.PEKAOSABUSSINESS,
             pickFile = { pickFile() },
         )

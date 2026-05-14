@@ -1721,14 +1721,20 @@ class ParkingAppViewModel(
             ApiClientsService.auth.login(email, password)
         }.onSuccess { user ->
             logDebug("login", user.toString())
-            val user: UserInfo = user.getOrNull() ?: throw NullPointerException("User is null")
 
-            getClientsList(0, 100)
+            val user: UserInfo? = user.getOrNull()
+            if (user == null) {
+                _state.update {
+                    it.copy(authState = AuthState(isAuthenticated = false, error = "Błędne dane logowania"))
+                }
+                return
+            } else {
+                getClientsList(0, 100)
 
-            _state.update {
-                it.copy(authState = AuthState(isAuthenticated = true, user = LoginResponse(user.id, user.role)))
+                _state.update {
+                    it.copy(authState = AuthState(isAuthenticated = true, user = LoginResponse(user.id, user.role)))
+                }
             }
-
         }.onFailure { e ->
             _state.update {
                 it.copy(authState = AuthState(isAuthenticated = false, error = "Błędne dane logowania"))
