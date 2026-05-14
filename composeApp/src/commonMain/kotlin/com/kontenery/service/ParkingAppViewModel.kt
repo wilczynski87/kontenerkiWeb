@@ -1,6 +1,5 @@
 package com.kontenery.service
 
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.kontenery.config.ApiConfig.baseUrl
 import com.kontenery.controller.ApiClientsService
 import com.kontenery.controller.ApiClientsService.healthCheck
@@ -22,7 +21,6 @@ import com.kontenery.model.Client
 import com.kontenery.model.ClientBankAccount
 import com.kontenery.model.ClientCompanyData
 import com.kontenery.model.ClientEvent
-import com.kontenery.model.ClientOnList
 import com.kontenery.model.ClientPersonalData
 import com.kontenery.model.ModalData
 import com.kontenery.model.PaymentForFinanceTable
@@ -43,8 +41,6 @@ import com.kontenery.model.invoice.Position
 import com.kontenery.util.endOfYear
 import com.kontenery.util.getMonthFinanceFromString
 import com.kontenery.util.startOfYear
-import com.kontenery.util.to2Decimals
-import com.kontenery.util.toDoublePl
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -58,12 +54,16 @@ import kotlinx.datetime.minus
 import kotlin.text.toDouble
 
 class ParkingAppViewModel(
-    private val coroutineScope: CoroutineScope
+    private val coroutineScope: CoroutineScope,
+    autoInitialize: Boolean = true,
+    initialState: ParkingAppState = ParkingAppState(),
 ) {
-    private val _state = MutableStateFlow(ParkingAppState())
+    private val _state = MutableStateFlow(initialState)
     val state: StateFlow<ParkingAppState> = _state.asStateFlow()
     private val modalController = ParkingModalController(_state)
     private val navigationController = ParkingNavigationController(_state)
+    private val selectionController = ParkingSelectionController(_state)
+    private val invoiceDraftController = InvoiceDraftController(_state)
     private val clientEventHandler = ClientEventHandler(
         updateClient = ::updateClient,
         saveClient = ::save,
@@ -76,7 +76,9 @@ class ParkingAppViewModel(
     private val pageSize = 20
 
     init {
-        initializeUiState()
+        if (autoInitialize) {
+            initializeUiState()
+        }
     }
 
     private fun initializeUiState() {
@@ -159,15 +161,7 @@ class ParkingAppViewModel(
      */
 
     fun toggleClientNavRow(clientId: Long) {
-        if (clientId == state.value.clientNavRow) {
-            _state.update { currentState ->
-                currentState.copy(clientNavRow = null)
-            }
-        } else {
-            _state.update { currentState ->
-                currentState.copy(clientNavRow = clientId)
-            }
-        }
+        selectionController.toggleClientNavRow(clientId)
     }
 
 //    fun getClientsList(page: Int, size: Int) {
@@ -240,9 +234,7 @@ class ParkingAppViewModel(
     }
 
     fun toggleClientsListModal() {
-        _state.update { currentState ->
-            currentState.copy(clientListError = !state.value.clientListError)
-        }
+        selectionController.toggleClientsListModal()
     }
 
     fun toClientData(idClient: Long? = null) {
@@ -269,8 +261,7 @@ class ParkingAppViewModel(
     }
 
     fun getClientNameById(clientId: Long): String? {
-        val clientsList = state.value.clients
-        return clientsList.find { it.id == clientId }?.name
+        return selectionController.getClientNameById(clientId)
     }
 
 //    fun updateClient(client: Client) {
@@ -553,45 +544,28 @@ class ParkingAppViewModel(
     }
 
     fun newProduct(product: Product?) {
-        _state.update { currentState ->
-            currentState.copy(newProduct = product)
-        }
+        selectionController.newProduct(product)
     }
 
     fun updateProduct(product: Product) {
-        _state.update { currentState ->
-            currentState.copy(newProduct = product)
-        }
+        selectionController.updateProduct(product)
     }
 
     fun clearProduct() {
-        _state.update { currentState ->
-            currentState.copy(newProduct = null)
-        }
+        selectionController.clearProduct()
     }
 
     fun toggleProductNavRow(productId: Long?) {
-        if (productId == state.value.productNavRow) {
-            _state.update { currentState ->
-                currentState.copy(productNavRow = null)
-            }
-        } else {
-            _state.update { currentState ->
-                currentState.copy(productNavRow = productId)
-            }
-        }
+        selectionController.toggleProductNavRow(productId)
     }
 
 
     fun getClientOverdue(clientId: Long): Double? {
-        var client: ClientOnList? = state.value.clients.find { it.id == clientId }
-        if (client == null) {
+        val hasClient = state.value.clients.any { it.id == clientId }
+        if (!hasClient) {
             getClientsList(0, 1000)
-            val widerListClient = state.value.clients.find { it.id == clientId }
-            if(widerListClient == null) return null
-            else client = widerListClient
         }
-        return client.paymentsOverdue
+        return selectionController.getClientOverdue(clientId)
     }
 
     /*
@@ -880,9 +854,7 @@ class ParkingAppViewModel(
 
     // TODO do wykasowania!!!
     fun updateInvoicesAndPayments(invoices: List<Invoice>, payments: List<Payment>) {
-        _state.update { currentState ->
-            currentState.copy(invoices = invoices, payments = payments)
-        }
+        selectionController.updateInvoicesAndPayments(invoices, payments)
     }
 
     fun toAddInvoice() {
@@ -902,124 +874,31 @@ class ParkingAppViewModel(
     }
 
     fun createNewInvoice(invoiceType: InvoiceType? = null, clientId: Long? = null) {
-        val client = null
-        val positions = mutableListOf<Position>()
-        val invoice = Invoice(
-            invoiceNumber = null,
-            invoiceTitle = null,
-            invoiceDate = LocalDate.now(),
-            seller = null,
-            customer = null,
-            products = positions,
-            vatAmountSum = null,
-            priceSum = null,
-            priceWithVatSum = null,
-            paymentDay = null,
-            invoiceSendToClient = null,
-            type = invoiceType?.name,
-            vatApply = false
-        )
-
-        _state.update { currentState ->
-            currentState.copy(
-                invoice = invoice
-            )
-        }
+        invoiceDraftController.createNewInvoice(invoiceType)
     }
 
     fun updateInvoice(invoice: Invoice) {
-        _state.update { currentState ->
-            currentState.copy(invoice = invoice)
-        }
+        invoiceDraftController.updateInvoice(invoice)
     }
 
     fun sellerForInvoiceUpdate() {
-        val invoice: Invoice = state.value.invoice ?: throw NullPointerException("Invoice is null, for: sellerForInvoiceUpdate")
-        val needInvoice: Boolean = state.value.client?.needInvoice() == true
-        if(needInvoice) updateInvoice(invoice.copy(
-            seller = Seller.company(null),
-            invoiceTitle = "Faktura VAT",
-            mainAccount = Seller.company(null).account
-        )
-        ) else updateInvoice(invoice.copy(
-            seller = Seller.personal(null),
-            invoiceTitle = "Faktura imienna bez VAT",
-            mainAccount = Seller.personal(null).account
-        )
-        )
+        invoiceDraftController.sellerForInvoiceUpdate()
     }
 
     fun addProductToInvoice(position: Position? = null) {
-        val invoice: Invoice = state.value.invoice ?: throw NullPointerException("Invoice is null, for: addProductToInvoice")
-        val newPosition: Position = position ?: state.value.position ?: throw NullPointerException("NewProduct is null, for: addProductToInvoice")
-
-        val positions: List<Position> = state.value.invoice?.products?.plus(newPosition) ?: listOf(newPosition)
-        val sumPrice = positions.sumOf { it.price?.toDoublePl() ?: 0.0 }
-        val sumVat = positions.sumOf { it.vatAmount?.toDoublePl() ?: 0.0 }
-        val sumWithVat = positions.sumOf { it.priceWithVat?.toDoublePl() ?: 0.0 }
-
-        val updatedInvoice = invoice.copy(
-            products = positions,
-            vatAmountSum = sumVat.toString(),
-            priceSum = sumPrice.toString(),
-            priceWithVatSum = sumWithVat.toString(),
-        )
-
-        _state.update { currentState ->
-            currentState.copy(
-                invoice = updatedInvoice
-            )
-        }
+        invoiceDraftController.addProductToInvoice(position)
     }
 
     fun removeProductFromInvoice(index: Int) {
-        var invoice: Invoice = state.value.invoice ?: throw NullPointerException("Invoice is null, for: removeProductFromInvoice")
-        var newProducts: MutableList<Position> = invoice.products.toMutableList()
-        newProducts.removeAt(index)
-        _state.update { currentState ->
-            currentState.copy(invoice = invoice.copy(products = newProducts))
-        }
+        invoiceDraftController.removeProductFromInvoice(index)
     }
 
     fun updatePosition(position: Position?) {
-        val position = position ?: Position(
-            vatRate = "23",
-            productName = null,
-            unitPrice = null,
-            quantity = null,
-            price = null,
-            vatAmount = null,
-            priceWithVat = null,
-        )
-        _state.update { currentState ->
-            currentState.copy(position = position)
-        }
+        invoiceDraftController.updatePosition(position)
     }
 
     fun calculatePosition(position: Position) {
-        if(position.unitPrice.isNullOrBlank() || position.quantity.isNullOrBlank()) {
-            updatePosition(position)
-            return
-        }
-
-        val newPrice: Double = position.unitPrice.toDoubleOrNull()?.times(position.quantity.toDouble()) ?: 0.00
-
-        val newVatAmount: Double = if(position.vatRate.isNullOrBlank().not())
-            (newPrice * position.vatRate.toDouble() / 100) else 0.00
-
-        val newPriceWithVat: Double = (newPrice + newVatAmount)
-
-        val position = Position(
-            vatRate = position.vatRate,
-            productName = position.productName,
-            unitPrice = position.unitPrice,
-            quantity = position.quantity,
-            price = newPrice.to2Decimals(),
-            vatAmount = newVatAmount.to2Decimals(),
-            priceWithVat = newPriceWithVat.to2Decimals(),
-        )
-
-        updatePosition(position)
+        invoiceDraftController.calculatePosition(position)
     }
 
     fun postCustomInvoice(clientId: Long, invoice: Invoice) {
@@ -1513,9 +1392,7 @@ class ParkingAppViewModel(
 
     // change ForDate:
     fun updateForDate(date: LocalDate? = LocalDate.now()) {
-        _state.update { currentState ->
-            currentState.copy(forDate = date)
-        }
+        selectionController.updateForDate(date)
     }
 
     // Drukuj faktury okresowe
@@ -1527,11 +1404,7 @@ class ParkingAppViewModel(
     }
 
     fun onUnitPriceChanged(input: String) {
-        val value = input.replace(',', '.').toDoubleOrNull()
-        updatePosition(
-            state.value.position?.copy(unitPrice = input)
-        )
-        value
+        invoiceDraftController.onUnitPriceChanged(input)
     }
 
     fun ensureInvoiceCustomer() {
@@ -1656,9 +1529,7 @@ class ParkingAppViewModel(
         }
     }
     fun changeFinanceYear(year: Int) {
-        _state.update { currentState ->
-            currentState.copy(financeYear = year)
-        }
+        selectionController.changeFinanceYear(year)
     }
     fun changeFinanceYearPaymentsMenu(year: Int) {
         val from = LocalDate.parse("${year}-01-01")
