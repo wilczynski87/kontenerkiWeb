@@ -62,6 +62,13 @@ class ParkingAppViewModel(
 ) {
     private val _state = MutableStateFlow(ParkingAppState())
     val state: StateFlow<ParkingAppState> = _state.asStateFlow()
+    private val modalController = ParkingModalController(_state)
+    private val navigationController = ParkingNavigationController(_state)
+    private val clientEventHandler = ClientEventHandler(
+        updateClient = ::updateClient,
+        saveClient = ::save,
+        updateExistingClient = ::update,
+    )
 
     private var currentPage = 0
     private var isLoading = false
@@ -83,9 +90,7 @@ class ParkingAppViewModel(
         MODAL
      */
     fun closeConfirmationModal() {
-        _state.update { currentState ->
-            currentState.copy(confirmModal = null)
-        }
+        modalController.closeConfirmationModal()
     }
 
     fun showConfirmModal(
@@ -93,13 +98,7 @@ class ParkingAppViewModel(
         dialogText: String,
         onConfirmation: () -> Unit,
     ) {
-        _state.update { it.copy(
-            confirmModal = ModalData(
-                dialogTitle = dialogTitle,
-                dialogText = dialogText,
-                onConfirmation = onConfirmation,
-            )
-        ) }
+        modalController.showConfirmModal(dialogTitle, dialogText, onConfirmation)
     }
 
     fun showErrorModal(
@@ -108,28 +107,17 @@ class ParkingAppViewModel(
         onDismissRequest: () -> Unit = {closeConfirmationModal()},
         onConfirmation: () -> Unit,
     ) {
-        _state.update { it.copy(
-            confirmModal = ModalData(
-                dialogTitle = dialogTitle,
-                dialogText = dialogText,
-                onConfirmation = onConfirmation,
-                onDismissRequest = onDismissRequest,
-            )
-        ) }
+        modalController.showErrorModal(dialogTitle, dialogText, onDismissRequest, onConfirmation)
     }
 
     fun createConfirmationModal(
         modal: ModalData = ModalData(onDismissRequest = {closeConfirmationModal()})
     ) {
-        _state.update { currentState ->
-            currentState.copy(confirmModal = modal)
-        }
+        modalController.createConfirmationModal(modal)
     }
 
     fun closeResponseModal() {
-        _state.update { currentState ->
-            currentState.copy(responseErrors = listOf())
-        }
+        modalController.closeResponseModal()
     }
 
     /*
@@ -157,32 +145,13 @@ class ParkingAppViewModel(
      */
 
     fun setGoBack(targetScreen: CurrentScreen, triggerScreen: CurrentScreen) {
-        _state.update { currentState ->
-            currentState.copy(
-                canGoBack = true,
-                triggerScreen = triggerScreen,
-                targetScreen = targetScreen
-            )
-        }
+        navigationController.setGoBack(targetScreen, triggerScreen)
     }
     fun goBack() {
-        _state.update { currentState ->
-            currentState.copy(
-                currentScreen = currentState.targetScreen ?: CurrentScreen.CLIENTS_LIST,
-                canGoBack = false
-            )
-        }
+        navigationController.goBack()
     }
     fun checkGoBack() {
-        val currentScreen: CurrentScreen = state.value.currentScreen
-        val triggerScreen: CurrentScreen? = state.value.triggerScreen
-        var canGoBack: Boolean = false
-        if (currentScreen == triggerScreen) canGoBack = true
-        if (triggerScreen == null) canGoBack = false
-
-        _state.update { currentState ->
-            currentState.copy(canGoBack = currentScreen == triggerScreen)
-        }
+        navigationController.checkGoBack()
     }
 
     /*
@@ -1770,95 +1739,7 @@ class ParkingAppViewModel(
     }
 
     fun onClientEvent(event: ClientEvent) {
-        when (event) {
-            is ClientEvent.Personal -> handlePersonal(event)
-            is ClientEvent.Company -> handleCompany(event)
-            is ClientEvent.AddressEvent -> handleAddress(event)
-            is ClientEvent.Bank -> handleBank(event)
-
-            is ClientEvent.InvoiceTitleChanged -> updateClient {
-                it.copy(invoiceTitle = event.value)
-            }
-
-            ClientEvent.ToggleActive -> updateClient {
-                it.copy(isActive = !(it.isActive ?: false))
-            }
-
-            ClientEvent.Save -> save()
-            ClientEvent.Update -> update()
-        }
-    }
-
-    private fun handlePersonal(event: ClientEvent.Personal) {
-        updateClient { client ->
-            val p = client.clientPrivate ?: ClientPersonalData()
-
-            client.copy(
-                clientPrivate = when (event) {
-                    is ClientEvent.Personal.FirstNameChanged -> p.copy(firstName = event.value)
-                    is ClientEvent.Personal.LastNameChanged -> p.copy(lastName = event.value)
-                    is ClientEvent.Personal.PeselChanged -> p.copy(pesel = event.value)
-                    is ClientEvent.Personal.PassportChanged -> p.copy(passport = event.value)
-                    is ClientEvent.Personal.PhoneChanged -> p.copy(phone = event.value)
-                    is ClientEvent.Personal.EmailChanged -> p.copy(email = event.value)
-                    is ClientEvent.Personal.SalutationChanged -> p.copy(salutation = event.value)
-                }
-            )
-        }
-    }
-
-    private fun handleCompany(event: ClientEvent.Company) {
-        updateClient { client ->
-            val c = client.clientCompany ?: ClientCompanyData()
-
-            client.copy(
-                clientCompany = when (event) {
-                    is ClientEvent.Company.NameChanged -> c.copy(name = event.value)
-                    is ClientEvent.Company.NipChanged -> c.copy(nip = event.value)
-                    is ClientEvent.Company.KrsChanged -> c.copy(krs = event.value)
-                    is ClientEvent.Company.PhoneChanged -> c.copy(phone = event.value)
-                    is ClientEvent.Company.EmailChanged -> c.copy(email = event.value)
-
-                    ClientEvent.Company.ToggleInvoice ->
-                        c.copy(needInvoice = !(c.needInvoice ?: false))
-                }
-            )
-        }
-    }
-
-    private fun handleAddress(event: ClientEvent.AddressEvent) {
-        updateClient { client ->
-            when (event) {
-
-                is ClientEvent.AddressEvent.PersonalAddressChanged -> {
-                    val p = client.clientPrivate ?: ClientPersonalData()
-                    client.copy(clientPrivate = p.copy(address = event.address))
-                }
-
-                is ClientEvent.AddressEvent.CompanyAddressChanged -> {
-                    val c = client.clientCompany ?: ClientCompanyData()
-                    client.copy(clientCompany = c.copy(address = event.address))
-                }
-            }
-        }
-    }
-
-    private fun handleBank(event: ClientEvent.Bank) {
-        updateClient { client ->
-            val list = client.bankAccounts.orEmpty().toMutableList()
-
-            when (event) {
-                is ClientEvent.Bank.Add -> list.add(event.account)
-                is ClientEvent.Bank.Remove -> list.remove(event.account)
-                is ClientEvent.Bank.Update -> {
-                    if (event.index in list.indices) {
-                        list[event.index] = event.value
-                    }
-                }
-            }
-
-            client.copy(bankAccounts = list)
-        }
+        clientEventHandler.handle(event)
     }
 
     private fun save() {
