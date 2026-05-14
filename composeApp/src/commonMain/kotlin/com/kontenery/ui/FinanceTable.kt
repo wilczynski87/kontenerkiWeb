@@ -52,7 +52,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.kontenery.library.utils.Month
+import com.kontenery.model.enums.Month
 import com.kontenery.model.MonthValue
 import com.kontenery.model.PaymentForFinanceTable
 import com.kontenery.model.TableRowFinance

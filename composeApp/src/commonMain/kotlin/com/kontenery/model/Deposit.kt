@@ -1,8 +1,8 @@
-package com.kontenery.library.model
+package com.kontenery.model
 
 
 import kotlinx.serialization.Serializable
-import com.kontenery.library.utils.DepositType
+import com.kontenery.model.enums.DepositType
 
 @Serializable
 data class Deposit(

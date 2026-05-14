@@ -21,7 +21,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.kontenery.library.utils.Month
+import com.kontenery.model.enums.Month
 import com.kontenery.model.ClientOnList
 import com.kontenery.model.MonthValue
 import com.kontenery.model.Payment

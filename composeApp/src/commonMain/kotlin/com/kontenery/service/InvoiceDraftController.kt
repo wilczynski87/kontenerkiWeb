@@ -1,6 +1,6 @@
 package com.kontenery.service
 
-import com.kontenery.library.model.invoice.Subject.Seller
+import com.kontenery.model.invoice.Subject.Seller
 import com.kontenery.model.invoice.Invoice
 import com.kontenery.model.enums.InvoiceType
 import com.kontenery.model.enums.now

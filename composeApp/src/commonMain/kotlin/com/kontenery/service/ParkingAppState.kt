@@ -2,14 +2,14 @@ package com.kontenery.service
 
 import androidx.compose.runtime.mutableStateMapOf
 import com.kontenery.data.AuthState
-import com.kontenery.library.model.Contract
+import com.kontenery.model.Contract
 import com.kontenery.model.Reading
 import com.kontenery.model.Payment
 import com.kontenery.model.PaymentDto
 import com.kontenery.model.Product
 import com.kontenery.model.Submeter
 import com.kontenery.model.invoice.Invoice
-import com.kontenery.library.utils.errors.ErrorMessage
+import com.kontenery.model.errors.ErrorMessage
 import com.kontenery.model.Client
 import com.kontenery.model.ClientBankAccount
 import com.kontenery.model.ClientOnList

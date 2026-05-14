@@ -33,7 +33,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.kontenery.library.model.Address
+import com.kontenery.model.Address
 import com.kontenery.model.Client
 import com.kontenery.model.ClientCompanyData
 import com.kontenery.model.ClientEvent

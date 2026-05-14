@@ -28,9 +28,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.example.parkingandroidview.ui.DatePickerDocked
-import com.example.parkingandroidview.ui.DepositOptionSelector
-import com.kontenery.library.model.Contract
+import com.kontenery.ui.DatePickerDocked
+import com.kontenery.ui.DepositOptionSelector
+import com.kontenery.model.Contract
 import com.kontenery.model.Product
 import com.kontenery.model.Client
 import com.kontenery.model.ClientOnList

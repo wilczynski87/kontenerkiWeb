@@ -1,4 +1,4 @@
-package com.example.parkingandroidview.ui
+package com.kontenery.ui
 
 //import android.icu.math.BigDecimal
 import androidx.compose.animation.AnimatedVisibility
@@ -25,7 +25,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.kontenery.ui.AddContract
 import com.kontenery.ui.ProductIcon
-import com.kontenery.library.model.Contract
+import com.kontenery.model.Contract
 import com.kontenery.model.Client
 import com.kontenery.model.enums.now
 import com.kontenery.service.ParkingAppViewModel

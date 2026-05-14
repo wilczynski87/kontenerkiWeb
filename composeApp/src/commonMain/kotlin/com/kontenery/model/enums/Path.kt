@@ -1,4 +1,4 @@
-package com.kontenery.library.utils
+package com.kontenery.model.enums
 
 enum class Path(val path: String) {
     PERIODIC_INVOICE_PDF("invoices/fakturaKontenery"),

@@ -1,4 +1,4 @@
-package com.example.parkingandroidview.ui
+package com.kontenery.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

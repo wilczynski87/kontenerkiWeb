@@ -1,6 +1,6 @@
-package com.kontenery.library.model.invoice
+package com.kontenery.model.invoice
 
-import com.kontenery.library.model.Address
+import com.kontenery.model.Address
 import com.kontenery.model.Client
 import kotlinx.serialization.Polymorphic
 import kotlinx.serialization.Serializable

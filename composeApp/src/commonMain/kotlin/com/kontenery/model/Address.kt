@@ -1,4 +1,4 @@
-package com.kontenery.library.model
+package com.kontenery.model
 
 import kotlinx.serialization.Serializable
 

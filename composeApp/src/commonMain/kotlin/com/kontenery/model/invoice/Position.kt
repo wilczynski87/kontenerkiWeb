@@ -1,6 +1,6 @@
 package com.kontenery.model.invoice
 
-import com.kontenery.library.model.Contract
+import com.kontenery.model.Contract
 import com.kontenery.model.Product
 import com.kontenery.util.round2
 import kotlinx.serialization.Serializable

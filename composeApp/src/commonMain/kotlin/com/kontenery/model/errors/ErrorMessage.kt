@@ -1,4 +1,4 @@
-package com.kontenery.library.utils.errors
+package com.kontenery.model.errors
 
 import kotlinx.serialization.Serializable
 

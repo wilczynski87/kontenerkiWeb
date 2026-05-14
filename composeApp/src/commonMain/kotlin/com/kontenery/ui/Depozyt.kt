@@ -1,4 +1,4 @@
-package com.example.parkingandroidview.ui
+package com.kontenery.ui
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -15,8 +15,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.kontenery.library.model.Deposit
-import com.kontenery.library.utils.DepositType
+import com.kontenery.model.Deposit
+import com.kontenery.model.enums.DepositType
 import com.kontenery.service.ParkingAppViewModel
 
 @Composable

@@ -1,4 +1,4 @@
-package com.kontenery.library.utils
+package com.kontenery.model.enums
 
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.number

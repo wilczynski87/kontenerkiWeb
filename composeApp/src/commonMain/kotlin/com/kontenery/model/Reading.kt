@@ -1,7 +1,7 @@
 package com.kontenery.model
 
 
-import com.kontenery.library.serializers.LocalDateSerializer
+import com.kontenery.serializers.LocalDateSerializer
 import com.kontenery.model.enums.UtilityType
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.Serializable

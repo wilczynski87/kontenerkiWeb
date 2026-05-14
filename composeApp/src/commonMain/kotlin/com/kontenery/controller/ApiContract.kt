@@ -1,8 +1,8 @@
 package com.kontenery.controller
 
 import com.kontenery.config.ApiConfig.baseUrl
-import com.kontenery.library.model.Contract
-import com.kontenery.library.model.ContractDto
+import com.kontenery.model.Contract
+import com.kontenery.model.ContractDto
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.delete

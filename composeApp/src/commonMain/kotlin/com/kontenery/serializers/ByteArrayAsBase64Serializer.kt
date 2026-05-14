@@ -1,4 +1,4 @@
-package com.kontenery.library.serializers
+package com.kontenery.serializers
 
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer

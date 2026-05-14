@@ -1,4 +1,4 @@
-package com.example.parkingandroidview.ui
+package com.kontenery.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.awaitEachGesture

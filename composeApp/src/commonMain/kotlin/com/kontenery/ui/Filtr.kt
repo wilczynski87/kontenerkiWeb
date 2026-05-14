@@ -1,4 +1,4 @@
-package com.example.parkingandroidview.ui
+package com.kontenery.ui
 
 //
 //@Composable

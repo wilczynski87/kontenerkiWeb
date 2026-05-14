@@ -1,4 +1,4 @@
-package com.kontenery.library.utils
+package com.kontenery.model.enums
 
 enum class MailSendParam(val param:String) {
     INVOICE_NUMBER("invoiceNumber"),

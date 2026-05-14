@@ -14,9 +14,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import com.example.parkingandroidview.ui.BankAccountMenu
-import com.example.parkingandroidview.ui.ContractList
-import com.example.parkingandroidview.ui.PaymentForm
+import com.kontenery.ui.BankAccountMenu
+import com.kontenery.ui.ContractList
+import com.kontenery.ui.PaymentForm
 import com.kontenery.model.ModalData
 import com.kontenery.model.enums.CurrentScreen
 import com.kontenery.model.enums.WindowWidthSizeClass

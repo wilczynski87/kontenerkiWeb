@@ -37,7 +37,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.kontenery.model.invoice.Invoice
-import com.kontenery.library.utils.Month
+import com.kontenery.model.enums.Month
 import com.kontenery.model.ModalData
 import com.kontenery.model.enums.SellerAccount
 import com.kontenery.model.enums.WindowWidthSizeClass
