@@ -1,10 +1,19 @@
 package com.kontenery.config
 
 object ApiConfig {
+    var baseUrl: String = defaultApiBaseUrl()
+        private set
 
-    var baseUrl = dockerUrl // ONLINE
-    const val dockerUrl = "http://api:8100" // DOCKER
-    const val localUrl = "http://localhost:8100" // WEB
-    const val remoteUrl =  "http://217.154.148.172:8100" // REMOTE
+    val candidateBaseUrls: List<String>
+        get() = apiBaseUrlCandidates()
+            .map { it.trimEnd('/') }
+            .distinct()
 
+    fun useBaseUrl(url: String) {
+        baseUrl = url.trimEnd('/')
+    }
 }
+
+internal expect fun defaultApiBaseUrl(): String
+
+internal expect fun apiBaseUrlCandidates(): List<String>
