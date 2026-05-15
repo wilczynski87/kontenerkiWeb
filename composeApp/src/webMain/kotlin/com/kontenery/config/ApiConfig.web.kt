@@ -12,3 +12,5 @@ internal actual fun apiBaseUrlCandidates(): List<String> =
         SAME_ORIGIN_API_PROXY_URL,
         REMOTE_URL,
     )
+
+actual fun apiDeviceLabel(): String = "przeglądarka"

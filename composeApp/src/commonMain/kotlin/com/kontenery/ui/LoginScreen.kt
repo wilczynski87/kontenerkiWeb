@@ -20,6 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.kontenery.config.ApiConfig.baseUrl
+import com.kontenery.config.apiDeviceLabel
 import com.kontenery.service.ParkingAppViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -34,6 +35,7 @@ fun LoginScreen(viewModel: ParkingAppViewModel) {
     val serverHealthStatus = state.serverHealthStatus
     val serverHealthProbeUrl = state.serverHealthProbeUrl
     val serverHealthTriedUrls = state.serverHealthTriedUrls
+    val serverHealthLastError = state.serverHealthLastError
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
@@ -43,6 +45,7 @@ fun LoginScreen(viewModel: ParkingAppViewModel) {
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
+            Text("Urządzenie: ${apiDeviceLabel()}", modifier = Modifier.padding(bottom = 8.dp))
             when {
                 serverHealthStatus == null && serverHealthProbeUrl != null -> {
                     Text("Sprawdzam: $serverHealthProbeUrl")
@@ -61,6 +64,12 @@ fun LoginScreen(viewModel: ParkingAppViewModel) {
                         Text(
                             modifier = Modifier.padding(top = 8.dp),
                             text = "Sprawdzono:\n${serverHealthTriedUrls.joinToString("\n") { "• $it" }}",
+                        )
+                    }
+                    serverHealthLastError?.let { err ->
+                        Text(
+                            modifier = Modifier.padding(top = 8.dp),
+                            text = "Ostatni błąd: $err",
                         )
                     }
                 }

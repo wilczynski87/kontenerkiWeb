@@ -8,6 +8,7 @@ import io.ktor.client.request.get
 data class HealthCheckResult(
     val activeBaseUrl: String?,
     val triedUrls: List<String>,
+    val lastError: String? = null,
 )
 
 class ApiHealthCheck(
@@ -15,6 +16,7 @@ class ApiHealthCheck(
 ) {
     suspend fun healthCheck(onProbe: (suspend (String) -> Unit)? = null): HealthCheckResult {
         val triedUrls = mutableListOf<String>()
+        var lastError: String? = null
         for (url in ApiConfig.candidateBaseUrls) {
             triedUrls.add(url)
             onProbe?.invoke(url)
@@ -24,10 +26,11 @@ class ApiHealthCheck(
                     ApiConfig.useBaseUrl(url)
                     return HealthCheckResult(activeBaseUrl = url, triedUrls = triedUrls)
                 }
-            } catch (_: Throwable) {
-                // Try next candidate.
+                lastError = "HTTP ${response.status.value} dla $url/health"
+            } catch (e: Throwable) {
+                lastError = "${e::class.simpleName}: ${e.message ?: "brak komunikatu"}"
             }
         }
-        return HealthCheckResult(activeBaseUrl = null, triedUrls = triedUrls)
+        return HealthCheckResult(activeBaseUrl = null, triedUrls = triedUrls, lastError = lastError)
     }
 }

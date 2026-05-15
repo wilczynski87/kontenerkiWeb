@@ -17,3 +17,6 @@ object ApiConfig {
 internal expect fun defaultApiBaseUrl(): String
 
 internal expect fun apiBaseUrlCandidates(): List<String>
+
+/** Etykieta platformy na ekranie logowania (debug). */
+expect fun apiDeviceLabel(): String
