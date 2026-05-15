@@ -21,7 +21,20 @@ kotlin {
     }
 
     wasmJs {
-        browser()
+        browser {
+            commonWebpackConfig {
+                devServer = (devServer ?: org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig.DevServer()).apply {
+                    proxy = mutableListOf(
+                        org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig.DevServer.Proxy(
+                            context = mutableListOf("/api"),
+                            target = "http://217.154.148.172:8100",
+                            changeOrigin = true,
+                            pathRewrite = mutableMapOf("^/api" to ""),
+                        ),
+                    )
+                }
+            }
+        }
         binaries.executable()
     }
     

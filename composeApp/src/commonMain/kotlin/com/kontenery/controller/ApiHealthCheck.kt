@@ -2,6 +2,7 @@ package com.kontenery.controller
 
 import com.kontenery.config.ApiConfig
 import com.kontenery.config.createHealthCheckHttpClient
+import com.kontenery.config.resolveHealthCheckUrl
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
 
@@ -21,7 +22,7 @@ class ApiHealthCheck(
             triedUrls.add(url)
             onProbe?.invoke(url)
             try {
-                val response = httpClient.get("$url/health")
+                val response = httpClient.get(resolveHealthCheckUrl(url))
                 if (response.status.value in 200..299) {
                     ApiConfig.useBaseUrl(url)
                     return HealthCheckResult(activeBaseUrl = url, triedUrls = triedUrls)

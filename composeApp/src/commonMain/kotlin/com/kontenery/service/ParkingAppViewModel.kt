@@ -85,9 +85,35 @@ class ParkingAppViewModel(
     private fun initializeUiState() {
         _state.value = ParkingAppState(clientNavRow = 1L)
         coroutineScope.launch {
-            checkServerConnectivity()
-            restoreSession()
+            bootstrapAuth()
         }
+    }
+
+    private suspend fun bootstrapAuth() {
+        val connectivity = runServerConnectivityCheck()
+        if (connectivity is ServerConnectivity.Online) {
+            restoreSession()
+        } else {
+            logDebug("login", "skip restoreSession — server offline")
+            _state.update {
+                it.copy(authState = AuthState(loading = false, error = null))
+            }
+        }
+    }
+
+    private suspend fun runServerConnectivityCheck(): ServerConnectivity {
+        _state.update {
+            it.copy(loginUi = it.loginUi.copy(serverConnectivity = ServerConnectivity.Checking(null)))
+        }
+        val connectivity = authService.checkServerConnectivity { url ->
+            logDebug("serverHealthCheck", "probing $url")
+            _state.update {
+                it.copy(loginUi = it.loginUi.copy(serverConnectivity = ServerConnectivity.Checking(url)))
+            }
+        }
+        logDebug("serverHealthCheck", "result=$connectivity baseUrl=$baseUrl")
+        _state.update { it.copy(loginUi = it.loginUi.copy(serverConnectivity = connectivity)) }
+        return connectivity
     }
     /*
         MODAL
@@ -153,17 +179,7 @@ class ParkingAppViewModel(
 
     fun checkServerConnectivity() {
         coroutineScope.launch {
-            _state.update {
-                it.copy(loginUi = it.loginUi.copy(serverConnectivity = ServerConnectivity.Checking(null)))
-            }
-            val connectivity = authService.checkServerConnectivity { url ->
-                logDebug("serverHealthCheck", "probing $url")
-                _state.update {
-                    it.copy(loginUi = it.loginUi.copy(serverConnectivity = ServerConnectivity.Checking(url)))
-                }
-            }
-            logDebug("serverHealthCheck", "result=$connectivity baseUrl=$baseUrl")
-            _state.update { it.copy(loginUi = it.loginUi.copy(serverConnectivity = connectivity)) }
+            runServerConnectivityCheck()
         }
     }
 
