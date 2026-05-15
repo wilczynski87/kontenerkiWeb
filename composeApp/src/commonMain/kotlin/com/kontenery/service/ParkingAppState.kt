@@ -53,6 +53,8 @@ data class ParkingAppState(
     val enabledChangeClient: Boolean? = true,
     val forDate: LocalDate? = LocalDate.now(),
     val serverHealthStatus: String? = null,
+    val serverHealthProbeUrl: String? = null,
+    val serverHealthTriedUrls: List<String> = emptyList(),
     val financeYear: Int? = LocalDate.now().year,
     val prevYearsBalance: PrevYearBalance? = null,
     val invoiceFeature: InvoiceFeature = InvoiceFeature(InvoiceType.UTILITIES),
