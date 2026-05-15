@@ -26,3 +26,6 @@ internal actual fun apiBaseUrlCandidates(): List<String> =
     } else {
         listOf(REMOTE_API_URL, ANDROID_EMULATOR_API_URL, LOCAL_ANDROID_API_URL)
     }
+
+actual fun apiDeviceLabel(): String =
+    if (isAndroidEmulator()) "emulator Android" else "telefon Android"

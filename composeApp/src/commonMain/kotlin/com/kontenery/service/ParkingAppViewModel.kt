@@ -138,15 +138,17 @@ class ParkingAppViewModel(
                         serverHealthStatus = "server online",
                         serverHealthProbeUrl = null,
                         serverHealthTriedUrls = result.triedUrls,
+                        serverHealthLastError = null,
                     )
                 }
             } else {
-                logDebug("serverHealthCheck", "all endpoints down: ${result.triedUrls}")
+                logDebug("serverHealthCheck", "all endpoints down: ${result.triedUrls}, last=${result.lastError}")
                 _state.update {
                     it.copy(
                         serverHealthStatus = "brak połączenia z serwerem",
                         serverHealthProbeUrl = null,
                         serverHealthTriedUrls = result.triedUrls,
+                        serverHealthLastError = result.lastError,
                     )
                 }
             }

@@ -55,6 +55,7 @@ data class ParkingAppState(
     val serverHealthStatus: String? = null,
     val serverHealthProbeUrl: String? = null,
     val serverHealthTriedUrls: List<String> = emptyList(),
+    val serverHealthLastError: String? = null,
     val financeYear: Int? = LocalDate.now().year,
     val prevYearsBalance: PrevYearBalance? = null,
     val invoiceFeature: InvoiceFeature = InvoiceFeature(InvoiceType.UTILITIES),

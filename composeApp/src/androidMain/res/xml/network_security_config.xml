@@ -1,16 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  API uses HTTP (not HTTPS). base-config must allow cleartext for IP hosts
+  like 217.154.148.172 — domain-config alone is unreliable for IP literals on
+  physical devices (especially release builds without debug-overrides).
+-->
 <network-security-config>
-    <base-config cleartextTrafficPermitted="false" />
-
-    <domain-config cleartextTrafficPermitted="true">
-        <domain includeSubdomains="true">10.0.2.2</domain>
-        <domain includeSubdomains="true">localhost</domain>
-        <domain includeSubdomains="true">127.0.0.1</domain>
-        <domain includeSubdomains="true">217.154.148.172</domain>
-    </domain-config>
-
-    <!-- Debug: HTTP do API w sieci LAN (np. 192.168.x.x:8100) -->
-    <debug-overrides>
-        <base-config cleartextTrafficPermitted="true" />
-    </debug-overrides>
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
 </network-security-config>
