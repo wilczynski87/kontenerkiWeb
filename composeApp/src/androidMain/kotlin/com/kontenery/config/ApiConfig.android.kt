@@ -2,9 +2,8 @@ package com.kontenery.config
 
 import android.os.Build
 
-private const val ANDROID_EMULATOR_API_URL = "http://10.0.2.2:8100"
-private const val LOCAL_ANDROID_API_URL = "http://localhost:8100"
-private const val REMOTE_API_URL = "http://217.154.148.172:8100"
+/** Emulator → host (Docker API na porcie 8100 na maszynie deweloperskiej). */
+private const val ANDROID_EMULATOR_DOCKER_HOST_URL = "http://10.0.2.2:8100"
 
 internal fun isAndroidEmulator(): Boolean =
     Build.FINGERPRINT.startsWith("generic")
@@ -18,13 +17,20 @@ internal fun isAndroidEmulator(): Boolean =
         || Build.PRODUCT.contains("sdk_gphone", ignoreCase = true)
 
 internal actual fun defaultApiBaseUrl(): String =
-    if (isAndroidEmulator()) ANDROID_EMULATOR_API_URL else REMOTE_API_URL
+    apiBaseUrlCandidates().first()
 
 internal actual fun apiBaseUrlCandidates(): List<String> =
     if (isAndroidEmulator()) {
-        listOf(ANDROID_EMULATOR_API_URL, LOCAL_ANDROID_API_URL, REMOTE_API_URL)
+        orderedApiBaseUrlCandidates(
+            dockerReachableUrl = ANDROID_EMULATOR_DOCKER_HOST_URL,
+            localhostUrl = LOCALHOST_API_URL,
+        )
     } else {
-        listOf(REMOTE_API_URL, ANDROID_EMULATOR_API_URL, LOCAL_ANDROID_API_URL)
+        // Telefon: localhost:8100 po `adb reverse tcp:8100 tcp:8100` trafia do API w Dockerze na hoście.
+        orderedApiBaseUrlCandidates(
+            dockerReachableUrl = LOCALHOST_API_URL,
+            localhostUrl = "http://127.0.0.1:8100",
+        )
     }
 
 actual fun apiDeviceLabel(): String =
