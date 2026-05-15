@@ -32,6 +32,7 @@ fun LoginScreen(viewModel: ParkingAppViewModel) {
     var password by remember { mutableStateOf("") }
 
     val state by viewModel.state.collectAsState()
+    val authError = state.authState.error
     val serverHealthStatus = state.serverHealthStatus
     val serverHealthProbeUrl = state.serverHealthProbeUrl
     val serverHealthTriedUrls = state.serverHealthTriedUrls
@@ -46,6 +47,12 @@ fun LoginScreen(viewModel: ParkingAppViewModel) {
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text("Urządzenie: ${apiDeviceLabel()}", modifier = Modifier.padding(bottom = 8.dp))
+            authError?.let { err ->
+                Text(
+                    modifier = Modifier.padding(bottom = 8.dp),
+                    text = err,
+                )
+            }
             when {
                 serverHealthStatus == null && serverHealthProbeUrl != null -> {
                     Text("Sprawdzam: $serverHealthProbeUrl")

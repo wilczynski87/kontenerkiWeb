@@ -39,6 +39,13 @@ class TokenManager(
         return cachedRefreshToken
     }
 
+    /** Po błędzie odszyfrowania (np. InvalidKeyException) — wymuś ponowne logowanie. */
+    suspend fun invalidateCachedTokens() {
+        cachedAccessToken = null
+        cachedRefreshToken = null
+        storage.clear()
+    }
+
     suspend fun clearTokens() {
         cachedAccessToken = null
         cachedRefreshToken = null
