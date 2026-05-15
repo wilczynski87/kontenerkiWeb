@@ -10,8 +10,6 @@ import com.google.crypto.tink.KeyTemplates
 import com.google.crypto.tink.aead.AeadConfig
 import com.google.crypto.tink.integration.android.AndroidKeysetManager
 import com.kontenery.auth.SecureTokenStorage
-import com.kontenery.logError
-import com.kontenery.logDebug
 import kotlinx.coroutines.flow.first
 import java.security.GeneralSecurityException
 import java.security.KeyStore
@@ -90,33 +88,47 @@ class AndroidSecureTokenStorage(
     }
 }
 
+
 @Suppress("DEPRECATION")
 private fun createAeadWithRecovery(context: Context): Aead {
     AeadConfig.register()
     return try {
-        buildAead(context)
+        buildAead(context, withMasterKey = true)
     } catch (first: Exception) {
         logError("SecureTokenStorage", "Inicjalizacja klucza Tink nie powiodła się: $first")
         resetTinkKeyMaterial(context)
         try {
-            buildAead(context)
+            buildAead(context, withMasterKey = false) // ← bez master key URI
         } catch (second: Exception) {
-            logError("SecureTokenStorage", "Ponowna inicjalizacja klucza nie powiodła się: $second")
+            logError("SecureTokenStorage", "Ponowna inicjalizacja nie powiodła się: $second")
             throw second
         }
     }
 }
 
-@Suppress("DEPRECATION")
-private fun buildAead(context: Context): Aead {
-    val keysetHandle = AndroidKeysetManager.Builder()
-        .withSharedPref(context, "tink_keyset", "tink_master_key")
-        .withKeyTemplate(KeyTemplates.get("AES256_GCM"))
-        .withMasterKeyUri("android-keystore://tink_master_key")
-        .build()
-        .keysetHandle
+//@Suppress("DEPRECATION")
+//private fun buildAead(context: Context, withMasterKey: Boolean): Aead {
+//    val keysetHandle = AndroidKeysetManager.Builder()
+//        .withSharedPref(context, "tink_keyset", "tink_master_key")
+//        .withKeyTemplate(KeyTemplates.get("AES256_GCM"))
+//        .withMasterKeyUri("android-keystore://tink_master_key")
+//        .build()
+//        .keysetHandle
+//
+//    return keysetHandle.getPrimitive(Aead::class.java)
+//}
 
-    return keysetHandle.getPrimitive(Aead::class.java)
+@Suppress("DEPRECATION")
+private fun buildAead(context: Context, withMasterKey: Boolean): Aead {
+    val builder = AndroidKeysetManager.Builder()
+        .withSharedPref(context, "tink_keyset", "tink_keyset_pref")
+        .withKeyTemplate(KeyTemplates.get("AES256_GCM"))
+
+    if (withMasterKey) {
+        builder.withMasterKeyUri("android-keystore://tink_master_key")
+    }
+
+    return builder.build().keysetHandle.getPrimitive(Aead::class.java)
 }
 
 private fun resetTinkKeyMaterial(context: Context) {
@@ -131,3 +143,22 @@ private fun resetTinkKeyMaterial(context: Context) {
         logError("SecureTokenStorage", "Nie udało się usunąć klucza Keystore: $it")
     }
 }
+
+//fun createEncryptedPrefs(context: Context): SharedPreferences {
+//    return try {
+//        val masterKey = MasterKey.Builder(context)
+//            .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+//            .build()
+//        EncryptedSharedPreferences.create(
+//            context,
+//            "my_prefs",
+//            masterKey,
+//            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+//            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+//        )
+//    } catch (e: Exception) {
+//        // Klucz nieważny - usuń stare preferencje i utwórz nowe
+//        context.deleteSharedPreferences("my_prefs")
+//        createEncryptedPrefs(context) // rekurencja - teraz się uda
+//    }
+//}
