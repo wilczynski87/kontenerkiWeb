@@ -2,7 +2,8 @@ package com.kontenery.service
 
 import com.kontenery.config.ApiConfig.baseUrl
 import com.kontenery.controller.ApiClientsService
-import com.kontenery.controller.ApiClientsService.healthCheck
+import com.kontenery.model.auth.LoginCredentials
+import com.kontenery.ui.login.ServerConnectivity
 import com.kontenery.data.AuthState
 import com.kontenery.model.Contract
 import com.kontenery.model.Deposit
@@ -30,7 +31,6 @@ import com.kontenery.model.Reading
 import com.kontenery.model.Submeter
 import com.kontenery.model.TableRowFinance
 import com.kontenery.model.auth.LoginResponse
-import com.kontenery.model.auth.UserInfo
 import com.kontenery.model.enums.CurrentScreen
 import com.kontenery.model.enums.endOfCurrentYear
 import com.kontenery.model.enums.now
@@ -69,6 +69,7 @@ class ParkingAppViewModel(
         saveClient = ::save,
         updateExistingClient = ::update,
     )
+    private val authService = AuthService()
 
     private var currentPage = 0
     private var isLoading = false
@@ -84,8 +85,8 @@ class ParkingAppViewModel(
     private fun initializeUiState() {
         _state.value = ParkingAppState(clientNavRow = 1L)
         coroutineScope.launch {
-            serverHealthCheck()
-            refreshLogin()
+            checkServerConnectivity()
+            restoreSession()
         }
     }
     /*
@@ -122,36 +123,103 @@ class ParkingAppViewModel(
         modalController.closeResponseModal()
     }
 
-    /*
-        Server Helathcheck
-     */
-    fun serverHealthCheck() {
+    fun onLoginUsernameChange(value: String) {
+        _state.update {
+            it.copy(
+                loginUi = it.loginUi.copy(
+                    username = value,
+                    usernameError = null,
+                ),
+            )
+        }
+    }
+
+    fun onLoginPasswordChange(value: String) {
+        _state.update {
+            it.copy(
+                loginUi = it.loginUi.copy(
+                    password = value,
+                    passwordError = null,
+                ),
+            )
+        }
+    }
+
+    fun onLoginPasswordVisibilityToggle() {
+        _state.update {
+            it.copy(loginUi = it.loginUi.copy(isPasswordVisible = !it.loginUi.isPasswordVisible))
+        }
+    }
+
+    fun checkServerConnectivity() {
         coroutineScope.launch {
-            val result = healthCheck.healthCheck { url ->
+            _state.update {
+                it.copy(loginUi = it.loginUi.copy(serverConnectivity = ServerConnectivity.Checking(null)))
+            }
+            val connectivity = authService.checkServerConnectivity { url ->
                 logDebug("serverHealthCheck", "probing $url")
-                _state.update { it.copy(serverHealthProbeUrl = url, serverHealthStatus = null) }
-            }
-            if (result.activeBaseUrl != null) {
-                logDebug("serverHealthCheck", "online at ${result.activeBaseUrl}, baseUrl: $baseUrl")
                 _state.update {
-                    it.copy(
-                        serverHealthStatus = "server online",
-                        serverHealthProbeUrl = null,
-                        serverHealthTriedUrls = result.triedUrls,
-                        serverHealthLastError = null,
-                    )
-                }
-            } else {
-                logDebug("serverHealthCheck", "all endpoints down: ${result.triedUrls}, last=${result.lastError}")
-                _state.update {
-                    it.copy(
-                        serverHealthStatus = "brak połączenia z serwerem",
-                        serverHealthProbeUrl = null,
-                        serverHealthTriedUrls = result.triedUrls,
-                        serverHealthLastError = result.lastError,
-                    )
+                    it.copy(loginUi = it.loginUi.copy(serverConnectivity = ServerConnectivity.Checking(url)))
                 }
             }
+            logDebug("serverHealthCheck", "result=$connectivity baseUrl=$baseUrl")
+            _state.update { it.copy(loginUi = it.loginUi.copy(serverConnectivity = connectivity)) }
+        }
+    }
+
+    fun submitLogin() {
+        val form = _state.value.loginUi
+        val validation = authService.validateForm(form.username, form.password)
+        if (!validation.isValid) {
+            _state.update {
+                it.copy(
+                    loginUi = it.loginUi.copy(
+                        usernameError = validation.usernameError,
+                        passwordError = validation.passwordError,
+                    ),
+                )
+            }
+            return
+        }
+
+        val connectivity = form.serverConnectivity
+        if (connectivity !is ServerConnectivity.Online) {
+            _state.update {
+                it.copy(authState = AuthState(error = "Serwer niedostępny — sprawdź połączenie"))
+            }
+            return
+        }
+
+        coroutineScope.launch {
+            _state.update { it.copy(authState = AuthState(loading = true, error = null)) }
+            authService.login(LoginCredentials(form.username, form.password))
+                .onSuccess { user ->
+                    getClientsList(0, 100)
+                    _state.update {
+                        it.copy(
+                            authState = AuthState(
+                                isAuthenticated = true,
+                                user = LoginResponse(user.id, user.role),
+                                loading = false,
+                            ),
+                        )
+                    }
+                }
+                .onFailure { error ->
+                    logError("login", "failed: $error")
+                    if (isSecureStorageFailure(error)) {
+                        authService.clearSession()
+                    }
+                    _state.update {
+                        it.copy(
+                            authState = AuthState(
+                                isAuthenticated = false,
+                                loading = false,
+                                error = authService.mapLoginFailure(error),
+                            ),
+                        )
+                    }
+                }
         }
     }
 
@@ -1562,70 +1630,39 @@ class ParkingAppViewModel(
         }
     }
 
-    // AUTH
-    suspend fun login(email: String, password: String) {
-        logDebug("login", "Login started")
-
-        _state.update {
-            it.copy(authState = AuthState(loading = true))
-        }
-
-        runCatching {
-            ApiClientsService.auth.login(email, password)
-        }.onSuccess { user ->
-            logDebug("login", user.toString())
-
-            val user: UserInfo? = user.getOrNull()
-            if (user == null) {
-                _state.update {
-                    it.copy(authState = AuthState(isAuthenticated = false, error = "Błędne dane logowania"))
+    fun restoreSession() {
+        coroutineScope.launch {
+            _state.update { it.copy(authState = AuthState(loading = true, error = null)) }
+            authService.restoreSession()
+                .onSuccess { user ->
+                    logDebug("login", "restoreSession success")
+                    getClientsList(0, 100)
+                    _state.update {
+                        it.copy(
+                            authState = AuthState(
+                                isAuthenticated = true,
+                                user = user,
+                                loading = false,
+                            ),
+                        )
+                    }
                 }
-                return
-            } else {
-                getClientsList(0, 100)
-
-                _state.update {
-                    it.copy(authState = AuthState(isAuthenticated = true, user = LoginResponse(user.id, user.role)))
+                .onFailure { error ->
+                    logError("login", "restoreSession failed: $error")
+                    if (isSecureStorageFailure(error)) {
+                        authService.clearSession()
+                    }
+                    _state.update {
+                        it.copy(
+                            authState = AuthState(
+                                isAuthenticated = false,
+                                loading = false,
+                                error = null,
+                                user = null,
+                            ),
+                        )
+                    }
                 }
-            }
-        }.onFailure { e ->
-            _state.update {
-                it.copy(authState = AuthState(isAuthenticated = false, error = "Błędne dane logowania"))
-            }
-        }
-    }
-
-    suspend fun refreshLogin() {
-        logDebug("login", "refresh started")
-        runCatching {
-            ApiClientsService.auth.verifyToken()
-        }.onSuccess { user ->
-            logDebug("login", "refreshLogin, onSuccess")
-            getClientsList(0, 100)
-            _state.update {
-                it.copy(
-                    authState = AuthState(isAuthenticated = true, user = user.getOrNull(), loading = false),
-                )
-            }
-        }.onFailure { e ->
-            logError("login", "refresh token failed: $e")
-            if (isSecureStorageFailure(e)) {
-                runCatching { ApiClientsService.auth.clearStoredTokens() }
-            }
-            _state.update {
-                it.copy(
-                    authState = AuthState(
-                        isAuthenticated = false,
-                        loading = false,
-                        error = if (isSecureStorageFailure(e)) {
-                            "Sesja wygasła — zaloguj się ponownie"
-                        } else {
-                            "Tokeny nieaktualne"
-                        },
-                        user = null,
-                    ),
-                )
-            }
         }
     }
 

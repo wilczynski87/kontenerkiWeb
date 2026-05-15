@@ -18,6 +18,7 @@ import com.kontenery.model.PaymentsListForFinanceTable
 import com.kontenery.model.PrevYearBalance
 import com.kontenery.model.TableRowFinance
 import com.kontenery.model.auth.UserCredentials
+import com.kontenery.ui.login.LoginUiState
 import com.kontenery.model.enums.CurrentScreen
 import com.kontenery.model.enums.InvoiceType
 import com.kontenery.model.enums.UtilityType
@@ -52,10 +53,7 @@ data class ParkingAppState(
     val payment: PaymentDto? = null,
     val enabledChangeClient: Boolean? = true,
     val forDate: LocalDate? = LocalDate.now(),
-    val serverHealthStatus: String? = null,
-    val serverHealthProbeUrl: String? = null,
-    val serverHealthTriedUrls: List<String> = emptyList(),
-    val serverHealthLastError: String? = null,
+    val loginUi: LoginUiState = LoginUiState(),
     val financeYear: Int? = LocalDate.now().year,
     val prevYearsBalance: PrevYearBalance? = null,
     val invoiceFeature: InvoiceFeature = InvoiceFeature(InvoiceType.UTILITIES),
