@@ -1607,16 +1607,23 @@ class ParkingAppViewModel(
                     authState = AuthState(isAuthenticated = true, user = user.getOrNull(), loading = false),
                 )
             }
-        }.onFailure {
-            logError("login", "refresh token failed")
+        }.onFailure { e ->
+            logError("login", "refresh token failed: $e")
+            if (isSecureStorageFailure(e)) {
+                runCatching { ApiClientsService.auth.clearStoredTokens() }
+            }
             _state.update {
                 it.copy(
                     authState = AuthState(
                         isAuthenticated = false,
                         loading = false,
-                        error = "Tokeny nieaktualne",
-                        user = null
-                    )
+                        error = if (isSecureStorageFailure(e)) {
+                            "Sesja wygasła — zaloguj się ponownie"
+                        } else {
+                            "Tokeny nieaktualne"
+                        },
+                        user = null,
+                    ),
                 )
             }
         }
@@ -1636,5 +1643,22 @@ class ParkingAppViewModel(
         putClient()
         toClientList()
     }
+}
 
+private fun isSecureStorageFailure(error: Throwable): Boolean {
+    var current: Throwable? = error
+    while (current != null) {
+        val name = current::class.simpleName.orEmpty()
+        if (name.contains("InvalidKey", ignoreCase = true)
+            || name.contains("GeneralSecurity", ignoreCase = true)
+            || name.contains("KeyStore", ignoreCase = true)
+        ) {
+            return true
+        }
+        if (current.message?.contains("invalid key", ignoreCase = true) == true) {
+            return true
+        }
+        current = current.cause
+    }
+    return false
 }

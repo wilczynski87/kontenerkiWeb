@@ -70,6 +70,10 @@ class ApiAuth(
         }
     }
 
+    suspend fun clearStoredTokens() {
+        tokenManager.clearTokens()
+    }
+
     suspend fun logout(): Result<Unit> {
         return try {
             httpClient.post("$baseUrl/auth/logout") {
