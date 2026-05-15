@@ -5,7 +5,7 @@ import com.kontenery.config.ApiConfig.baseUrl
 import com.kontenery.error.AuthError
 import com.kontenery.logDebug
 import com.kontenery.model.auth.AuthResponse
-import com.kontenery.model.auth.LoginRequest
+import com.kontenery.model.auth.LoginCredentials
 import com.kontenery.model.auth.LoginResponse
 import com.kontenery.model.auth.UserInfo
 import io.ktor.client.HttpClient
@@ -23,38 +23,30 @@ import kotlinx.io.IOException
 
 class ApiAuth(
     private val tokenManager: TokenManager,
-    private val httpClient: HttpClient
+    private val httpClient: HttpClient,
 ) {
-
-    suspend fun login(email: String, password: String): Result<UserInfo> {
-        logDebug("login", "inside ApiAuth.login($email, $password)")
+    suspend fun login(credentials: LoginCredentials): Result<UserInfo> {
+        val username = credentials.username.trim()
+        logDebug("ApiAuth", "login user=$username")
         return try {
-            // Tymczasowo wyłącz Auth plugin dla login request
             val response: AuthResponse = httpClient.post("$baseUrl/auth/login") {
                 contentType(ContentType.Application.Json)
-                setBody(LoginRequest(email, password))
-                // Oznacz, żeby nie dodawać tokena
+                setBody(credentials.toRequest())
                 markAsNotRequiringAuth()
             }.body()
-            logDebug("login", "response: $response")
 
-
-            // Tokeny zostaną zapisane przez Auth plugin po otrzymaniu odpowiedzi
-            // Ale możemy też zapisać ręcznie dla pewności
             tokenManager.setTokens(
                 response.tokenResponse.accessToken,
-                response.tokenResponse.refreshToken
+                response.tokenResponse.refreshToken,
             )
 
-            val tokenManagerInfo = tokenManager.getAccessToken()
-            logDebug("login", "tokenManagerInfo: $tokenManagerInfo")
-
-
-            Result.success(UserInfo(
-                id = response.loginResponse.userId,
-                email = email,
-                role = response.loginResponse.role
-            ))
+            Result.success(
+                UserInfo(
+                    id = response.loginResponse.userId,
+                    email = username,
+                    role = response.loginResponse.role,
+                ),
+            )
         } catch (e: ClientRequestException) {
             when (e.response.status.value) {
                 401 -> Result.failure(AuthError.InvalidCredentials)
@@ -79,63 +71,46 @@ class ApiAuth(
             httpClient.post("$baseUrl/auth/logout") {
                 contentType(ContentType.Application.Json)
             }
-
             tokenManager.clearTokens()
             Result.success(Unit)
         } catch (e: Exception) {
-            // Nawet jeśli logout na serwerze się nie udał, wyczyść tokeny lokalnie
             tokenManager.clearTokens()
             Result.failure(AuthError.Unknown(e))
         }
     }
 
-    suspend fun verifyToken(): Result<LoginResponse> {
+    suspend fun verifySession(): Result<LoginResponse> {
         return try {
-            // Proste zapytanie weryfikujące token
             val response = httpClient.get("$baseUrl/auth/verify") {
                 contentType(ContentType.Application.Json)
             }.body<AuthResponse>()
 
-            val loginResponse = response.loginResponse
             tokenManager.setTokens(
                 response.tokenResponse.accessToken,
-                response.tokenResponse.refreshToken
+                response.tokenResponse.refreshToken,
             )
-
-            Result.success(loginResponse)
+            Result.success(response.loginResponse)
         } catch (e: ClientRequestException) {
             if (e.response.status == HttpStatusCode.Unauthorized) {
                 tokenManager.clearTokens()
-                logDebug("login", "verifyToken, Unauthorized $e")
-            } else {
-                logDebug("login", "verifyToken, 403 $e")
             }
-            throw e
+            Result.failure(
+                when (e.response.status.value) {
+                    401 -> AuthError.InvalidCredentials
+                    403 -> AuthError.Unauthorized
+                    else -> AuthError.Server
+                },
+            )
+        } catch (e: IOException) {
+            Result.failure(AuthError.Network)
         } catch (e: Exception) {
-            logDebug("login", "verifyToken, not Unauthorized $e")
-            throw e
+            Result.failure(AuthError.Unknown(e))
         }
     }
 
-    // Helper extension dla requestów bez autoryzacji
-    fun HttpRequestBuilder.markAsNotRequiringAuth() {
+    private fun HttpRequestBuilder.markAsNotRequiringAuth() {
         headers.append("X-No-Auth", "true")
     }
 }
 
-// Extension dla HttpClient do łatwego tworzenia requestów
-suspend inline fun <reified T> HttpClient.authGet(url: String): T {
-    return this.get(url) {
-        // Auth plugin automatycznie doda token
-    }.body()
-}
-
-suspend inline fun <reified T, reified R> HttpClient.authPost(url: String, body: R): T {
-    return this.post(url) {
-        contentType(ContentType.Application.Json)
-        setBody(body)
-    }.body()
-}
-
-// commonMain
 class UnauthorizedException : RuntimeException("Authentication required")
