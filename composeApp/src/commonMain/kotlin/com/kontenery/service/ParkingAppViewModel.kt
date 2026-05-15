@@ -127,16 +127,27 @@ class ParkingAppViewModel(
      */
     fun serverHealthCheck() {
         coroutineScope.launch {
-            try {
-                val healthStatus: String = healthCheck.healthCheck()
-                logDebug("serverHealthCheck","serverHealthCheck: $healthStatus, baseUrl: $baseUrl")
-                _state.update { currentState ->
-                    currentState.copy(serverHealthStatus = "server online")
+            val result = healthCheck.healthCheck { url ->
+                logDebug("serverHealthCheck", "probing $url")
+                _state.update { it.copy(serverHealthProbeUrl = url, serverHealthStatus = null) }
+            }
+            if (result.activeBaseUrl != null) {
+                logDebug("serverHealthCheck", "online at ${result.activeBaseUrl}, baseUrl: $baseUrl")
+                _state.update {
+                    it.copy(
+                        serverHealthStatus = "server online",
+                        serverHealthProbeUrl = null,
+                        serverHealthTriedUrls = result.triedUrls,
+                    )
                 }
-            } catch (e: Exception) {
-                logDebug("serverHealthCheck","serverHealthCheck: $e")
-                _state.update { currentState ->
-                    currentState.copy(serverHealthStatus = "brak połączenia z serverem")
+            } else {
+                logDebug("serverHealthCheck", "all endpoints down: ${result.triedUrls}")
+                _state.update {
+                    it.copy(
+                        serverHealthStatus = "brak połączenia z serwerem",
+                        serverHealthProbeUrl = null,
+                        serverHealthTriedUrls = result.triedUrls,
+                    )
                 }
             }
         }
