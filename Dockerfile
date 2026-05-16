@@ -15,6 +15,10 @@ COPY . .
 RUN chmod +x gradlew
 RUN ./gradlew :composeApp:wasmJsBrowserDistribution -x test
 
+# Debug -sprawdza co zostało przeniesione
+RUN echo "=== Zawartość dist ===" && \
+    find /app/composeApp/build/dist -type f 2>/dev/null || echo "Brak katalogu dist!"
+
 # Stage 2: Nginx
 FROM nginx:stable-alpine
 

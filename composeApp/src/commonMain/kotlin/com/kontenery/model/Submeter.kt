@@ -11,4 +11,5 @@ data class Submeter(
     val utilityType: UtilityType? = null,
     val readings: List<Reading> = emptyList(),
     val number: String? = null,
+    val fotoUrl: String? = null,
 )

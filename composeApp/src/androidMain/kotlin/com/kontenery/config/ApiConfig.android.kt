@@ -3,18 +3,18 @@ package com.kontenery.config
 import android.os.Build
 
 /** Emulator → host (Docker API na porcie 8100 na maszynie deweloperskiej). */
-private const val ANDROID_EMULATOR_DOCKER_HOST_URL = "http://10.0.2.2:8100"
+private const val ANDROID_EMULATOR_DOCKER_HOST_URL = "http://10.0.2.2:8100/"
 
 internal fun isAndroidEmulator(): Boolean =
-    Build.FINGERPRINT.startsWith("generic")
-        || Build.FINGERPRINT.startsWith("unknown")
-        || Build.MODEL.contains("google_sdk", ignoreCase = true)
-        || Build.MODEL.contains("Emulator", ignoreCase = true)
-        || Build.MODEL.contains("Android SDK built for x86", ignoreCase = true)
-        || Build.MANUFACTURER.contains("Genymotion", ignoreCase = true)
-        || Build.HARDWARE.contains("goldfish", ignoreCase = true)
-        || Build.HARDWARE.contains("ranchu", ignoreCase = true)
-        || Build.PRODUCT.contains("sdk_gphone", ignoreCase = true)
+    (Build.FINGERPRINT?.startsWith("generic") == true)
+            || (Build.FINGERPRINT?.startsWith("unknown") == true)
+            || (Build.MODEL?.contains("google_sdk", ignoreCase = true) == true)
+            || (Build.MODEL?.contains("Emulator", ignoreCase = true) == true)
+            || (Build.MODEL?.contains("Android SDK built for x86", ignoreCase = true) == true)
+            || (Build.MANUFACTURER?.contains("Genymotion", ignoreCase = true) == true)
+            || (Build.HARDWARE?.contains("goldfish", ignoreCase = true) == true)
+            || (Build.HARDWARE?.contains("ranchu", ignoreCase = true) == true)
+            || (Build.PRODUCT?.contains("sdk_gphone", ignoreCase = true) == true)
 
 internal actual fun defaultApiBaseUrl(): String =
     apiBaseUrlCandidates().first()

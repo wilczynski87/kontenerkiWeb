@@ -73,7 +73,10 @@ fun ReadingsView(
             viewModel,
             { submeterId, reading -> viewModel.postSubmeterReading(submeterId, reading) },
             { submeterId, readingId -> viewModel.deleteReading(submeterId, readingId) },
-            { viewModel.toUtility() }
+            {
+                viewModel.fetchSubmeters()
+                viewModel.toUtility()
+            }
         )
     }
 }

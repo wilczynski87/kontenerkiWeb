@@ -5,7 +5,7 @@ fun AuthError.toUserMessage(): String = when (this) {
     AuthError.Network -> "Brak połączenia z serwerem"
     AuthError.Unauthorized -> "Brak uprawnień do konta"
     AuthError.Server -> "Błąd serwera — spróbuj ponownie później"
-    is AuthError.Unknown -> cause?.message?.takeIf { it.isNotBlank() }
+    is AuthError.Unknown -> cause.message?.takeIf { it.isNotBlank() }
         ?: message?.takeIf { it.isNotBlank() }
         ?: "Wystąpił nieoczekiwany błąd"
 }

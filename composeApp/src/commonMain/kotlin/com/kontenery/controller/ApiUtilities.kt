@@ -75,9 +75,17 @@ class ApiUtilities(
             Result.failure(e)
         }
     }
-    suspend fun postSubmeter(submeter: Submeter): Result<List<Submeter>> = httpClient.post("$baseUrl/utilities/submeter") {
-        setBody(submeter)
-    }.body()
+    suspend fun postSubmeter(submeter: Submeter): Result<List<Submeter>> {
+        return try {
+            val result: List<Submeter> = httpClient.post("$baseUrl/utilities/submeter") {
+                setBody(submeter)
+            }.body()
+            Result.success(result)
+        } catch (e: Throwable) {
+            println("postSubmeter błąd: $e")
+            Result.failure(e)
+        }
+    }
     suspend fun deleteSubmeter(submeterId: Long): Result<List<Submeter>> = httpClient.delete("$baseUrl/utilities/submeter/$submeterId").body()
 
     suspend fun checkReading(clientId: Long, reading: Reading): Result<Reading> {
