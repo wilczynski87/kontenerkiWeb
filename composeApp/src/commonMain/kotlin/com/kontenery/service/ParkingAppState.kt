@@ -58,6 +58,7 @@ data class ParkingAppState(
     val prevYearsBalance: PrevYearBalance? = null,
     val invoiceFeature: InvoiceFeature = InvoiceFeature(InvoiceType.UTILITIES),
     val reading: Reading? = null,
+    val readings: List<Reading> = emptyList(),
     val submeter: Submeter? = null,
     val submitContentMap: Map<String, SubmitContent> = emptyMap(),
 

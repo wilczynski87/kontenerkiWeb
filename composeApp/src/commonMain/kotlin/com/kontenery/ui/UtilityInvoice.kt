@@ -316,6 +316,7 @@ fun UtilitiesChoice(
     val clients: List<ClientOnList> = state.clients
     val client: Client? = state.client
     val invoice: Invoice = state.invoice ?: return
+    val readings: List<Reading> = state.readings
     val positions: List<Position> = invoice.products
     val submeters: List<Submeter> = state.submeters
     var expandedClients by remember { mutableStateOf(false) }
@@ -380,6 +381,7 @@ fun UtilitiesChoice(
             Button(
                 onClick = {
                     // TODO jak nie ma id customera to jakiś błąd?
+                    viewModel.postSubmeterReadings(newReadings = readings)
                     viewModel.postCustomInvoice(client?.id ?: 0, invoice)
                     viewModel.showConfirmModal(
                         "Status dodatkowej faktury",
@@ -388,7 +390,7 @@ fun UtilitiesChoice(
                     )
                 },
             ) {
-                Text("Wyślij dodatkową fakturę")
+                Text("Wyślij fakturę za media")
             }
         }
 
@@ -460,7 +462,14 @@ fun SubmeterRow(
 ) {
     val lastReading = submeter.readings.maxByOrNull { it.date ?: LocalDate.now() }
     var value by remember { mutableStateOf("") }
-    var price by remember { mutableStateOf(lastReading?.currentUnitPriceNet.toString()) }
+    var price by remember(lastReading) {
+        mutableStateOf(
+        lastReading?.currentUnitPriceNet
+            ?.toString()
+            ?.replace(",", ".")
+            ?: ""
+        )
+    }
 
     Row(
         modifier = Modifier
@@ -477,6 +486,7 @@ fun SubmeterRow(
 
         var readingError by remember { mutableStateOf(false) }
 
+        // Nowy Odczyt
         OutlinedTextField(
             value = value,
             onValueChange = {
@@ -504,6 +514,7 @@ fun SubmeterRow(
         var priceError by remember { mutableStateOf(false) }
         val priceRegex = Regex("""^\d+(\.\d{0,2})?$""")
 
+        // Cena za jednostkę
         OutlinedTextField(
             value = price,
             onValueChange = {

@@ -1147,6 +1147,36 @@ class ParkingAppViewModel(
         }
     }
 
+    fun postSubmeterReadings(newReadings: List<Reading>) {
+        coroutineScope.launch {
+            newReadings.forEach { newReading ->
+                ApiClientsService.utilities.addReadingToSubmeter(
+                    newReading.submeterId ?: throw NullPointerException("No submeter Id for reading: $newReading") ,
+                    newReading
+                ).onSuccess { submeter ->
+                        if (submeter.clientId == null) throw NullPointerException("No client Id for submeter")
+                        _state.update { state ->
+                            state.copy(
+                                submeter = null,
+                            )
+                        }
+                    }
+                    .onFailure { e ->
+                        println("Could not add Reading to submeter: $e")
+                        showErrorModal(
+                            "Could not add reading",
+                            "${e.message}",
+                            onConfirmation = {closeConfirmationModal()},
+                        )
+                    }
+            }
+            fetchSubmeters()
+            _state.update { state ->
+                state.copy(readings = emptyList())
+            }
+        }
+    }
+
     fun fetchSubmeters() {
         coroutineScope.launch {
             println("fetchSubmeters")
@@ -1290,10 +1320,11 @@ class ParkingAppViewModel(
             ApiClientsService.utilities.createPositionFromReading(clientId, reading)
                 .onSuccess { position ->
                     println("position add to invoice: $position")
+                    val readings = state.value.readings.toMutableList().plus(reading)
 //                    val products: MutableList<Position> = state.value.invoice?.products?.toMutableList() ?: mutableListOf()
 //                    val invoice = state.value.invoice?.copy(products = products.plus(position))
                     _state.update { state ->
-                        state.copy(submitContentMap = submitContentMap, position = position)
+                        state.copy(submitContentMap = submitContentMap, position = position, readings = readings)
                     }.also {
                         addProductToInvoice()
                     }
