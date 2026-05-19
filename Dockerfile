@@ -8,11 +8,17 @@ RUN apt-get update && apt-get install -y \
     curl \
     xz-utils \
     gnupg \
+    nodejs \
+    npm \
  && rm -rf /var/lib/apt/lists/*
 
 COPY . .
 
 RUN chmod +x gradlew
+
+# Najpierw pobierz zależności (cache layer)
+RUN ./gradlew dependencies --no-daemon || true
+
 RUN ./gradlew :composeApp:wasmJsBrowserDistribution -x test
 
 # Debug -sprawdza co zostało przeniesione

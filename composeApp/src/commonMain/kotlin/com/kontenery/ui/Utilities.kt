@@ -134,7 +134,7 @@ fun SubmeterCard(
                         onDismissRequest = { expanded = false }
                     ) {
                         DropdownMenuItem(
-                            text = { Text("Wystaw fakturę") },
+                            text = { Text("Wystaw fakturę - media") },
                             onClick = {
                                 onAddReading(submeter)
                                 expanded = false

@@ -8,8 +8,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -22,16 +20,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
@@ -63,13 +55,29 @@ fun InvoicesTable(
 
     val horizontalScrollState = rememberScrollState()
     val verticalScrollState = rememberScrollState()
-
-    val widths = listOf(
-        200.dp, 200.dp, 200.dp, 140.dp, 120.dp, 140.dp,
-        210.dp, 190.dp, 170.dp, 210.dp, 160.dp, 150.dp,
-        100.dp, 160.dp
+    
+    val columnsMap = mapOf(
+        "nr_faktury" to ColumnConfig("Nr faktury", 170.dp) { it.invoiceNumber ?: "" },
+        "data" to ColumnConfig("Data", 170.dp) { it.invoiceDate?.toString() ?: "" },
+        "wyslano" to ColumnConfig("Wysłano", 200.dp) { it.invoiceSendToClient?.toString() ?: "" },
+        "netto" to ColumnConfig("Netto", 140.dp) { it.priceSum ?: "" },
+        "vat" to ColumnConfig("VAT", 120.dp) { it.vatAmountSum ?: "" },
+        "brutto" to ColumnConfig("Brutto", 140.dp) { it.priceWithVatSum ?: "" },
+        "platnosc" to ColumnConfig("Płatność", 210.dp) { it.paymentDay?.toString() ?: "" },
+        "konto" to ColumnConfig("Konto", 190.dp) {
+            SellerAccount.fromAccountNumber("PL${it.mainAccount}")?.name ?: ""
+        },
+        "klient" to ColumnConfig("Klient", 170.dp) { it.customer?.name ?: "" },
+        "sprzedawca" to ColumnConfig("Sprzedawca", 210.dp) { it.seller?.name ?: "" },
+        "typ" to ColumnConfig("Typ", 160.dp) { it.type ?: "" },
+        "tytul" to ColumnConfig("Tytuł", 210.dp) { it.invoiceTitle ?: "" },
+        "vatowiec" to ColumnConfig("Vatowiec", 210.dp) { if (it.vatApply) "Tak" else "Nie" },
+        "akcja" to ColumnConfig("Akcja", 160.dp) { "" } // Special case for action button
     )
-    val tableWidth = widths.reduce { acc, dp -> acc + dp }
+
+//    val tableWidth = widths.reduce { acc, dp -> acc + dp }
+    val tableWidth = columnsMap.values.map { it.width }.reduce { acc, config -> acc + config }
+
 
     Column(modifier = modifier.padding(8.dp)) {
 
@@ -93,55 +101,37 @@ fun InvoicesTable(
 
                 // HEADER
                 Row {
-                    widths.forEachIndexed { index, width ->
-                        Header(
-                            text = when (index) {
-                                0 -> "Nr faktury"
-                                1 -> "Data"
-                                2 -> "Wysłano"
-                                3 -> "Netto"
-                                4 -> "VAT"
-                                5 -> "Brutto"
-                                6 -> "Płatność"
-                                7 -> "Konto"
-                                8 -> "Klient"
-                                9 -> "Sprzedawca"
-                                10 -> "Typ"
-                                11 -> "Tytuł"
-                                12 -> "VAT"
-                                13 -> "Akcja"
-                                else -> ""
-                            },
-                            width = width
-                        )
-                    }
+                    Header(columnsMap["nr_faktury"])
+                    Header(columnsMap["data"])
+                    Header(columnsMap["wyslano"])
+                    Header(columnsMap["netto"])
+                    Header(columnsMap["vat"])
+                    Header(columnsMap["brutto"])
+                    Header(columnsMap["platnosc"])
+                    Header(columnsMap["klient"])
+                    Header(columnsMap["typ"])
+                    Header(columnsMap["akcja"])
                 }
                 HorizontalDivider(color = Color.LightGray, thickness = 0.5.dp)
 
                 // BODY
                 Column(modifier = Modifier.verticalScroll(verticalScrollState)) {
                     invoices.forEach { invoice ->
-                        val accountType =
-                            SellerAccount.fromAccountNumber("PL${invoice.mainAccount}")?.name ?: ""
 
                         Row(verticalAlignment = Alignment.CenterVertically) {
 
-                            Cell(invoice.invoiceNumber ?: "", widths[0])
-                            Cell(invoice.invoiceDate?.toString() ?: "", widths[1])
-                            Cell(invoice.invoiceSendToClient?.toString() ?: "", widths[2])
-                            Cell(invoice.priceSum ?: "", widths[3])
-                            Cell(invoice.vatAmountSum ?: "", widths[4])
-                            Cell(invoice.priceWithVatSum ?: "", widths[5])
-                            Cell(invoice.paymentDay?.toString() ?: "", widths[6])
-                            Cell(accountType, widths[7])
-                            Cell(invoice.customer?.name ?: "", widths[8])
-                            Cell(invoice.seller?.name ?: "", widths[9])
-                            Cell(invoice.type ?: "", widths[10])
-                            Cell(invoice.invoiceTitle ?: "", widths[11])
-                            Cell(if (invoice.vatApply) "Tak" else "Nie", widths[12])
+                            Cell(invoice.invoiceNumber ?: "", columnsMap["nr_faktury"])
+                            Cell(invoice.invoiceDate?.toString() ?: "", columnsMap["data"])
+                            Cell(invoice.invoiceSendToClient?.toString() ?: "", columnsMap["wyslano"])
+                            Cell(invoice.priceSum ?: "", columnsMap["netto"])
+                            Cell(invoice.vatAmountSum ?: "", columnsMap["vat"])
+                            Cell(invoice.priceWithVatSum ?: "", columnsMap["brutto"])
+                            Cell(invoice.paymentDay?.toString() ?: "", columnsMap["platnosc"])
+                            Cell(invoice.customer?.name ?: "", columnsMap["klient"])
+                            Cell(invoice.type ?: "", columnsMap["akcja"])
 
                             Box(
-                                modifier = Modifier.width(widths[13]),
+                                modifier = Modifier.width(columnsMap["akcja"]?.width ?: 150.dp),
                                 contentAlignment = Alignment.Center
                             ) {
                                 if (invoice.invoiceNumber != null) {
@@ -173,13 +163,14 @@ fun InvoicesTable(
 }
 
 @Composable
-fun Header(text: String, width: Dp) {
+fun Header(col: ColumnConfig? = null) {
+    if(col == null) return
     Text(
-        text,
+        col.title,
         fontWeight = FontWeight.Bold,
         textAlign = TextAlign.Center,
         modifier = Modifier
-            .width(width)
+            .width(col.width)
             .padding(4.dp)
     )
 }
@@ -194,3 +185,21 @@ fun Cell(text: String, width: Dp) {
             .padding(4.dp)
     )
 }
+
+@Composable
+fun Cell(text: String, col: ColumnConfig? = null) {
+    val width: Dp = col?.width ?: 150.dp
+    Text(
+        text,
+        textAlign = TextAlign.Center,
+        modifier = Modifier
+            .width(width)
+            .padding(4.dp)
+    )
+}
+
+data class ColumnConfig(
+    val title: String,
+    val width: Dp,
+    val getValue: (Invoice) -> String
+)
