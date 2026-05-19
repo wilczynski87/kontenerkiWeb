@@ -27,14 +27,16 @@ class TokenManager(
 
     suspend fun getAccessToken(): String? {
         if (cachedAccessToken == null) {
-            cachedAccessToken = storage.getAccessToken()
+            val token = storage.getAccessToken()
+            cachedAccessToken = if (token.isNullOrBlank()) null else token
         }
         return cachedAccessToken
     }
 
     suspend fun getRefreshToken(): String? {
         if (cachedRefreshToken == null) {
-            cachedRefreshToken = storage.getRefreshToken()
+            val token = storage.getRefreshToken()
+            cachedRefreshToken = if (token.isNullOrBlank()) null else token
         }
         return cachedRefreshToken
     }

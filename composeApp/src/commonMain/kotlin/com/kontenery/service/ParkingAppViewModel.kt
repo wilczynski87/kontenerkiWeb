@@ -2,20 +2,7 @@ package com.kontenery.service
 
 import com.kontenery.config.ApiConfig.baseUrl
 import com.kontenery.controller.ApiClientsService
-import com.kontenery.model.auth.LoginCredentials
-import com.kontenery.ui.login.ServerConnectivity
 import com.kontenery.data.AuthState
-import com.kontenery.model.Contract
-import com.kontenery.model.Deposit
-import com.kontenery.model.Payment
-import com.kontenery.model.PaymentDto
-import com.kontenery.model.Product
-import com.kontenery.model.Product.Container
-import com.kontenery.model.Product.Yard
-import com.kontenery.model.invoice.Invoice
-import com.kontenery.model.invoice.Subject
-import com.kontenery.model.invoice.Subject.Seller
-import com.kontenery.model.enums.InvoiceType
 import com.kontenery.logDebug
 import com.kontenery.logError
 import com.kontenery.model.Client
@@ -23,21 +10,33 @@ import com.kontenery.model.ClientBankAccount
 import com.kontenery.model.ClientCompanyData
 import com.kontenery.model.ClientEvent
 import com.kontenery.model.ClientPersonalData
+import com.kontenery.model.Contract
+import com.kontenery.model.Deposit
 import com.kontenery.model.ModalData
+import com.kontenery.model.Payment
+import com.kontenery.model.PaymentDto
 import com.kontenery.model.PaymentForFinanceTable
 import com.kontenery.model.PaymentsListForFinanceTable
 import com.kontenery.model.PrevYearBalance
+import com.kontenery.model.Product
+import com.kontenery.model.Product.Container
+import com.kontenery.model.Product.Yard
 import com.kontenery.model.Reading
 import com.kontenery.model.Submeter
 import com.kontenery.model.TableRowFinance
+import com.kontenery.model.auth.LoginCredentials
 import com.kontenery.model.auth.LoginResponse
 import com.kontenery.model.enums.CurrentScreen
+import com.kontenery.model.enums.InvoiceType
 import com.kontenery.model.enums.endOfCurrentYear
 import com.kontenery.model.enums.now
 import com.kontenery.model.enums.startOfCurrentYear
+import com.kontenery.model.invoice.Invoice
 import com.kontenery.model.invoice.InvoiceFeature
-import com.kontenery.model.invoice.InvoiceSend
 import com.kontenery.model.invoice.Position
+import com.kontenery.model.invoice.Subject
+import com.kontenery.model.invoice.Subject.Seller
+import com.kontenery.ui.login.ServerConnectivity
 import com.kontenery.util.endOfYear
 import com.kontenery.util.getMonthFinanceFromString
 import com.kontenery.util.startOfYear
@@ -51,7 +50,6 @@ import kotlinx.coroutines.launch
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.minus
-import kotlin.text.toDouble
 
 class ParkingAppViewModel(
     private val coroutineScope: CoroutineScope,
@@ -236,6 +234,15 @@ class ParkingAppViewModel(
                         )
                     }
                 }
+        }
+    }
+
+    /*
+        SUBHEADING
+     */
+    fun updateSubheading(subheading:String? = null) {
+        _state.update { state ->
+            state.copy(subheading = subheading)
         }
     }
 
@@ -552,7 +559,6 @@ class ParkingAppViewModel(
     }
 
     fun saveClient(client: Client) {
-        var client: Client = client
         coroutineScope.launch {
             try {
                 val savedClient: Client = ApiClientsService.clients.saveClient(client)
@@ -1167,14 +1173,15 @@ class ParkingAppViewModel(
         coroutineScope.launch {
             ApiClientsService.utilities.postSubmeter(submeter)
                 .onSuccess { submeters ->
+
                     _state.update { state ->
                         state.copy(
                             submeters = submeters,
-                            currentScreen = CurrentScreen.READINGS
+                            currentScreen = CurrentScreen.UTILITY
                         )
                     }
                 }.onFailure { e ->
-                    println("fetchSubmeter error: ${e.message}")
+                    println("postSubmeter error: ${e.message}")
                 }
         }
     }
@@ -1187,7 +1194,7 @@ class ParkingAppViewModel(
                         state.copy(submeter = it)
                     }
                 }.onFailure { e ->
-                    println("fetchSubmeter error: ${e.message}")
+                    println("updateSubmeter error: ${e.message}")
                 }
         }
     }
@@ -1208,7 +1215,7 @@ class ParkingAppViewModel(
                             )
                         }
                     }.onFailure { e ->
-                        println("fetchSubmeter error: ${e.message}")
+                        println("updateSubmeterClient error: ${e.message}")
                     }
             } catch (e: Exception) {
                 println("fetchClientById nie udało się odnaleźć danych, o id: $clientId,\n $e")
@@ -1652,7 +1659,7 @@ class ParkingAppViewModel(
             authService.restoreSession()
                 .onSuccess { user ->
                     logDebug("login", "restoreSession success")
-                    getClientsList(0, 100)
+                    getClientsList(0, pageSize)
                     _state.update {
                         it.copy(
                             authState = AuthState(
@@ -1665,9 +1672,7 @@ class ParkingAppViewModel(
                 }
                 .onFailure { error ->
                     logError("login", "restoreSession failed: $error")
-                    if (isSecureStorageFailure(error)) {
-                        authService.clearSession()
-                    }
+                    authService.clearSession()
                     _state.update {
                         it.copy(
                             authState = AuthState(

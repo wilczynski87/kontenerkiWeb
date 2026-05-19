@@ -12,7 +12,6 @@ import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.ClientRequestException
 import io.ktor.client.plugins.ServerResponseException
-import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
@@ -24,15 +23,15 @@ import kotlinx.io.IOException
 class ApiAuth(
     private val tokenManager: TokenManager,
     private val httpClient: HttpClient,
+    private val noAuthHttpClient: HttpClient = httpClient
 ) {
     suspend fun login(credentials: LoginCredentials): Result<UserInfo> {
         val username = credentials.username.trim()
         logDebug("ApiAuth", "login user=$username")
         return try {
-            val response: AuthResponse = httpClient.post("$baseUrl/auth/login") {
+            val response: AuthResponse = noAuthHttpClient.post("$baseUrl/auth/login") {
                 contentType(ContentType.Application.Json)
                 setBody(credentials.toRequest())
-                markAsNotRequiringAuth()
             }.body()
 
             tokenManager.setTokens(
@@ -106,10 +105,6 @@ class ApiAuth(
         } catch (e: Exception) {
             Result.failure(AuthError.Unknown(e))
         }
-    }
-
-    private fun HttpRequestBuilder.markAsNotRequiringAuth() {
-        headers.append("X-No-Auth", "true")
     }
 }
 

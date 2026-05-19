@@ -32,7 +32,7 @@ data class LoginResponse(
 data class TokenResponse(
     val accessToken: String,
     val refreshToken: String? = null,
-    val expiresTn: Int? = null,
+    val expiresIn: Int? = null,
     val tokenType: String = "Bearer"
 )
 

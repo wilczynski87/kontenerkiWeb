@@ -1,6 +1,7 @@
 package com.kontenery.ui
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -10,6 +11,7 @@ import androidx.compose.material3.DrawerDefaults
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationDrawerItem
@@ -17,6 +19,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.BaselineShift
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.kontenery.model.enums.InvoiceType
@@ -33,17 +37,29 @@ import kotlinx.datetime.LocalDate
 fun TopUpBar(
     modifier: Modifier = Modifier,
     title: String,
+    subheading: String? = null,
     canNavigateBack: Boolean,
     drawerClick: () -> Unit = {},
     navigateUp: () -> Unit = {},
 ) {
     CenterAlignedTopAppBar(
         title = {
-            Text(
-                text = title,
-                modifier,
-                textAlign = TextAlign.Center,
-            )
+            Column {
+                Text(
+                    text = title,
+                    modifier,
+                    textAlign = TextAlign.Center,
+                )
+                if(subheading.isNullOrBlank().not())
+                Text(subheading,
+                    modifier,
+                    textAlign = TextAlign.Center,
+                    style = TextStyle(
+                        baselineShift = BaselineShift.Superscript,
+                        fontSize = MaterialTheme.typography.bodySmall.fontSize
+                    )
+                )
+            }
         },
         modifier = modifier,
         navigationIcon = {

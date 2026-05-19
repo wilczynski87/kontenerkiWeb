@@ -1,6 +1,5 @@
 package com.kontenery.ui
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -59,6 +58,7 @@ fun Utilities(
             items(submeters) { submeter ->
                 SubmeterCard(
                     submeter = submeter,
+                    clientName = if(submeter.clientId != null) viewModel.getClientNameById(submeter.clientId) ?: "Nie odnaleziono nazwy" else "brak",
                     onAddReading = {
                         viewModel.createNewInvoice(InvoiceType.UTILITIES)
                         viewModel.toAddInvoice()
@@ -92,6 +92,7 @@ fun Utilities(
 @Composable
 fun SubmeterCard(
     submeter: Submeter,
+    clientName: String = "brak",
     onAddReading: (Submeter) -> Unit,
     onDetails: (Submeter) -> Unit
 ) {
@@ -117,7 +118,7 @@ fun SubmeterCard(
                     }
 
                     Text("Odczytów: ${submeter.readings.size}")
-                    Text("Klient: ${submeter.clientId}")
+                    Text("Klient: $clientName")
                 }
 
                 Box {

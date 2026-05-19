@@ -14,6 +14,7 @@ import io.ktor.client.plugins.auth.*
 import io.ktor.client.plugins.auth.providers.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.plugins.cookies.*
+import io.ktor.client.request.accept
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
@@ -40,12 +41,17 @@ fun androidCreateHttpClient(tokenManager: TokenManager): HttpClient {
             storage = AcceptAllCookiesStorage()
         }
 
-        expectSuccess = false
+        install(DefaultRequest) {
+            contentType(ContentType.Application.Json)
+            accept(ContentType.Application.Json)
+        }
+
+        expectSuccess = true
 
         install(HttpRequestRetry) {
             maxRetries = 3
-            retryOnExceptionIf { request, cause ->
-                cause is Exception
+            retryOnExceptionIf { _, cause ->
+                cause is java.io.IOException || cause is kotlinx.coroutines.TimeoutCancellationException
             }
             delayMillis { retry -> retry * 1000L } // Exponential backoff
         }
@@ -78,6 +84,7 @@ fun androidCreateHttpClient(tokenManager: TokenManager): HttpClient {
                     try {
                         // Tworzymy tymczasowego klienta bez autoryzacji dla refresh token
                         val refreshClient = HttpClient(Android) {
+                            expectSuccess = true
                             install(ContentNegotiation) {
                                 json(Json {
                                     ignoreUnknownKeys = true
@@ -107,28 +114,27 @@ fun androidCreateHttpClient(tokenManager: TokenManager): HttpClient {
                             accessToken = response.accessToken,
                             refreshToken = response.refreshToken ?: ""
                         )
-                    } catch (e: ClientRequestException) {
-                        println("❌ Token refresh failed: ${e.response.status} - ${e.message}")
-                        try {
-                            val errorBody = e.response.bodyAsText()
-                            println("Error body: $errorBody")
-                        } catch (ex: Exception) {
-                            // Ignoruj
-                        }
-                        tokenManager.clearTokens()
-                        null
                     } catch (e: Exception) {
                         println("❌ Token refresh failed: ${e.message}")
-                        e.printStackTrace()
+                        if (e is ClientRequestException) {
+                            try {
+                                val errorBody = e.response.bodyAsText()
+                                println("Error body: $errorBody")
+                            } catch (ex: Exception) {
+                                println(ex)
+                            }
+                        }
                         tokenManager.clearTokens()
                         null
                     }
                 }
 
                 sendWithoutRequest { request ->
-                    !request.url.encodedPath.contains("/auth/login") &&
-                    !request.url.encodedPath.contains("/auth/register") &&
-                    !request.url.encodedPath.contains("/auth/refresh")
+                    val isAuthEndpoint = request.url.encodedPath.contains("/auth/login") ||
+                                        request.url.encodedPath.contains("/auth/register") ||
+                                        request.url.encodedPath.contains("/auth/refresh")
+                    
+                    !isAuthEndpoint
                 }
             }
         }

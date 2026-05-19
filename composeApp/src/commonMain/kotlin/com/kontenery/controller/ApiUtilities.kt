@@ -1,7 +1,6 @@
 package com.kontenery.controller
 
 import com.kontenery.config.ApiConfig.baseUrl
-import com.kontenery.model.Product
 import com.kontenery.model.Reading
 import com.kontenery.model.Submeter
 import com.kontenery.model.invoice.Position
@@ -47,7 +46,7 @@ class ApiUtilities(
 
     suspend fun getSubmeterByReadingId(readingId: Long): Result<Submeter> {
         return try {
-            val result: Submeter = httpClient.delete("$baseUrl/utilities/submeters/byReading/$readingId").body()
+            val result: Submeter = httpClient.get("$baseUrl/utilities/submeters/byReading/$readingId").body()
             Result.success(result)
         } catch (e: Throwable) {
             Result.failure(e)

@@ -29,8 +29,6 @@ import kotlinx.serialization.json.Json
 
 @OptIn(ExperimentalWasmJsInterop::class)
 fun webCreateHttpClient(tokenManager: TokenManager): HttpClient {
-    val tokenManager = tokenManager
-
     return HttpClient(Js) {
 
         install(ContentNegotiation) {
@@ -58,7 +56,7 @@ fun webCreateHttpClient(tokenManager: TokenManager): HttpClient {
             storage = AcceptAllCookiesStorage()
         }
 
-        expectSuccess = false
+        expectSuccess = true
 
         install(Auth) {
             bearer {
@@ -79,11 +77,25 @@ fun webCreateHttpClient(tokenManager: TokenManager): HttpClient {
                         ?: return@refreshTokens null
 
                     try {
-                        val response: TokenResponse = client.post("$baseUrl/auth/refresh") {
-                            markAsRefreshTokenRequest()
+                        val refreshClient = HttpClient(Js) {
+                            expectSuccess = true
+                            install(ContentNegotiation) {
+                                json(Json {
+                                    ignoreUnknownKeys = true
+                                    isLenient = true
+                                })
+                            }
+                            install(HttpTimeout) {
+                                requestTimeoutMillis = 15000
+                            }
+                        }
+
+                        val response: TokenResponse = refreshClient.post("$baseUrl/auth/refresh") {
                             contentType(ContentType.Application.Json)
                             setBody(RefreshTokenRequest(oldRefreshToken))
                         }.body()
+                        
+                        refreshClient.close()
 
                         println("✅ Token refresh successful")
 
@@ -96,29 +108,27 @@ fun webCreateHttpClient(tokenManager: TokenManager): HttpClient {
                             accessToken = response.accessToken,
                             refreshToken = response.refreshToken ?: ""
                         )
-                    }  catch (e: ClientRequestException) {
-                        println("❌ Token refresh failed: ${e.response.status} - ${e.message}")
-                        // Spróbuj odczytać body błędu
-                        try {
-                            val errorBody = e.response.bodyAsText()
-                            println("Error body: $errorBody")
-                        } catch (ex: Exception) {
-                            // Ignoruj
-                        }
-                        tokenManager.clearTokens()
-                        null
-                    } catch (e: Exception) {
+                    }  catch (e: Exception) {
                         println("❌ Token refresh failed: ${e.message}")
-                        e.printStackTrace()
+                        if (e is ClientRequestException) {
+                            try {
+                                val errorBody = e.response.bodyAsText()
+                                println("Error body: $errorBody")
+                            } catch (ex: Exception) {
+                                println(ex)
+                            }
+                        }
                         tokenManager.clearTokens()
                         null
                     }
                 }
 
                 sendWithoutRequest { request ->
-                    // Zawsze wysyłaj token (oprócz endpointów auth)
-                    !request.url.encodedPath.contains("/auth/login") &&
-                    !request.url.encodedPath.contains("/auth/register")
+                    val isAuthEndpoint = request.url.encodedPath.contains("/auth/login") ||
+                                        request.url.encodedPath.contains("/auth/register") ||
+                                        request.url.encodedPath.contains("/auth/refresh")
+                    
+                    !isAuthEndpoint
                 }
             }
         }
