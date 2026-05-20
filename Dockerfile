@@ -1,37 +1,37 @@
-# Stage 1: Build the Kotlin/Wasm app
-FROM gradle:jdk21 AS builder
+# Stage 1: Build Kotlin/Wasm distribution
+FROM gradle:8.14.4-jdk21 AS builder
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y \
+# Native libs occasionally required by toolchain downloads
+RUN apt-get update && apt-get install -y --no-install-recommends \
     libatomic1 \
     ca-certificates \
-    curl \
-    xz-utils \
-    gnupg \
-    nodejs \
-    npm \
  && rm -rf /var/lib/apt/lists/*
 
-COPY . .
+# Docker often has less RAM than a dev machine; gradle.properties requests 4g by default
+ENV GRADLE_OPTS="-Dorg.gradle.daemon=false"
+ENV GRADLE_USER_HOME=/home/gradle/.gradle
+
+COPY gradle gradle
+COPY gradlew gradlew.bat settings.gradle.kts build.gradle.kts gradle.properties ./
+COPY composeApp composeApp
+COPY kotlin-js-store kotlin-js-store
 
 RUN chmod +x gradlew
 
-# Najpierw pobierz zależności (cache layer)
-RUN ./gradlew dependencies --no-daemon || true
+RUN ./gradlew :composeApp:wasmJsBrowserDistribution -x test --no-daemon \
+    -Dorg.gradle.jvmargs="-Xmx2g -XX:MaxMetaspaceSize=512m" \
+    -Dkotlin.daemon.jvmargs="-Xmx1536m" \
+    -Dorg.gradle.configuration-cache=false
 
-RUN ./gradlew :composeApp:wasmJsBrowserDistribution -x test
+RUN test -f composeApp/build/dist/wasmJs/productionExecutable/index.html
 
-# Debug -sprawdza co zostało przeniesione
-RUN echo "=== Zawartość dist ===" && \
-    find /app/composeApp/build/dist -type f 2>/dev/null || echo "Brak katalogu dist!"
-
-# Stage 2: Nginx
+# Stage 2: Serve static assets
 FROM nginx:stable-alpine
 
 RUN rm /etc/nginx/conf.d/default.conf
 
 COPY nginx.conf /etc/nginx/conf.d/default.conf
-
 COPY --from=builder /app/composeApp/build/dist/wasmJs/productionExecutable /usr/share/nginx/html
 
 EXPOSE 80

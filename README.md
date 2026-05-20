@@ -35,6 +35,28 @@ in your IDE’s toolbar or run it directly from the terminal:
   .\gradlew.bat :composeApp:wasmJsBrowserDevelopmentRun
   ```
 
+### Docker (production web build)
+
+From the repository root:
+
+```shell
+docker compose up --build
+```
+
+The app is served on [http://localhost:8080](http://localhost:8080) (override with `PORT=3000 docker compose up`).
+
+**Common build failures**
+
+- **OutOfMemoryError / Gradle daemon exited** — increase Docker memory to at least 4 GB (Docker Desktop → Settings → Resources).
+- **`path "../KONTENERKIAPI" not found`** — use root `docker-compose.yml`, or start only the web service: `docker compose -f docker/docker-compose.yml up --build kotlin-wasm-app` (do not enable the `api` profile unless that repo exists next to this project).
+- **`COPY ... productionExecutable: not found`** — the Wasm build failed in the builder stage; scroll up in the build log for the first Gradle error.
+
+Optional API container (sibling repo required):
+
+```shell
+docker compose -f docker/docker-compose.yml --profile api up --build
+```
+
 ---
 
 Learn more about [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-multiplatform-dev/get-started.html),

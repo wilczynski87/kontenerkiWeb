@@ -3,35 +3,12 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      args:
-        - GRADLE_OPTS=-Dorg.gradle.daemon=false
     container_name: kontenerki-web
     ports:
-      - "${PORT:-80}:80"  # Allows overriding port via environment variable
+      - "${PORT:-8080}:80"
     restart: unless-stopped
-#    networks:
-#      - web-network
-#    healthcheck:
-#      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80"]
-#      interval: 30s
-#      timeout: 10s
-#      retries: 3
-#      start_period: 30s
-#    logging:
-#      driver: "json-file"
-#      options:
-#        max-size: "10m"
-#        max-file: "3"
-
-#  api:
-#    build:
-#      context: ../KONTENERKIAPI
-#      dockerfile: Dockerfile
-#    container_name: kontenerkiapi
-#    restart: unless-stopped
-#    networks:
-#      - web-network
-
-networks:
-  web-network:
-    driver: bridge
+    # Kotlin/Wasm build in Docker Desktop typically needs >= 4 GB RAM for the builder stage
+    deploy:
+      resources:
+        limits:
+          memory: 6G

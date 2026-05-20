@@ -1,6 +1,11 @@
-#build/
-#composeApp/build/
 .gradle/
+**/.gradle/
+**/build/
 .idea/
 *.iml
 local.properties
+.git/
+.gitignore
+*.md
+docker/
+terminals/
