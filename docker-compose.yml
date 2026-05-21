@@ -5,7 +5,7 @@ services:
       dockerfile: Dockerfile
     container_name: kontenerki-web
     ports:
-      - "${PORT:-8080}:80"
+      - "${PORT:-80}:80"
     restart: unless-stopped
     # Kotlin/Wasm build in Docker Desktop typically needs >= 4 GB RAM for the builder stage
     deploy:
