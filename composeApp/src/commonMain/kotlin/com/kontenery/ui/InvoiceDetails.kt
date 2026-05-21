@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.HorizontalDivider
@@ -72,7 +73,8 @@ fun InvoicesTable(
         "typ" to ColumnConfig("Typ", 160.dp) { it.type ?: "" },
         "tytul" to ColumnConfig("Tytuł", 210.dp) { it.invoiceTitle ?: "" },
         "vatowiec" to ColumnConfig("Vatowiec", 210.dp) { if (it.vatApply) "Tak" else "Nie" },
-        "akcja" to ColumnConfig("Akcja", 160.dp) { "" } // Special case for action button
+        "ksef" to ColumnConfig("KSeF", 120.dp) { it.ksefStatus ?: it.ksefNumber ?: "" },
+        "akcja" to ColumnConfig("Akcja", 220.dp) { "" } // Special case for action buttons
     )
 
 //    val tableWidth = widths.reduce { acc, dp -> acc + dp }
@@ -110,6 +112,7 @@ fun InvoicesTable(
                     Header(columnsMap["platnosc"])
                     Header(columnsMap["klient"])
                     Header(columnsMap["typ"])
+                    Header(columnsMap["ksef"])
                     Header(columnsMap["akcja"])
                 }
                 HorizontalDivider(color = Color.LightGray, thickness = 0.5.dp)
@@ -128,28 +131,53 @@ fun InvoicesTable(
                             Cell(invoice.priceWithVatSum ?: "", columnsMap["brutto"])
                             Cell(invoice.paymentDay?.toString() ?: "", columnsMap["platnosc"])
                             Cell(invoice.customer?.name ?: "", columnsMap["klient"])
-                            Cell(invoice.type ?: "", columnsMap["akcja"])
+                            Cell(invoice.type ?: "", columnsMap["typ"])
+                            Cell(
+                                invoice.ksefStatus ?: invoice.ksefNumber ?: "",
+                                columnsMap["ksef"],
+                            )
 
                             Box(
                                 modifier = Modifier.width(columnsMap["akcja"]?.width ?: 150.dp),
                                 contentAlignment = Alignment.Center
                             ) {
                                 if (invoice.invoiceNumber != null) {
-                                    IconButton(onClick = {
-                                        viewModel.createConfirmationModal(
-                                            ModalData(
-                                                onDismissRequest = { viewModel.closeConfirmationModal() },
-                                                onConfirmation = {
-                                                    viewModel.postPeriodicInvoiceAgain(invoice.invoiceNumber)
-                                                    viewModel.closeConfirmationModal()
-                                                },
-                                                dialogTitle = "Wyślij ponownie",
-                                                dialogText = "Czy wysłać fakturę nr: ${invoice.invoiceNumber} ponownie?",
-                                                icon = Icons.Default.Info
+                                    Row {
+                                        IconButton(onClick = {
+                                            viewModel.createConfirmationModal(
+                                                ModalData(
+                                                    onDismissRequest = { viewModel.closeConfirmationModal() },
+                                                    onConfirmation = {
+                                                        viewModel.postPeriodicInvoiceAgain(invoice.invoiceNumber)
+                                                        viewModel.closeConfirmationModal()
+                                                    },
+                                                    dialogTitle = "Wyślij ponownie",
+                                                    dialogText = "Czy wysłać fakturę nr: ${invoice.invoiceNumber} ponownie?",
+                                                    icon = Icons.Default.Info
+                                                )
                                             )
-                                        )
-                                    }) {
-                                        Icon(Icons.Default.Email, contentDescription = "email again")
+                                        }) {
+                                            Icon(Icons.Default.Email, contentDescription = "Wyślij e-mail ponownie")
+                                        }
+                                        IconButton(onClick = {
+                                            viewModel.createConfirmationModal(
+                                                ModalData(
+                                                    onDismissRequest = { viewModel.closeConfirmationModal() },
+                                                    onConfirmation = {
+                                                        viewModel.sendInvoiceToKsef(invoice.invoiceNumber)
+                                                        viewModel.closeConfirmationModal()
+                                                    },
+                                                    dialogTitle = "Wyślij do KSeF",
+                                                    dialogText = "Czy wysłać fakturę nr: ${invoice.invoiceNumber} do KSeF?",
+                                                    icon = Icons.Default.CloudUpload,
+                                                )
+                                            )
+                                        }) {
+                                            Icon(
+                                                Icons.Default.CloudUpload,
+                                                contentDescription = "Wyślij do KSeF",
+                                            )
+                                        }
                                     }
                                 }
                             }

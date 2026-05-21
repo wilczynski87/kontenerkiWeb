@@ -5,6 +5,7 @@ import com.kontenery.model.invoice.Invoice
 import com.kontenery.model.errors.InvoiceErrorMessage
 import com.kontenery.model.enums.now
 import com.kontenery.model.invoice.InvoiceSend
+import com.kontenery.model.invoice.KsefSendResult
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
@@ -69,4 +70,17 @@ class ApiInvoice(
     suspend fun printAllInvoice(
         date: LocalDate? = LocalDate.now()
     ): Boolean = httpClient.get("$baseUrl/invoice/${date}/print").body()
+
+    suspend fun sendInvoiceToKsef(
+        invoiceNumber: String,
+    ): Result<KsefSendResult> {
+        return try {
+            val result: KsefSendResult = httpClient.post("$baseUrl/invoice/ksef") {
+                setBody(invoiceNumber)
+            }.body()
+            Result.success(result)
+        } catch (e: Throwable) {
+            Result.failure(e)
+        }
+    }
 }
