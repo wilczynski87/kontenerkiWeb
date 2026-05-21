@@ -25,6 +25,10 @@ data class Invoice(
     val invoiceSendToClient: LocalDate? = null,
     val type: String? = InvoiceType.PERIODIC.name,
     val vatApply: Boolean = false,
+    val ksefNumber: String? = null,
+    @Serializable(with = LocalDateSerializer::class)
+    val ksefSentAt: LocalDate? = null,
+    val ksefStatus: String? = null,
 ) {
 }
 
