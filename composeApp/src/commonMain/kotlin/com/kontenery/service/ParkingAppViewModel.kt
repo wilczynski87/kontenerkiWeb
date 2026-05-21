@@ -920,6 +920,30 @@ class ParkingAppViewModel(
         }
     }
 
+    fun sendInvoiceToKsef(invoice: Invoice) {
+        coroutineScope.launch {
+            ApiClientsService.ksef.sendInvoice(invoice).onSuccess { response ->
+                showConfirmModal(
+                    dialogTitle = "Faktura wysłana do KSeF",
+                    dialogText = buildString {
+                        append("Numer faktury: ${response.invoiceNumber ?: invoice.invoiceNumber}")
+                        response.ksefNumber?.let { append("\nNumer KSeF: $it") }
+                        append("\nReferencja sesji: ${response.sessionReferenceNumber}")
+                    },
+                    onConfirmation = {
+                        state.value.clientNavRow?.let { fetchInvoicesForClient(it) }
+                    },
+                )
+            }.onFailure { e ->
+                showErrorModal(
+                    dialogTitle = "Faktura NIE wysłana do KSeF",
+                    dialogText = e.message ?: "Nieznany błąd",
+                    onConfirmation = {},
+                )
+            }
+        }
+    }
+
     // TODO obsługa odpowiedzi do napisania
     fun postPeriodicInvoiceAgain(invoiceNumber: String) {
         coroutineScope.launch {

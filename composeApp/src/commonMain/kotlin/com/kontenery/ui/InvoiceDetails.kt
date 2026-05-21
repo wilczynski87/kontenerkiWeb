@@ -73,7 +73,6 @@ fun InvoicesTable(
         "typ" to ColumnConfig("Typ", 160.dp) { it.type ?: "" },
         "tytul" to ColumnConfig("Tytuł", 210.dp) { it.invoiceTitle ?: "" },
         "vatowiec" to ColumnConfig("Vatowiec", 210.dp) { if (it.vatApply) "Tak" else "Nie" },
-        "ksef" to ColumnConfig("KSeF", 120.dp) { it.ksefStatus ?: it.ksefNumber ?: "" },
         "akcja" to ColumnConfig("Akcja", 220.dp) { "" } // Special case for action buttons
     )
 
@@ -112,7 +111,6 @@ fun InvoicesTable(
                     Header(columnsMap["platnosc"])
                     Header(columnsMap["klient"])
                     Header(columnsMap["typ"])
-                    Header(columnsMap["ksef"])
                     Header(columnsMap["akcja"])
                 }
                 HorizontalDivider(color = Color.LightGray, thickness = 0.5.dp)
@@ -132,10 +130,6 @@ fun InvoicesTable(
                             Cell(invoice.paymentDay?.toString() ?: "", columnsMap["platnosc"])
                             Cell(invoice.customer?.name ?: "", columnsMap["klient"])
                             Cell(invoice.type ?: "", columnsMap["typ"])
-                            Cell(
-                                invoice.ksefStatus ?: invoice.ksefNumber ?: "",
-                                columnsMap["ksef"],
-                            )
 
                             Box(
                                 modifier = Modifier.width(columnsMap["akcja"]?.width ?: 150.dp),
@@ -153,8 +147,8 @@ fun InvoicesTable(
                                                     },
                                                     dialogTitle = "Wyślij ponownie",
                                                     dialogText = "Czy wysłać fakturę nr: ${invoice.invoiceNumber} ponownie?",
-                                                    icon = Icons.Default.Info
-                                                )
+                                                    icon = Icons.Default.Info,
+                                                ),
                                             )
                                         }) {
                                             Icon(Icons.Default.Email, contentDescription = "Wyślij e-mail ponownie")
@@ -164,13 +158,13 @@ fun InvoicesTable(
                                                 ModalData(
                                                     onDismissRequest = { viewModel.closeConfirmationModal() },
                                                     onConfirmation = {
-                                                        viewModel.sendInvoiceToKsef(invoice.invoiceNumber)
+                                                        viewModel.sendInvoiceToKsef(invoice)
                                                         viewModel.closeConfirmationModal()
                                                     },
                                                     dialogTitle = "Wyślij do KSeF",
-                                                    dialogText = "Czy wysłać fakturę nr: ${invoice.invoiceNumber} do KSeF?",
+                                                    dialogText = "Czy wysłać fakturę nr: ${invoice.invoiceNumber} do KSeF (kontenerkiApi)?",
                                                     icon = Icons.Default.CloudUpload,
-                                                )
+                                                ),
                                             )
                                         }) {
                                             Icon(
