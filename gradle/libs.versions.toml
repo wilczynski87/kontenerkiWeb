@@ -74,8 +74,6 @@ compose-resources = { module = "org.jetbrains.compose.components:components-reso
 # Android
 ktor-client-android = { group = "io.ktor", name = "ktor-client-android",  version.ref = "ktorVer" }
 
-ktor-client-mock = { module = "io.ktor:ktor-client-mock", version.ref = "ktorVer" }
-
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
 androidLibrary = { id = "com.android.library", version.ref = "agp" }
@@ -83,4 +81,3 @@ composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "composeMul
 composeCompiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
-kotlinJvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
