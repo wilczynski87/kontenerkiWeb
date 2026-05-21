@@ -24,6 +24,7 @@ object ApiClientsService {
     val clients by lazy { ApiClients(httpClient) }
     val products by lazy { ApiProduct(httpClient) }
     val invoices by lazy { ApiInvoice(httpClient) }
+    val ksef by lazy { ApiKsef(httpClient) }
     val contracts by lazy { ApiContract(httpClient) }
     val payments by lazy { ApiPayments(httpClient) }
     val bankAccounts by lazy { ApiBankAccount(httpClient) }
