@@ -40,6 +40,7 @@ kotlin {
     
     sourceSets {
         androidMain.dependencies {
+            implementation(project(":ksef"))
             implementation(libs.androidx.activity.compose)
             implementation(libs.androidx.startup)
             implementation(libs.ktor.client.android)
