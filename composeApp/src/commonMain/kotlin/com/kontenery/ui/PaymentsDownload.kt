@@ -1,6 +1,5 @@
 package com.kontenery.ui
 
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
@@ -71,6 +70,7 @@ fun PaymentsDownload(viewModel: ParkingAppViewModel, modifier: Modifier) {
         )
 
         uploadResult?.let { result ->
+            println("result: $result")
             when (result) {
                 is CsvUploadResult.Recognised -> PaymentsRecogniseResult(result.result)
                 is CsvUploadResult.Simple -> UploadSimpleResult(result.message)
@@ -189,82 +189,55 @@ private fun PaymentDtoSection(
             if (payments.isEmpty()) {
                 Text(text = emptyText, style = MaterialTheme.typography.bodyMedium)
             } else {
-                PaymentDtoTable(payments)
+                payments.forEachIndexed { index, payment ->
+                    if (index > 0) {
+                        HorizontalDivider(
+                            modifier = Modifier.padding(vertical = 8.dp),
+                            color = Color.LightGray,
+                        )
+                    }
+                    PaymentDtoListItem(payment)
+                }
             }
         }
     }
 }
 
 @Composable
-private fun PaymentDtoTable(payments: List<PaymentDto>) {
-    val scrollState = rememberScrollState()
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .horizontalScroll(scrollState),
+private fun PaymentDtoListItem(payment: PaymentDto) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
-        Column {
-            PaymentDtoTableRow(
-                date = "Data",
-                amount = "Kwota",
-                title = "Tytuł",
-                clientId = "Klient",
-                reference = "Nr ref.",
-                invoices = "Faktury",
-                isHeader = true,
-            )
-            payments.forEach { payment ->
-                PaymentDtoTableRow(
-                    date = payment.date?.let(::formatLocalDate) ?: "-",
-                    amount = payment.amount?.to2Decimals() ?: "-",
-                    title = payment.title ?: "-",
-                    clientId = payment.fromClientId?.toString() ?: "-",
-                    reference = payment.referenceNumber ?: "-",
-                    invoices = payment.forInvoices?.joinToString(", ").orEmpty().ifBlank { "-" },
-                )
-            }
-        }
+        PaymentDtoField("Data", payment.date?.let(::formatLocalDate))
+        PaymentDtoField("Kwota", payment.amount?.let { "${it.to2Decimals()} zł" })
+        PaymentDtoField("Tytuł", payment.title)
+        PaymentDtoField("Klient (ID)", payment.fromClientId?.toString())
+        PaymentDtoField("Metoda", payment.method)
+        PaymentDtoField("Konto odbiorcy", payment.toAccount)
+        PaymentDtoField("Konto nadawcy", payment.fromAccount)
+        PaymentDtoField("Nr referencyjny", payment.referenceNumber)
+        PaymentDtoField("Za faktury", payment.forInvoices?.joinToString(", "))
+        PaymentDtoField("ID płatności", payment.paymentId)
     }
 }
 
 @Composable
-private fun PaymentDtoTableRow(
-    date: String,
-    amount: String,
-    title: String,
-    clientId: String,
-    reference: String,
-    invoices: String,
-    isHeader: Boolean = false,
-) {
-    val style = if (isHeader) {
-        MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold)
-    } else {
-        MaterialTheme.typography.bodySmall
+private fun PaymentDtoField(label: String, value: String?) {
+    if (value.isNullOrBlank()) return
+    Row(modifier = Modifier.fillMaxWidth()) {
+        Text(
+            text = "$label: ",
+            style = MaterialTheme.typography.bodySmall,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.width(130.dp),
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodySmall,
+            modifier = Modifier.weight(1f),
+        )
     }
-
-    Row(modifier = Modifier.padding(vertical = 4.dp)) {
-        TableCell(date, 90, style)
-        TableCell(amount, 80, style)
-        TableCell(title, 200, style)
-        TableCell(clientId, 70, style)
-        TableCell(reference, 120, style)
-        TableCell(invoices, 150, style)
-    }
-    if (!isHeader) {
-        HorizontalDivider(thickness = 0.5.dp, color = Color.LightGray)
-    }
-}
-
-@Composable
-private fun TableCell(text: String, widthDp: Int, style: androidx.compose.ui.text.TextStyle) {
-    Text(
-        text = text,
-        modifier = Modifier.width(widthDp.dp).padding(horizontal = 4.dp),
-        style = style,
-        maxLines = 2,
-    )
 }
 
 @Composable
@@ -287,9 +260,11 @@ private fun PaymentErrorsSection(errors: List<PaymentError>) {
             if (errors.isEmpty()) {
                 Text(text = "Brak błędów.", style = MaterialTheme.typography.bodyMedium)
             } else {
-                errors.forEach { error ->
+                errors.forEachIndexed { index, error ->
+                    if (index > 0) {
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                    }
                     PaymentErrorRow(error)
-                    HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
                 }
             }
         }
@@ -298,7 +273,10 @@ private fun PaymentErrorsSection(errors: List<PaymentError>) {
 
 @Composable
 private fun PaymentErrorRow(error: PaymentError) {
-    Column(modifier = Modifier.padding(vertical = 4.dp)) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
         Text(
             text = listOfNotNull(error.title, error.message).joinToString(": "),
             style = MaterialTheme.typography.bodyMedium,
@@ -306,15 +284,12 @@ private fun PaymentErrorRow(error: PaymentError) {
             color = Color(0xFFC62828),
         )
         error.payment?.let { payment ->
-            Text(
-                text = buildString {
-                    append(formatLocalDate(payment.date))
-                    append(" · ${payment.amount.to2Decimals()} zł")
-                    payment.title?.let { append(" · $it") }
-                    payment.fromClient?.getName()?.let { append(" · $it") }
-                },
-                style = MaterialTheme.typography.bodySmall,
-            )
+            PaymentDtoField("Data", formatLocalDate(payment.date))
+            PaymentDtoField("Kwota", "${payment.amount.to2Decimals()} zł")
+            PaymentDtoField("Tytuł", payment.title)
+            PaymentDtoField("Klient", payment.fromClient?.getName())
+            PaymentDtoField("Konto nadawcy", payment.fromAccount)
+            PaymentDtoField("Nr referencyjny", payment.referenceNumber)
         }
     }
 }

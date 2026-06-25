@@ -21,42 +21,16 @@ class ApiCsvPayments(
         csvType: CSVType,
     ): CsvUploadResult {
         return try {
-            when (csvType) {
-                CSVType.ALIOR -> {
-                    val result: PaymentsRecogniseList = httpClient.post("$baseUrl/csv/${csvType.endpoint}") {
-                        contentType(ContentType.Application.Json)
-                        setBody(message)
-                    }.body()
-                    CsvUploadResult.Recognised(result)
-                }
-                else -> {
-                    val response: MessageRequest = httpClient.post("$baseUrl/csv/${csvType.endpoint}") {
-                        contentType(ContentType.Application.Json)
-                        setBody(message)
-                    }.body()
-                    CsvUploadResult.Simple(response.message)
-                }
-            }
+            val result: PaymentsRecogniseList = httpClient.post("$baseUrl/csv/${csvType.endpoint}") {
+                contentType(ContentType.Application.Json)
+                setBody(message)
+            }.body()
+            println("csvType, result: $csvType, $result")
+            CsvUploadResult.Recognised(result)
         } catch (e: ClientRequestException) {
             CsvUploadResult.Failed(e.message)
         } catch (e: Exception) {
             CsvUploadResult.Failed(e.message ?: "Nie udało się wgrać pliku")
         }
-    }
-
-    suspend fun sendCSVMessage(
-        message: MessageRequest,
-        csvType: CSVType,
-    ): MessageRequest {
-        return httpClient.post("$baseUrl/csv/${csvType.endpoint}") {
-            contentType(ContentType.Application.Json)
-            setBody(message)
-        }.body()
-    }
-
-    // przykład GET
-    suspend fun fetchMessages(
-    ): List<MessageRequest> {
-        return httpClient.post("$baseUrl/csv/PeKaOSA").body()
     }
 }
