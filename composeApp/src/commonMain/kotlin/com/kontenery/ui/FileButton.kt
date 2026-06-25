@@ -30,10 +30,11 @@ fun MyFilePickerButton(
 
                 file.let {
                     val csvText = it.bytes.decodeToString()
+                    println("csvText: $csvText")
                     ApiClientsService.csvPayments.sendCSVMessage(
                         MessageRequest(csvText),
                         csvType ?: CSVType.PEKAOSABUSSINESS,
-                        )
+                    )
                     transactions = parseBankTransactions(csvText)
                 }
             }

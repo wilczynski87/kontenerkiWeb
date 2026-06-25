@@ -72,7 +72,7 @@ class ParkingAppViewModel(
     private var currentPage = 0
     private var isLoading = false
     private var endReached = false
-    private val pageSize = 20
+    private val pageSize = 100
 
     init {
         if (autoInitialize) {
