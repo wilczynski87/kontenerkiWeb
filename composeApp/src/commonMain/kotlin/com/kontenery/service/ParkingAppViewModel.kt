@@ -907,7 +907,10 @@ class ParkingAppViewModel(
     fun sendPeriodicInvoice(clientId: Long) {
         coroutineScope.launch {
             try {
-                val response = ApiClientsService.invoices.postPeriodicInvoice(clientId)
+                val response = ApiClientsService.invoices.postPeriodicInvoice(
+                    clientId = clientId,
+                    period = state.value.forDate?.toString(),
+                )
                 handlePeriodicInvoiceResponse(
                     response = response,
                     successTitle = "Faktura okresowa wysłana",

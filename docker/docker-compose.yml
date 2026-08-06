@@ -12,12 +12,12 @@ services:
         limits:
           memory: 6G
 
-  # Optional: requires sibling repo ../KONTENERKIAPI
+  # Optional: requires sibling repo ../kontenerkiApi
   # Start with: docker compose -f docker/docker-compose.yml --profile api up --build
   api:
     profiles: ["api"]
     build:
-      context: ../KONTENERKIAPI
+      context: ../kontenerkiApi
       dockerfile: Dockerfile
     container_name: kontenerkiapi
     restart: unless-stopped
