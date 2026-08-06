@@ -11,8 +11,8 @@ internal actual fun defaultApiBaseUrl(): String =
 
 internal actual fun apiBaseUrlCandidates(): List<String> =
     orderedApiBaseUrlCandidates(
-        dockerReachableUrl = LOCALHOST_API_URL,
-        localhostUrl = SAME_ORIGIN_DOCKER_PROXY_URL,
+        dockerReachableUrl = SAME_ORIGIN_DOCKER_PROXY_URL,
+        localhostUrl = LOCALHOST_API_URL,
     )
 
 actual fun apiDeviceLabel(): String = "przeglądarka"
