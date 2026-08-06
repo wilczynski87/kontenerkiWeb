@@ -915,6 +915,11 @@ class ParkingAppViewModel(
                 )
             } catch (e: Exception) {
                 println("sendPeriodicInvoice nie udało się wysłać faktury $e")
+                showErrorModal(
+                    dialogTitle = "Faktura okresowa NIE została wysłana",
+                    dialogText = e.message ?: "Nie udało się połączyć z serwerem.",
+                    onConfirmation = {},
+                )
             }
         }
     }
@@ -1002,6 +1007,11 @@ class ParkingAppViewModel(
                 )
             } catch (e: Exception) {
                 println("sendPeriodicInvoiceToAllClients nie udało się wysłać faktur $e")
+                showErrorModal(
+                    dialogTitle = "Faktury okresowe NIE zostały wysłane",
+                    dialogText = e.message ?: "Nie udało się połączyć z serwerem.",
+                    onConfirmation = {},
+                )
             }
         }
     }
@@ -1602,8 +1612,29 @@ class ParkingAppViewModel(
     // Drukuj faktury okresowe
     fun printAllInvoices(date: LocalDate? = LocalDate.now()){
         coroutineScope.launch {
-            val isPrinting = ApiClientsService.invoices.printAllInvoice(date)
-            println("isPrinting $isPrinting")
+            try {
+                val isPrinting = ApiClientsService.invoices.printAllInvoice(date)
+                println("isPrinting $isPrinting")
+                if (isPrinting) {
+                    showConfirmModal(
+                        dialogTitle = "Faktury zostały wydrukowane",
+                        dialogText = "Faktury za okres $date zostały przekazane do wydruku.",
+                        onConfirmation = {},
+                    )
+                } else {
+                    showErrorModal(
+                        dialogTitle = "Drukowanie faktur nie powiodło się",
+                        dialogText = "Serwer nie potwierdził wydruku faktur.",
+                        onConfirmation = {},
+                    )
+                }
+            } catch (e: Exception) {
+                showErrorModal(
+                    dialogTitle = "Drukowanie faktur nie powiodło się",
+                    dialogText = e.message ?: "Nie udało się połączyć z serwerem.",
+                    onConfirmation = {},
+                )
+            }
         }
     }
 
