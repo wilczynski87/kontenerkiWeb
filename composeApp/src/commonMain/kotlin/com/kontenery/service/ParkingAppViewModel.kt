@@ -31,6 +31,7 @@ import com.kontenery.model.enums.InvoiceType
 import com.kontenery.model.enums.endOfCurrentYear
 import com.kontenery.model.enums.now
 import com.kontenery.model.enums.startOfCurrentYear
+import com.kontenery.model.errors.InvoiceErrorMessage
 import com.kontenery.model.invoice.Invoice
 import com.kontenery.model.invoice.InvoiceFeature
 import com.kontenery.model.invoice.Position
@@ -904,16 +905,14 @@ class ParkingAppViewModel(
         TO INVOICE:
     */
     fun sendPeriodicInvoice(clientId: Long) {
-//        println("sendPeriodicInvoice", clientId.toString())
         coroutineScope.launch {
             try {
-                val response = ApiClientsService.invoices.postPeriodicInvoice(
-                    clientId)
-                println("sendPeriodicInvoice errors: $response")
-                _state.update { currentState ->
-                    currentState.copy(responseErrors = response)
-                }
-
+                val response = ApiClientsService.invoices.postPeriodicInvoice(clientId)
+                handlePeriodicInvoiceResponse(
+                    response = response,
+                    successTitle = "Faktura okresowa wysłana",
+                    successText = "Faktura okresowa została wygenerowana i wysłana do klienta.",
+                )
             } catch (e: Exception) {
                 println("sendPeriodicInvoice nie udało się wysłać faktury $e")
             }
@@ -993,16 +992,34 @@ class ParkingAppViewModel(
     }
 
     fun sendPeriodicInvoiceToAllClients(period: LocalDate = LocalDate.now()) {
-        println("sendPeriodicInvoiceToAllClients period: $period")
         coroutineScope.launch {
             try {
                 val response = ApiClientsService.invoices.postPeriodicInvoiceToAllClients(period.toString())
-                println("sendPeriodicInvoiceForAll errors: $response")
-                _state.update { currentState ->
-                    currentState.copy(responseErrors = response)
-                }
+                handlePeriodicInvoiceResponse(
+                    response = response,
+                    successTitle = "Faktury okresowe wysłane",
+                    successText = "Faktury okresowe za okres $period zostały wygenerowane i wysłane.",
+                )
             } catch (e: Exception) {
                 println("sendPeriodicInvoiceToAllClients nie udało się wysłać faktur $e")
+            }
+        }
+    }
+
+    private fun handlePeriodicInvoiceResponse(
+        response: List<InvoiceErrorMessage>,
+        successTitle: String,
+        successText: String,
+    ) {
+        if (response.isEmpty()) {
+            showConfirmModal(
+                dialogTitle = successTitle,
+                dialogText = successText,
+                onConfirmation = {},
+            )
+        } else {
+            _state.update { currentState ->
+                currentState.copy(responseErrors = response)
             }
         }
     }
