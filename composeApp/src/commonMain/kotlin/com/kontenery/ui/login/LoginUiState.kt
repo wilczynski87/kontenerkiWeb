@@ -1,10 +1,8 @@
 package com.kontenery.ui.login
 
-import com.kontenery.auth.AuthDefaults
-
 data class LoginUiState(
-    val username: String = AuthDefaults.DEV_USERNAME,
-    val password: String = AuthDefaults.DEV_PASSWORD,
+    val username: String = "",
+    val password: String = "",
     val isPasswordVisible: Boolean = false,
     val usernameError: String? = null,
     val passwordError: String? = null,
