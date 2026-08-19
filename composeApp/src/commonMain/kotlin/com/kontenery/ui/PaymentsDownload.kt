@@ -1,6 +1,7 @@
 package com.kontenery.ui
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
@@ -9,15 +10,19 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -25,8 +30,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.kontenery.controller.ApiClientsService
 import com.kontenery.data.CSVType
 import com.kontenery.data.CsvUploadResult
+import com.kontenery.model.Client
+import com.kontenery.model.ClientBankAccount
+import com.kontenery.model.ClientOnList
 import com.kontenery.model.PaymentDto
 import com.kontenery.model.errors.PaymentError
 import com.kontenery.model.payment.PaymentsRecogniseList
@@ -34,6 +43,7 @@ import com.kontenery.pickFile
 import com.kontenery.service.ParkingAppViewModel
 import com.kontenery.util.formatLocalDate
 import com.kontenery.util.to2Decimals
+import kotlinx.coroutines.launch
 
 @Composable
 fun PaymentsDownload(viewModel: ParkingAppViewModel, modifier: Modifier) {
@@ -72,7 +82,7 @@ fun PaymentsDownload(viewModel: ParkingAppViewModel, modifier: Modifier) {
         uploadResult?.let { result ->
             println("result: $result")
             when (result) {
-                is CsvUploadResult.Recognised -> PaymentsRecogniseResult(result.result)
+                is CsvUploadResult.Recognised -> PaymentsRecogniseResult(result.result, viewModel)
                 is CsvUploadResult.Simple -> UploadSimpleResult(result.message)
                 is CsvUploadResult.Failed -> UploadErrorResult(result.message)
             }
@@ -108,7 +118,7 @@ private fun UploadErrorResult(message: String) {
 }
 
 @Composable
-fun PaymentsRecogniseResult(result: PaymentsRecogniseList) {
+fun PaymentsRecogniseResult(result: PaymentsRecogniseList, viewModel: ParkingAppViewModel) {
     val newCount = result.newPayments.orEmpty().size
     val oldCount = result.oldPayments.orEmpty().size
     val unrecognizedCount = result.unrecognizedPayments.orEmpty().size
@@ -136,6 +146,12 @@ fun PaymentsRecogniseResult(result: PaymentsRecogniseList) {
         }
 
         PaymentDtoSection(
+            title = "Nierozpoznane przelewy",
+            payments = result.unrecognizedPayments.orEmpty(),
+            emptyText = "Brak nierozpoznanych przelewów.",
+            viewModel = viewModel,
+        )
+        PaymentDtoSection(
             title = "Nowe płatności",
             payments = result.newPayments.orEmpty(),
             emptyText = "Brak nowych płatności.",
@@ -144,11 +160,6 @@ fun PaymentsRecogniseResult(result: PaymentsRecogniseList) {
             title = "Duplikaty (już w bazie)",
             payments = result.oldPayments.orEmpty(),
             emptyText = "Brak duplikatów.",
-        )
-        PaymentDtoSection(
-            title = "Nierozpoznane przelewy",
-            payments = result.unrecognizedPayments.orEmpty(),
-            emptyText = "Brak nierozpoznanych przelewów.",
         )
         PaymentErrorsSection(errors = result.errors.orEmpty())
     }
@@ -176,6 +187,7 @@ private fun PaymentDtoSection(
     title: String,
     payments: List<PaymentDto>,
     emptyText: String,
+    viewModel: ParkingAppViewModel? = null,
 ) {
     OutlinedCard(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(12.dp)) {
@@ -196,7 +208,34 @@ private fun PaymentDtoSection(
                             color = Color.LightGray,
                         )
                     }
-                    PaymentDtoListItem(payment)
+                    BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+                        val isWide = maxWidth >= 600.dp
+                        if (isWide && viewModel != null && !payment.fromAccount.isNullOrBlank()) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                                verticalAlignment = Alignment.Top,
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    PaymentDtoListItem(payment)
+                                }
+                                Column(modifier = Modifier.weight(1f)) {
+                                    AssignAccountToClientRow(
+                                        accountNumber = payment.fromAccount,
+                                        viewModel = viewModel,
+                                    )
+                                }
+                            }
+                        } else {
+                            PaymentDtoListItem(payment)
+                            if (viewModel != null && !payment.fromAccount.isNullOrBlank()) {
+                                AssignAccountToClientRow(
+                                    accountNumber = payment.fromAccount,
+                                    viewModel = viewModel,
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -211,11 +250,12 @@ private fun PaymentDtoListItem(payment: PaymentDto) {
     ) {
         PaymentDtoField("Data", payment.date?.let(::formatLocalDate))
         PaymentDtoField("Kwota", payment.amount?.let { "${it.to2Decimals()} zł" })
+        PaymentDtoField("Nadawca", payment.senderName)
         PaymentDtoField("Tytuł", payment.title)
         PaymentDtoField("Klient (ID)", payment.fromClientId?.toString())
         PaymentDtoField("Metoda", payment.method)
-        PaymentDtoField("Konto odbiorcy", payment.toAccount)
-        PaymentDtoField("Konto nadawcy", payment.fromAccount)
+        PaymentDtoField("Konto odbiorcy", payment.toAccount?.formatIban())
+        PaymentDtoField("Konto nadawcy", payment.fromAccount?.formatIban())
         PaymentDtoField("Nr referencyjny", payment.referenceNumber)
         PaymentDtoField("Za faktury", payment.forInvoices?.joinToString(", "))
         PaymentDtoField("ID płatności", payment.paymentId)
@@ -288,8 +328,95 @@ private fun PaymentErrorRow(error: PaymentError) {
             PaymentDtoField("Kwota", "${payment.amount.to2Decimals()} zł")
             PaymentDtoField("Tytuł", payment.title)
             PaymentDtoField("Klient", payment.fromClient?.getName())
-            PaymentDtoField("Konto nadawcy", payment.fromAccount)
+            PaymentDtoField("Konto nadawcy", payment.fromAccount?.formatIban())
             PaymentDtoField("Nr referencyjny", payment.referenceNumber)
+        }
+    }
+}
+
+private fun String.formatIban(): String {
+    val digits = this.filter { it.isDigit() }
+    val prefix = if (this.length >= 2 && this[0].isLetter() && this[1].isLetter())
+        this.substring(0, 2).uppercase() else "PL"
+    return (prefix + digits).chunked(4).joinToString(" ").trim()
+}
+
+@Composable
+private fun AssignAccountToClientRow(
+    accountNumber: String,
+    viewModel: ParkingAppViewModel,
+) {
+    val scope = rememberCoroutineScope()
+    val clients: List<ClientOnList> = viewModel.state.collectAsState().value.clients
+    if (clients.isEmpty()) viewModel.getClientsList(0, 1000)
+
+    var expanded by remember { mutableStateOf(false) }
+    var selectedClient by remember { mutableStateOf<Client?>(null) }
+    var isSaving by remember { mutableStateOf(false) }
+    var saveResult by remember { mutableStateOf<String?>(null) }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 6.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        HorizontalDivider(color = Color(0xFF1565C0).copy(alpha = 0.3f))
+
+        if (saveResult != null) {
+            Text(
+                text = saveResult!!,
+                style = MaterialTheme.typography.bodySmall,
+                color = if (saveResult!!.startsWith("Zapisano")) Color(0xFF2E7D32) else Color(0xFFC62828),
+            )
+        } else {
+            ClientsListDropdown(
+                client = selectedClient,
+                clients = clients,
+                expanded = expanded,
+                onExpandedChange = { expanded = !expanded },
+                onSelect = { clientId ->
+                    expanded = false
+                    selectedClient = Client(id = clientId)
+                },
+            )
+
+            if (selectedClient != null) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    TextButton(onClick = { selectedClient = null }) {
+                        Text("Anuluj")
+                    }
+                    Button(
+                        onClick = {
+                            scope.launch {
+                                isSaving = true
+                                try {
+                                    val clientId = selectedClient!!.id!!
+                                    ApiClientsService.bankAccounts.saveClientBankAccount(
+                                        ClientBankAccount(
+                                            bankAccount = accountNumber,
+                                            client = Client(id = clientId),
+                                        )
+                                    )
+                                    val clientName = clients.find { it.id == clientId }?.name ?: "klienta"
+                                    saveResult = "Zapisano konto dla: $clientName"
+                                } catch (e: Exception) {
+                                    saveResult = "Błąd zapisu: ${e.message}"
+                                } finally {
+                                    isSaving = false
+                                }
+                            }
+                        },
+                        enabled = !isSaving,
+                    ) {
+                        Text(if (isSaving) "Zapisuję..." else "Przypisz konto do klienta")
+                    }
+                }
+            }
         }
     }
 }

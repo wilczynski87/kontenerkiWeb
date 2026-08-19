@@ -51,6 +51,7 @@ data class PaymentDto(
     val title: String? = null,
     val forInvoices: List<String>? = null,
     val referenceNumber: String? = null,
+    val senderName: String? = null,
 )
 
 @Serializable
