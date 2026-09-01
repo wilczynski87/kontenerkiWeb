@@ -93,9 +93,13 @@
         e-mail i hasło, jeśli użytkownik zaznaczy opcję „Zapamiętaj login i hasło”.
       </li>
       <li>
-        <strong>Logowanie Google:</strong> token identyfikacyjny Google
-        (w celu weryfikacji tożsamości po stronie serwera Administratora).
-        Przetwarzanie po stronie Google podlega polityce prywatności Google.
+        <strong>Logowanie Google (opcjonalne):</strong> identyfikator Google (<code>sub</code>)
+        oraz zweryfikowany adres e-mail z tokena identyfikacyjnego Google przekazywane
+        do serwera API Administratora w celu logowania do istniejącego konta klienta.
+        Serwer weryfikuje token po stronie Google; po pierwszym logowaniu może zapisać
+        powiązanie konta Google z kontem klienta. Logowanie Google jest dostępne tylko
+        dla kont klientów wcześniej utworzonych w systemie Administratora (brak samodzielnej
+        rejestracji). Przetwarzanie po stronie Google podlega polityce prywatności Google.
       </li>
       <li>
         <strong>Dane finansowe i rozliczeniowe:</strong> podsumowanie wpłat

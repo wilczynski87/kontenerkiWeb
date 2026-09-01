@@ -238,6 +238,50 @@ class ParkingAppViewModel(
         }
     }
 
+    fun isGoogleSignInAvailable(): Boolean = authService.isGoogleSignInAvailable()
+
+    fun submitGoogleLogin() {
+        val connectivity = _state.value.loginUi.serverConnectivity
+        if (connectivity !is ServerConnectivity.Online) {
+            _state.update {
+                it.copy(authState = AuthState(error = "Serwer niedostępny — sprawdź połączenie"))
+            }
+            return
+        }
+
+        coroutineScope.launch {
+            _state.update { it.copy(authState = AuthState(loading = true, error = null)) }
+            authService.loginWithGoogle()
+                .onSuccess { user ->
+                    getClientsList(0, 100)
+                    _state.update {
+                        it.copy(
+                            authState = AuthState(
+                                isAuthenticated = true,
+                                user = LoginResponse(user.id, user.role),
+                                loading = false,
+                            ),
+                        )
+                    }
+                }
+                .onFailure { error ->
+                    logError("googleLogin", "failed: $error")
+                    if (isSecureStorageFailure(error)) {
+                        authService.clearSession()
+                    }
+                    _state.update {
+                        it.copy(
+                            authState = AuthState(
+                                isAuthenticated = false,
+                                loading = false,
+                                error = authService.mapLoginFailure(error),
+                            ),
+                        )
+                    }
+                }
+        }
+    }
+
     /*
         SUBHEADING
      */
@@ -1090,12 +1134,13 @@ class ParkingAppViewModel(
         // save invoice to DB
         coroutineScope.launch {
             try {
-//                val invoice: Invoice = state.value.invoice ?: throw NullPointerException("Invoice is null, for: postCustomInvoice")
-                println("saveCustomInvoiceToDB $invoice")
-//                var invoiceNew = invoice
-//                var inv = gson.toJson(invoiceNew)
-//                println("saveCustomInvoiceToDB json: $inv")
-                val savedInvoice = ApiClientsService.invoices.postCustomInvoice(clientId, invoice)
+                val today = LocalDate.now()
+                val invoiceDate = invoice.invoiceDate?.let { date ->
+                    if (date < today) today else date
+                } ?: today
+                val invoiceToSend = invoice.copy(invoiceDate = invoiceDate)
+                println("saveCustomInvoiceToDB $invoiceToSend")
+                val savedInvoice = ApiClientsService.invoices.postCustomInvoice(clientId, invoiceToSend)
                 if(savedInvoice != null) {
                     showConfirmModal(
                         "Status dodatkowej faktury:",

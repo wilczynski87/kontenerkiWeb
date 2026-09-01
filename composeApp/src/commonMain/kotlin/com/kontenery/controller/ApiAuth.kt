@@ -5,6 +5,7 @@ import com.kontenery.config.ApiConfig.baseUrl
 import com.kontenery.error.AuthError
 import com.kontenery.logDebug
 import com.kontenery.model.auth.AuthResponse
+import com.kontenery.model.auth.GoogleLoginRequest
 import com.kontenery.model.auth.LoginCredentials
 import com.kontenery.model.auth.LoginResponse
 import com.kontenery.model.auth.UserInfo
@@ -50,6 +51,43 @@ class ApiAuth(
             when (e.response.status.value) {
                 401 -> Result.failure(AuthError.InvalidCredentials)
                 403 -> Result.failure(AuthError.Unauthorized)
+                else -> Result.failure(AuthError.Server)
+            }
+        } catch (e: ServerResponseException) {
+            Result.failure(AuthError.Server)
+        } catch (e: IOException) {
+            Result.failure(AuthError.Network)
+        } catch (e: Exception) {
+            Result.failure(AuthError.Unknown(e))
+        }
+    }
+
+    suspend fun loginWithGoogle(idToken: String): Result<UserInfo> {
+        logDebug("ApiAuth", "loginWithGoogle")
+        return try {
+            val response: AuthResponse = noAuthHttpClient.post("$baseUrl/auth/google") {
+                contentType(ContentType.Application.Json)
+                setBody(GoogleLoginRequest(idToken))
+            }.body()
+
+            tokenManager.setTokens(
+                response.tokenResponse.accessToken,
+                response.tokenResponse.refreshToken,
+            )
+
+            Result.success(
+                UserInfo(
+                    id = response.loginResponse.userId,
+                    email = "",
+                    role = response.loginResponse.role,
+                ),
+            )
+        } catch (e: ClientRequestException) {
+            when (e.response.status.value) {
+                401 -> Result.failure(AuthError.GoogleAccountNotFound)
+                403 -> Result.failure(AuthError.Unauthorized)
+                409 -> Result.failure(AuthError.Unauthorized)
+                503 -> Result.failure(AuthError.Server)
                 else -> Result.failure(AuthError.Server)
             }
         } catch (e: ServerResponseException) {

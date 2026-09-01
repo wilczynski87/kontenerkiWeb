@@ -1,6 +1,9 @@
 package com.kontenery.service
 
+import com.kontenery.auth.GoogleSignInProvider
 import com.kontenery.auth.LoginValidator
+import com.kontenery.auth.createGoogleSignInProvider
+import com.kontenery.config.isGoogleSignInConfigured
 import com.kontenery.auth.LoginValidationResult
 import com.kontenery.error.AuthError
 import com.kontenery.error.toAuthUserMessage
@@ -15,6 +18,7 @@ import com.kontenery.ui.login.ServerConnectivity
 
 class AuthService(
     private val repository: AuthRepository = AuthRepositoryImpl(),
+    private val googleSignInProvider: GoogleSignInProvider? = createGoogleSignInProvider(),
 ) {
     fun validateForm(username: String, password: String): LoginValidationResult =
         LoginValidator.validate(username, password)
@@ -36,6 +40,19 @@ class AuthService(
     suspend fun login(credentials: LoginCredentials): Result<UserInfo> {
         logDebug("AuthService", "login user=${credentials.username.trim()}")
         return repository.login(credentials)
+    }
+
+    fun isGoogleSignInAvailable(): Boolean =
+        isGoogleSignInConfigured() && googleSignInProvider != null
+
+    suspend fun loginWithGoogle(): Result<UserInfo> {
+        val provider = googleSignInProvider
+            ?: return Result.failure(IllegalStateException("Google Sign-In is not available"))
+        logDebug("AuthService", "loginWithGoogle")
+        return provider.requestIdToken().fold(
+            onSuccess = { idToken -> repository.loginWithGoogle(idToken) },
+            onFailure = { error -> Result.failure(error) },
+        )
     }
 
     suspend fun restoreSession(): Result<LoginResponse> {

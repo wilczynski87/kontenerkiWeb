@@ -15,6 +15,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -152,6 +153,17 @@ fun LoginScreen(viewModel: ParkingAppViewModel) {
                 )
             } else {
                 Text("Zaloguj się")
+            }
+        }
+
+        if (viewModel.isGoogleSignInAvailable()) {
+            Spacer(Modifier.height(12.dp))
+            OutlinedButton(
+                onClick = viewModel::submitGoogleLogin,
+                modifier = Modifier.fillMaxWidth(),
+                enabled = canSubmit,
+            ) {
+                Text("Zaloguj przez Google")
             }
         }
 

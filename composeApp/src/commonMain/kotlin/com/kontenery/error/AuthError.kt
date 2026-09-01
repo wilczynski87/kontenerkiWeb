@@ -2,6 +2,7 @@ package com.kontenery.error
 
 sealed class AuthError(message: String) : Throwable(message) {
     object InvalidCredentials : AuthError("Invalid credentials")
+    object GoogleAccountNotFound : AuthError("Google account not linked")
     object Network : AuthError("Network error")
     object Unauthorized : AuthError("Unauthorized")
     object Server : AuthError("Server error")

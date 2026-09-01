@@ -14,6 +14,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         AeadConfig.register()
         appContext = applicationContext
+        mainActivity = this
 
         setContent {
             App()

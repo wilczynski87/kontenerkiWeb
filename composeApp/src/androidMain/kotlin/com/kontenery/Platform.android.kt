@@ -22,6 +22,7 @@ actual fun logError(tag: String, message: String) {
 }
 
 lateinit var appContext: Context
+var mainActivity: MainActivity? = null
 actual fun provideSecureTokenStorage(): SecureTokenStorage {
     return AndroidSecureTokenStorage(appContext)
 }

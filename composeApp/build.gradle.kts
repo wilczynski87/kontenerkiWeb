@@ -47,7 +47,9 @@ kotlin {
             implementation(libs.tink.android)
             implementation(libs.androidx.datastore)
             implementation(libs.datastore.preferences)
-
+            implementation(libs.androidx.credentials)
+            implementation(libs.androidx.credentials.play.services.auth)
+            implementation(libs.googleid)
         }
         commonMain.dependencies {
             implementation(libs.compose.runtime)
@@ -97,6 +99,11 @@ android {
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 1
         versionName = "1.0"
+        val googleOAuthClientId = project.findProperty("GOOGLE_OAUTH_CLIENT_ID")?.toString().orEmpty()
+        buildConfigField("String", "GOOGLE_OAUTH_CLIENT_ID", "\"$googleOAuthClientId\"")
+    }
+    buildFeatures {
+        buildConfig = true
     }
     packaging {
         resources {

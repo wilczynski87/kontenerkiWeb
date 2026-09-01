@@ -321,6 +321,13 @@ fun UtilitiesChoice(
     val submeters: List<Submeter> = state.submeters
     var expandedClients by remember { mutableStateOf(false) }
 
+    LaunchedEffect(Unit) {
+        val today = LocalDate.now()
+        if (invoice.invoiceDate != today) {
+            viewModel.updateInvoice(invoice.copy(invoiceDate = today))
+        }
+    }
+
     Column(
         modifier = Modifier
             .padding(horizontal = 16.dp)
@@ -358,7 +365,7 @@ fun UtilitiesChoice(
         Row() {
             ChooseDate(
                 title = "Data wystawienia",
-                date = LocalDate.now(),
+                date = invoice.invoiceDate ?: LocalDate.now(),
                 updateDate = { date ->
                     viewModel.updateInvoice(invoice.copy(invoiceDate = LocalDate.parse(date)))
                 }

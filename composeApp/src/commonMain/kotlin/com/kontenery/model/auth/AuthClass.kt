@@ -46,3 +46,8 @@ data class AuthResponse(
 data class RefreshTokenRequest(
     val refreshToken: String
 )
+
+@Serializable
+data class GoogleLoginRequest(
+    val idToken: String,
+)

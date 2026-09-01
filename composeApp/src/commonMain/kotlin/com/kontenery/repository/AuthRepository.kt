@@ -7,6 +7,7 @@ import com.kontenery.model.auth.UserInfo
 
 interface AuthRepository {
     suspend fun login(credentials: LoginCredentials): Result<UserInfo>
+    suspend fun loginWithGoogle(idToken: String): Result<UserInfo>
     suspend fun verifySession(): Result<LoginResponse>
     suspend fun logout(): Result<Unit>
     suspend fun clearStoredTokens()

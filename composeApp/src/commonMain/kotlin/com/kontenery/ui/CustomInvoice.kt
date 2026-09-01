@@ -398,6 +398,14 @@ fun CustomInvoiceForm(
             }
     }
 
+    // Ustaw dzisiejszą datę przy otwarciu formularza (świeży draft lub po zmianie dnia w otwartej karcie).
+    LaunchedEffect(Unit) {
+        val today = LocalDate.now()
+        if (invoice.invoiceDate != today) {
+            viewModel.updateInvoice(invoice.copy(invoiceDate = today))
+        }
+    }
+
     Column(
         modifier = Modifier
             .padding(horizontal = 16.dp)
@@ -440,7 +448,7 @@ fun CustomInvoiceForm(
         Row() {
             ChooseDate(
                 title = "Data wystawienia",
-                date = LocalDate.now(),
+                date = invoice.invoiceDate ?: LocalDate.now(),
                 updateDate = { date ->
                     viewModel.updateInvoice(invoice.copy(invoiceDate = LocalDate.parse(date)))
                 }

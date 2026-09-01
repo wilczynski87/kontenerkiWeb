@@ -10,6 +10,9 @@ class AuthRepositoryImpl : AuthRepository {
     override suspend fun login(credentials: LoginCredentials): Result<UserInfo> =
         ApiClientsService.auth.login(credentials)
 
+    override suspend fun loginWithGoogle(idToken: String): Result<UserInfo> =
+        ApiClientsService.auth.loginWithGoogle(idToken)
+
     override suspend fun verifySession(): Result<LoginResponse> =
         ApiClientsService.auth.verifySession()
 

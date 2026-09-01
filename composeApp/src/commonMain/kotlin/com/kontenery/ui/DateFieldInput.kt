@@ -22,6 +22,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -49,9 +50,25 @@ fun DatePickerDocked(
     modifier: Modifier = Modifier
 ) {
     var showDatePicker by remember { mutableStateOf(false) }
-    val datePickerState = rememberDatePickerState(localDateToMillis(currentDate))
-    val selectedDate = datePickerState.selectedDateMillis?.let {
-        updateDate(convertMillisToLocalDateKotlinx(it))
+    val datePickerState = rememberDatePickerState(initialSelectedDateMillis = localDateToMillis(currentDate))
+
+    LaunchedEffect(currentDate) {
+        localDateToMillis(currentDate)?.let { millis ->
+            updateDate(convertMillisToLocalDateKotlinx(millis))
+        }
+    }
+
+    LaunchedEffect(datePickerState.selectedDateMillis) {
+        datePickerState.selectedDateMillis?.let { millis ->
+            updateDate(convertMillisToLocalDateKotlinx(millis))
+        }
+    }
+
+    val selectedDate = currentDate?.let { date ->
+        val day = date.day.toString().padStart(2, '0')
+        val month = date.month.number.toString().padStart(2, '0')
+        "$day/$month/${date.year}"
+    } ?: datePickerState.selectedDateMillis?.let {
         convertMillisToDate(it)
     }.orEmpty()
 
