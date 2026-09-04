@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: kontenerki-web
+#    container_name: kontenerki-web
     ports:
       - "${PORT:-80}:80"
     restart: unless-stopped
@@ -11,4 +11,4 @@ services:
     deploy:
       resources:
         limits:
-          memory: 6G
+          memory: 8G

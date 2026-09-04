@@ -201,11 +201,15 @@ fun ProductDropdown(
     enabled: Boolean = true,
     toggleExpanded: () -> Unit = {}
 ) {
-    // TODO dodaj guzik - WOLNE
     var search by remember { mutableStateOf("") }
-    val filtered = remember(products, search) {
+    val filtered = remember(products, search, chosenProduct?.id) {
         products
-            .filter { Product.createProductName(it).contains(search, ignoreCase = true) }
+            .filter { product ->
+                val isFree = product.client == null
+                val isChosen = chosenProduct?.id != null && product.id == chosenProduct.id
+                (isFree || isChosen) &&
+                    Product.createProductName(product).contains(search, ignoreCase = true)
+            }
             .sortedBy { Product.createProductName(it) }
     }
 
