@@ -33,3 +33,10 @@ fun LocalDate.Companion.endOfCurrentYear(period: LocalDate? = null): LocalDate {
 
 /** Najwcześniejsza data używana przy saldzie / pełnej historii klienta. */
 fun LocalDate.Companion.historyStart(): LocalDate = LocalDate(2000, 1, 1)
+
+/**
+ * Górna granica salda w bieżącym roku — koniec roku, nie „dziś”
+ * (spójne z listą klientów / pełnym rokiem w płatnościach).
+ */
+fun LocalDate.Companion.balanceToDate(period: LocalDate? = null): LocalDate =
+    endOfCurrentYear(period)

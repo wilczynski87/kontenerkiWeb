@@ -207,17 +207,19 @@ fun ClientListItem(
 
                 client.paymentsOverdue?.let { overdue ->
                     append("\n")
-                    // jeśli zaległość ujemna, kolor tła będzie czerwony
-                    if (overdue < 0.00) {
-                        append("Zaległości: ")
-                        pushStyle(SpanStyle(background = Color(0xFFB00020), color = Color.White))
-                    } else if(overdue > 0.00) {
-                        append("Płatności: ")
-                        pushStyle(SpanStyle(color = Color(0xFF2E7D32)))
-                    } else {
-//                        println("Overdue: ", "$overdue")
-                        append("Nadpłata: ")
-                        pushStyle(SpanStyle(background = Color(0xFFFFA500), color = Color.White))
+                    when {
+                        overdue < 0.00 -> {
+                            append("Zaległości: ")
+                            pushStyle(SpanStyle(background = Color(0xFFB00020), color = Color.White))
+                        }
+                        overdue > 0.00 -> {
+                            append("Nadpłata: ")
+                            pushStyle(SpanStyle(color = Color(0xFF2E7D32)))
+                        }
+                        else -> {
+                            append("Saldo: ")
+                            pushStyle(SpanStyle(color = Color(0xFF2E7D32)))
+                        }
                     }
                     append(" $overdue ")
                     pop()

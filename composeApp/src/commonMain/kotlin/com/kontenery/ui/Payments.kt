@@ -31,6 +31,7 @@ import com.kontenery.model.Client
 import com.kontenery.model.Payment
 import com.kontenery.model.enums.CurrentScreen
 import com.kontenery.model.enums.WindowWidthSizeClass
+import com.kontenery.model.enums.balanceToDate
 import com.kontenery.model.enums.now
 import com.kontenery.model.enums.startOfCurrentYear
 import com.kontenery.model.invoice.Invoice
@@ -56,7 +57,7 @@ fun PaymentsMenu(
 
     val financeYear: Int = state.financeYear ?: LocalDate.now().year
     val from = LocalDate.parse("${financeYear}-01-01")
-    val to = if (financeYear == LocalDate.now().year) LocalDate.now()
+    val to = if (financeYear == LocalDate.now().year) LocalDate.balanceToDate()
         else LocalDate.parse("${financeYear}-12-31")
     val prevYearsBalance = state.prevYearsBalance
 

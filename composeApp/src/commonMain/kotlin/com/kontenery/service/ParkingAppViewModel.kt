@@ -29,6 +29,7 @@ import com.kontenery.model.auth.LoginCredentials
 import com.kontenery.model.auth.LoginResponse
 import com.kontenery.model.enums.CurrentScreen
 import com.kontenery.model.enums.InvoiceType
+import com.kontenery.model.enums.balanceToDate
 import com.kontenery.model.enums.endOfCurrentYear
 import com.kontenery.model.enums.historyStart
 import com.kontenery.model.enums.now
@@ -1877,8 +1878,11 @@ class ParkingAppViewModel(
     }
     fun changeFinanceYearPaymentsMenu(year: Int) {
         val from = LocalDate.parse("${year}-01-01")
-        val to = if(year == LocalDate.now().year) LocalDate.now()
-            else LocalDate.parse("${year}-12-31")
+        val to = if (year == LocalDate.now().year) {
+            LocalDate.balanceToDate()
+        } else {
+            LocalDate.parse("${year}-12-31")
+        }
         val clientId = state.value.client?.id ?: return
 
         coroutineScope.launch {
