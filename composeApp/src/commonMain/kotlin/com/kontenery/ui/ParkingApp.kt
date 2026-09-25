@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.rememberDrawerState
@@ -19,8 +21,6 @@ import com.kontenery.model.enums.CurrentScreen
 import com.kontenery.model.enums.WindowWidthSizeClass
 import com.kontenery.service.ParkingAppState
 import com.kontenery.service.ParkingAppViewModel
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Warning
 
 @Composable
 fun ParkingApp(
@@ -148,6 +148,13 @@ fun ParkingApp(
 
                         CurrentScreen.PAYMENT_FORM -> {
                             PaymentForm(
+                                viewModel = viewModel,
+                                modifier = modifier.padding(innerPadding)
+                            )
+                        }
+
+                        CurrentScreen.PAYMENT_TRANSFER -> {
+                            PaymentTransferForm(
                                 viewModel = viewModel,
                                 modifier = modifier.padding(innerPadding)
                             )

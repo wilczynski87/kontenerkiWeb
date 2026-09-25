@@ -1,6 +1,5 @@
 package com.kontenery.model
 
-import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.ImageVector
 
 data class ModalData(

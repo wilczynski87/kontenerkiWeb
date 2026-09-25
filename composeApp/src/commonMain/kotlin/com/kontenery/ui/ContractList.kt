@@ -23,10 +23,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.kontenery.ui.AddContract
-import com.kontenery.ui.ProductIcon
-import com.kontenery.model.Contract
 import com.kontenery.model.Client
+import com.kontenery.model.Contract
 import com.kontenery.model.enums.now
 import com.kontenery.service.ParkingAppViewModel
 import com.kontenery.util.to2Decimals

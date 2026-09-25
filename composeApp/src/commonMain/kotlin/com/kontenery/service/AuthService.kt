@@ -1,14 +1,13 @@
 package com.kontenery.service
 
 import com.kontenery.auth.GoogleSignInProvider
+import com.kontenery.auth.LoginValidationResult
 import com.kontenery.auth.LoginValidator
 import com.kontenery.auth.createGoogleSignInProvider
 import com.kontenery.config.isGoogleSignInConfigured
-import com.kontenery.auth.LoginValidationResult
 import com.kontenery.error.AuthError
 import com.kontenery.error.toAuthUserMessage
 import com.kontenery.logDebug
-import com.kontenery.logError
 import com.kontenery.model.auth.LoginCredentials
 import com.kontenery.model.auth.LoginResponse
 import com.kontenery.model.auth.UserInfo

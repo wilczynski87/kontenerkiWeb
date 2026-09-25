@@ -27,7 +27,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.kontenery.model.Client
 import com.kontenery.model.ClientBankAccount
-import com.kontenery.model.ClientEvent
 import com.kontenery.service.ParkingAppViewModel
 
 @Composable

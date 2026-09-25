@@ -28,12 +28,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.kontenery.ui.DatePickerDocked
-import com.kontenery.ui.DepositOptionSelector
-import com.kontenery.model.Contract
-import com.kontenery.model.Product
 import com.kontenery.model.Client
 import com.kontenery.model.ClientOnList
+import com.kontenery.model.Contract
+import com.kontenery.model.Product
 import com.kontenery.service.ParkingAppViewModel
 import com.kontenery.util.to2Decimals
 import com.kontenery.util.toDoublePl

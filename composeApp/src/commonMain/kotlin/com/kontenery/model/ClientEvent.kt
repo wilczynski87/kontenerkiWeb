@@ -1,7 +1,5 @@
 package com.kontenery.model
 
-import com.kontenery.model.Address
-
 sealed interface ClientEvent {
 
     // =========================

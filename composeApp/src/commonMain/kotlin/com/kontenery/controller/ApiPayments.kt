@@ -3,6 +3,8 @@ package com.kontenery.controller
 import com.kontenery.config.ApiConfig.baseUrl
 import com.kontenery.model.Payment
 import com.kontenery.model.PaymentDto
+import com.kontenery.model.PaymentTransferRequest
+import com.kontenery.model.PaymentTransferResponse
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.delete
@@ -31,6 +33,13 @@ class ApiPayments(
     ): Payment? = httpClient.post("$baseUrl/payment") {
         contentType(ContentType.Application.Json)
         setBody(paymentDto)
+    }.body()
+
+    suspend fun transferPayment(
+        request: PaymentTransferRequest,
+    ): PaymentTransferResponse = httpClient.post("$baseUrl/payment/transfer") {
+        contentType(ContentType.Application.Json)
+        setBody(request)
     }.body()
 
     suspend fun deletePayment(

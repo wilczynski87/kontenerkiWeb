@@ -4,17 +4,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import com.kontenery.ui.ParkingApp
 import com.kontenery.model.enums.WindowWidthSizeClass
 import com.kontenery.service.ParkingAppViewModel
 import com.kontenery.ui.AuthGate
 import com.kontenery.ui.LoginScreen
+import com.kontenery.ui.ParkingApp
 import com.kontenery.ui.rememberWindowWidthSizeClass
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.launch
+
 val scope = MainScope()
 @Composable
 fun App() {

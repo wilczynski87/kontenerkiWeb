@@ -16,6 +16,7 @@ import com.kontenery.model.ModalData
 import com.kontenery.model.Payment
 import com.kontenery.model.PaymentDto
 import com.kontenery.model.PaymentForFinanceTable
+import com.kontenery.model.PaymentTransferRequest
 import com.kontenery.model.PaymentsListForFinanceTable
 import com.kontenery.model.PrevYearBalance
 import com.kontenery.model.Product
@@ -29,6 +30,7 @@ import com.kontenery.model.auth.LoginResponse
 import com.kontenery.model.enums.CurrentScreen
 import com.kontenery.model.enums.InvoiceType
 import com.kontenery.model.enums.endOfCurrentYear
+import com.kontenery.model.enums.historyStart
 import com.kontenery.model.enums.now
 import com.kontenery.model.enums.startOfCurrentYear
 import com.kontenery.model.errors.InvoiceErrorMessage
@@ -48,9 +50,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
-import kotlinx.datetime.minus
 
 class ParkingAppViewModel(
     private val coroutineScope: CoroutineScope,
@@ -1484,6 +1484,67 @@ class ParkingAppViewModel(
         }
     }
 
+    fun toPaymentTransfer(source: Payment) {
+        _state.update { currentState ->
+            currentState.copy(
+                currentScreen = CurrentScreen.PAYMENT_TRANSFER,
+                payment = PaymentDto(
+                    paymentId = source.id?.toString(),
+                    amount = source.amount,
+                    date = source.date,
+                    fromClientId = source.fromClient?.id,
+                    title = null,
+                    forInvoices = emptyList(),
+                ),
+                transferTargetClient = null,
+            )
+        }
+    }
+
+    fun fetchClientForPaymentTransfer(clientId: Long) {
+        coroutineScope.launch {
+            try {
+                val client: Client? = ApiClientsService.clients.getClientData(clientId)
+                _state.update { currentState ->
+                    currentState.copy(transferTargetClient = client)
+                }
+            } catch (e: Exception) {
+                println("fetchClientForPaymentTransfer nie udało się odnaleźć klienta id: $clientId,\n $e")
+            }
+        }
+    }
+
+    fun transferPaymentAndRefresh() {
+        coroutineScope.launch {
+            try {
+                val payment = _state.value.payment
+                val targetClientId = _state.value.transferTargetClient?.id
+                val sourcePaymentId = payment?.paymentId?.toLongOrNull()
+                if (payment == null || sourcePaymentId == null || targetClientId == null) {
+                    println("transferPayment: brak źródła lub klienta docelowego")
+                    return@launch
+                }
+                val response = ApiClientsService.payments.transferPayment(
+                    PaymentTransferRequest(
+                        sourcePaymentId = sourcePaymentId,
+                        targetClientId = targetClientId,
+                        amount = payment.amount,
+                        date = payment.date,
+                        title = payment.title,
+                    ),
+                )
+                val sourceClientId = payment.fromClientId
+                if (sourceClientId != null) {
+                    fetchPaymentsForClient(sourceClientId)
+                }
+                println("transferPayment OK debit=${response.debit.id} credit=${response.credit.id}")
+                toPaymentsMenu()
+            } catch (e: Exception) {
+                println("transferPayment nie powiodło się:\n $e")
+            }
+        }
+    }
+
     fun updatePaymentState(payment: PaymentDto?) {
         _state.update { currentState ->
             currentState.copy(payment = payment)
@@ -1823,8 +1884,11 @@ class ParkingAppViewModel(
         coroutineScope.launch {
             fetchInvoicesForClient(clientId, from, to)
             fetchPaymentsForClient(clientId, from, to)
-            fetchClientFinance(clientId, from.minus(1, DateTimeUnit.YEAR),
-                LocalDate(year = (to.year - 1), month = 12, day = 31)
+            // Saldo otwarcia = pełna historia do końca roku poprzedzającego wybrany
+            fetchClientFinance(
+                clientId,
+                LocalDate.historyStart(),
+                LocalDate(year = year - 1, month = 12, day = 31),
             )
         }
         _state.update { currentState ->

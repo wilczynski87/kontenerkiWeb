@@ -1,9 +1,9 @@
 package com.kontenery.controller
 
 import com.kontenery.auth.TokenManager
+import com.kontenery.createHttpClient
 import com.kontenery.provideSecureTokenStorage
 import io.ktor.client.HttpClient
-import com.kontenery.createHttpClient
 
 object ApiClientsService {
     private val tokenManager by lazy { TokenManager(provideSecureTokenStorage()) }

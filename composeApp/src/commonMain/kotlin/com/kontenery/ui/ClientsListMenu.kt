@@ -2,7 +2,6 @@ package com.kontenery.ui
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -50,12 +49,11 @@ import com.kontenery.model.Client
 import com.kontenery.model.ClientOnList
 import com.kontenery.model.enums.ClientFilter
 import com.kontenery.model.enums.WindowWidthSizeClass
+import com.kontenery.model.enums.historyStart
 import com.kontenery.model.enums.now
 import com.kontenery.service.ParkingAppViewModel
-import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
-import kotlinx.datetime.minus
 import kotlinx.datetime.number
 import kotlinx.datetime.todayIn
 import kotlin.enums.EnumEntries
@@ -292,8 +290,10 @@ fun <T : Enum<T>> FilterButtons(
 @Composable
 fun ClientNavRow(clientId: Long, viewModel: ParkingAppViewModel, modifier: Modifier = Modifier) {
     val state by viewModel.state.collectAsState()
-    val from: LocalDate = LocalDate(year = state.financeYear ?: LocalDate.now().year, month = 1, 1).minus(1, DateTimeUnit.YEAR)
-    val to: LocalDate = LocalDate(year = state.financeYear ?: LocalDate.now().year, month = 12, 31).minus(1, DateTimeUnit.YEAR)
+    val selectedYear = state.financeYear ?: LocalDate.now().year
+    // Pełna historia przed wybranym rokiem (saldo otwarcia w dziale płatności)
+    val from: LocalDate = LocalDate.historyStart()
+    val to: LocalDate = LocalDate(year = selectedYear - 1, month = 12, day = 31)
 
     FlowRow(modifier = modifier.fillMaxWidth()
         , verticalArrangement = Arrangement.Center

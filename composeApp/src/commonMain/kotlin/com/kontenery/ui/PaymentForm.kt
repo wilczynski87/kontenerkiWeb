@@ -28,18 +28,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.kontenery.model.PaymentDto
-import com.kontenery.model.PaymentMethod
-import com.kontenery.ui.ChooseDate
-import com.kontenery.ui.ClientsDropdown
-import kotlinx.datetime.LocalDate
 import com.kontenery.model.Client
 import com.kontenery.model.ClientOnList
+import com.kontenery.model.PaymentDto
+import com.kontenery.model.PaymentMethod
 import com.kontenery.model.enums.now
 import com.kontenery.service.ParkingAppViewModel
-import com.kontenery.ui.ClientsListDropdown
 import com.kontenery.util.isDigitsOnly
 import com.kontenery.util.toDoublePl
+import kotlinx.datetime.LocalDate
 
 @Composable
 fun PaymentForm(

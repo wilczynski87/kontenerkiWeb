@@ -1,10 +1,10 @@
 package com.kontenery.service
 
-import com.kontenery.model.invoice.Subject.Seller
-import com.kontenery.model.invoice.Invoice
 import com.kontenery.model.enums.InvoiceType
 import com.kontenery.model.enums.now
+import com.kontenery.model.invoice.Invoice
 import com.kontenery.model.invoice.Position
+import com.kontenery.model.invoice.Subject.Seller
 import com.kontenery.util.to2Decimals
 import com.kontenery.util.toDoublePl
 import kotlinx.coroutines.flow.MutableStateFlow

@@ -5,7 +5,6 @@ package com.kontenery.auth
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
-import kotlin.js.JsAny
 import kotlin.js.Promise
 
 @JsFun("() => !!(window.magazynkiGoogleSignIn && window.magazynkiGoogleSignIn.isAvailable())")

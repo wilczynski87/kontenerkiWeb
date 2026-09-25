@@ -2,7 +2,9 @@ package com.kontenery.model
 
 import com.kontenery.serializers.LocalDateSerializer
 import kotlinx.datetime.LocalDate
-import kotlinx.serialization.*
+import kotlinx.serialization.Polymorphic
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 @Serializable
 @Polymorphic

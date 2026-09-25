@@ -3,7 +3,6 @@ import com.kontenery.auth.SecureTokenStorage
 import com.kontenery.auth.TokenManager
 import com.kontenery.controller.webCreateHttpClient
 import io.ktor.client.HttpClient
-import kotlinx.browser.localStorage
 
 actual fun logDebug(tag: String, message: String) = println("DEBUG/$tag: $message")
 

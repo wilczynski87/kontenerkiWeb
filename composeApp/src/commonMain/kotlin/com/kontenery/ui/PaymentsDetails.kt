@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -27,9 +28,10 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.kontenery.model.enums.Month
-import com.kontenery.model.Payment
 import com.kontenery.model.ModalData
+import com.kontenery.model.Payment
+import com.kontenery.model.enums.CurrentScreen
+import com.kontenery.model.enums.Month
 import com.kontenery.model.enums.endOfCurrentMonth
 import com.kontenery.model.enums.now
 import com.kontenery.model.enums.startOfCurrentMonth
@@ -59,7 +61,7 @@ fun PaymentsDetails(
         150, // tytuł
         200, // metoda
         200, // za faktury
-        150, // akcja
+        200, // akcja
     ) }
 
     Column(
@@ -110,24 +112,36 @@ fun BodyPayments(
                 BodyCell(payment.method, 3, columnWidths)
                 BodyCell(payment.forInvoices.toString(), 4, columnWidths)
                 BodyCell(5, columnWidths) {
-                    IconButton(onClick = {
-                        viewModel.createConfirmationModal(
-                            ModalData(
-                                onDismissRequest = { viewModel.closeConfirmationModal() },
-                                onConfirmation = {
-//                                    viewModel.deletePayment(payment.id.toString())
-                                    viewModel.deletePaymentAndRefreshClient(
-                                        payment.id.toString(),
-                                        payment.fromClient?.id
-                                    )
-                                },
-                                dialogTitle = "Płatność",
-                                dialogText = "Czy usunąć płatność z dnia: ${payment.date}?",
-                                icon = Icons.Default.Delete
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        if (payment.amount > 0) {
+                            IconButton(onClick = {
+                                viewModel.toPaymentTransfer(payment)
+                                viewModel.setGoBack(
+                                    CurrentScreen.PAYMENT_MENU,
+                                    CurrentScreen.PAYMENT_TRANSFER,
+                                )
+                            }) {
+                                Icon(Icons.Default.SwapHoriz, contentDescription = "zaliczenie")
+                            }
+                        }
+                        IconButton(onClick = {
+                            viewModel.createConfirmationModal(
+                                ModalData(
+                                    onDismissRequest = { viewModel.closeConfirmationModal() },
+                                    onConfirmation = {
+                                        viewModel.deletePaymentAndRefreshClient(
+                                            payment.id.toString(),
+                                            payment.fromClient?.id
+                                        )
+                                    },
+                                    dialogTitle = "Płatność",
+                                    dialogText = "Czy usunąć płatność z dnia: ${payment.date}?",
+                                    icon = Icons.Default.Delete
+                                )
                             )
-                        )
-                    }) {
-                        Icon(Icons.Default.Delete, contentDescription = "delete")
+                        }) {
+                            Icon(Icons.Default.Delete, contentDescription = "delete")
+                        }
                     }
                 }
             }

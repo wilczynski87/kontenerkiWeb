@@ -1,8 +1,5 @@
 package com.kontenery.model
 
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
-
 //object TokenManager {
 //    private var accessToken: String? = null
 //    private var refreshToken: String? = null

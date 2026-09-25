@@ -1,8 +1,8 @@
 package com.kontenery.model
 
+import com.kontenery.model.enums.SellerAccount
 import com.kontenery.model.invoice.Invoice
 import com.kontenery.serializers.LocalDateSerializer
-import com.kontenery.model.enums.SellerAccount
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.Serializable
 
@@ -59,6 +59,7 @@ enum class PaymentMethod(val polishName: String) {
     TRANSFER("przelew"),
     BLIK("blik"),
     CASH("gotówka"),
+    ZALICZENIE("zaliczenie"),
     OTHER("inna");
 
     companion object {
@@ -67,6 +68,22 @@ enum class PaymentMethod(val polishName: String) {
         }
     }
 }
+
+@Serializable
+data class PaymentTransferRequest(
+    val sourcePaymentId: Long,
+    val targetClientId: Long,
+    val amount: Double? = null,
+    @Serializable(with = LocalDateSerializer::class)
+    val date: LocalDate? = null,
+    val title: String? = null,
+)
+
+@Serializable
+data class PaymentTransferResponse(
+    val debit: Payment,
+    val credit: Payment,
+)
 
 @Serializable
 data class PaymentForFinanceTable(

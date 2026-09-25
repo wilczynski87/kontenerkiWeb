@@ -1,8 +1,6 @@
 package com.kontenery.model
 
 import com.kontenery.serializers.LocalDateSerializer
-import com.kontenery.model.Client
-import com.kontenery.model.Product
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.Serializable
 

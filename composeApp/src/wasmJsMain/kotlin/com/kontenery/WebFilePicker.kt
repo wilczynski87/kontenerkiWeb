@@ -1,13 +1,13 @@
 package com.kontenery
 
-import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.browser.document
-import org.w3c.dom.HTMLInputElement
-import org.w3c.files.File
-import org.w3c.files.FileReader
+import kotlinx.coroutines.suspendCancellableCoroutine
 import org.khronos.webgl.Uint8Array
 import org.khronos.webgl.get
+import org.w3c.dom.HTMLInputElement
 import org.w3c.files.Blob
+import org.w3c.files.File
+import org.w3c.files.FileReader
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 

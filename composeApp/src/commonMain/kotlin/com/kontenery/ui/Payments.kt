@@ -12,9 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -29,21 +27,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.kontenery.model.Payment
-import com.kontenery.model.invoice.Invoice
-import kotlinx.datetime.DateTimeUnit
-import kotlinx.datetime.LocalDate
-import kotlinx.datetime.plus
 import com.kontenery.model.Client
+import com.kontenery.model.Payment
 import com.kontenery.model.enums.CurrentScreen
 import com.kontenery.model.enums.WindowWidthSizeClass
 import com.kontenery.model.enums.now
 import com.kontenery.model.enums.startOfCurrentYear
+import com.kontenery.model.invoice.Invoice
 import com.kontenery.service.ParkingAppViewModel
 import com.kontenery.util.formatLocalDate
 import com.kontenery.util.to2Decimals
-import kotlinx.datetime.minus
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
 import kotlinx.datetime.number
+import kotlinx.datetime.plus
 
 @Composable
 fun PaymentsMenu(
@@ -107,7 +104,7 @@ fun PaymentsMenu(
                 verticalAlignment = CenterVertically,
                 horizontalArrangement = Arrangement.End
             ) {
-                PaymentsFooter(prevYearsBalance?.from?.year, prevYearsBalance?.documentBalance, prevYearsBalance?.income, prevYearsBalance?.totalBalance)
+                PaymentsFooter(prevYearsBalance?.to?.year, prevYearsBalance?.documentBalance, prevYearsBalance?.income, prevYearsBalance?.totalBalance)
             }
         }
 
@@ -187,7 +184,7 @@ fun PaymentsFooter(
     val columnWeight = listOf(1f, 1f, 1f, 1f)
     Row(modifier = Modifier.fillMaxWidth()) {
         Text(
-            text = "${year ?: " - "}",
+            text = if (year != null) "do $year" else "Historia",
             modifier = Modifier
                 .weight(columnWeight[0])
                 .padding(4.dp), style = MaterialTheme.typography.bodyMedium

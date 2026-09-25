@@ -1,32 +1,29 @@
 package com.kontenery.service
 
 import com.kontenery.data.AuthState
-import com.kontenery.model.Contract
-import com.kontenery.model.Reading
-import com.kontenery.model.Payment
-import com.kontenery.model.PaymentDto
-import com.kontenery.model.Product
-import com.kontenery.model.Submeter
-import com.kontenery.model.invoice.Invoice
-import com.kontenery.model.errors.ErrorMessage
 import com.kontenery.model.Client
 import com.kontenery.model.ClientBankAccount
 import com.kontenery.model.ClientOnList
+import com.kontenery.model.Contract
 import com.kontenery.model.ModalData
+import com.kontenery.model.Payment
+import com.kontenery.model.PaymentDto
 import com.kontenery.model.PaymentsListForFinanceTable
 import com.kontenery.model.PrevYearBalance
+import com.kontenery.model.Product
+import com.kontenery.model.Reading
+import com.kontenery.model.Submeter
 import com.kontenery.model.TableRowFinance
 import com.kontenery.model.auth.UserCredentials
-import com.kontenery.ui.login.LoginUiState
 import com.kontenery.model.enums.CurrentScreen
 import com.kontenery.model.enums.InvoiceType
-import com.kontenery.model.enums.UtilityType
 import com.kontenery.model.enums.now
+import com.kontenery.model.errors.ErrorMessage
+import com.kontenery.model.invoice.Invoice
 import com.kontenery.model.invoice.InvoiceFeature
 import com.kontenery.model.invoice.Position
-import kotlinx.datetime.DateTimeUnit
+import com.kontenery.ui.login.LoginUiState
 import kotlinx.datetime.LocalDate
-import kotlinx.datetime.plus
 
 data class ParkingAppState(
     val authState: AuthState = AuthState(),
@@ -51,6 +48,7 @@ data class ParkingAppState(
     val position: Position? = null,
     val bankAccount: ClientBankAccount? = null,
     val payment: PaymentDto? = null,
+    val transferTargetClient: Client? = null,
     val enabledChangeClient: Boolean? = true,
     val forDate: LocalDate? = LocalDate.now(),
     val loginUi: LoginUiState = LoginUiState(),
