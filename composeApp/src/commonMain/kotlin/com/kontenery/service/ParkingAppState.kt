@@ -71,6 +71,8 @@ data class ParkingAppState(
     val submeters: List<Submeter> = emptyList(),  // fakeSubmeter,
     val clientsWithPayments: List<PaymentsListForFinanceTable> = listOf(),
     val financeTable: List<TableRowFinance> = listOf(),
+    /** MagazynkiFat: cron auto-send of periodic invoices (1st of month). null = not loaded yet. */
+    val periodicAutoSendEnabled: Boolean? = null,
 )
 
 data class SubmitContent(

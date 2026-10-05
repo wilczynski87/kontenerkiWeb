@@ -6,6 +6,7 @@ import com.kontenery.model.errors.InvoiceErrorMessage
 import com.kontenery.model.invoice.Invoice
 import com.kontenery.model.invoice.InvoiceSend
 import com.kontenery.model.invoice.KsefSendResult
+import com.kontenery.model.invoice.PeriodicAutoSendSettings
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.ClientRequestException
@@ -22,6 +23,15 @@ import kotlinx.datetime.LocalDate
 class ApiInvoice(
     private val httpClient: HttpClient
 ) {
+
+    suspend fun getPeriodicAutoSend(): PeriodicAutoSendSettings =
+        httpClient.get("$baseUrl/invoice/settings/periodicAutoSend").body()
+
+    suspend fun setPeriodicAutoSend(enabled: Boolean): PeriodicAutoSendSettings =
+        httpClient.post("$baseUrl/invoice/settings/periodicAutoSend") {
+            contentType(ContentType.Application.Json)
+            setBody(PeriodicAutoSendSettings(enabled = enabled))
+        }.body()
 
     suspend fun postPeriodicInvoice(
         clientId: Long,

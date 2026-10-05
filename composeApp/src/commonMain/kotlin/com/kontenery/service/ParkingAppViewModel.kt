@@ -211,6 +211,7 @@ class ParkingAppViewModel(
             authService.login(LoginCredentials(form.username, form.password))
                 .onSuccess { user ->
                     getClientsList(0, 100)
+                    loadPeriodicAutoSendSetting()
                     _state.update {
                         it.copy(
                             authState = AuthState(
@@ -255,6 +256,7 @@ class ParkingAppViewModel(
             authService.loginWithGoogle()
                 .onSuccess { user ->
                     getClientsList(0, 100)
+                    loadPeriodicAutoSendSetting()
                     _state.update {
                         it.copy(
                             authState = AuthState(
@@ -1058,6 +1060,36 @@ class ParkingAppViewModel(
                 showErrorModal(
                     dialogTitle = "Faktury okresowe NIE zostały wysłane",
                     dialogText = e.message ?: "Nie udało się połączyć z serwerem.",
+                    onConfirmation = {},
+                )
+            }
+        }
+    }
+
+    fun loadPeriodicAutoSendSetting() {
+        coroutineScope.launch {
+            try {
+                val settings = ApiClientsService.invoices.getPeriodicAutoSend()
+                _state.update { it.copy(periodicAutoSendEnabled = settings.enabled) }
+            } catch (e: Exception) {
+                println("loadPeriodicAutoSendSetting failed: $e")
+            }
+        }
+    }
+
+    fun setPeriodicAutoSendEnabled(enabled: Boolean) {
+        coroutineScope.launch {
+            val previous = _state.value.periodicAutoSendEnabled
+            _state.update { it.copy(periodicAutoSendEnabled = enabled) }
+            try {
+                val settings = ApiClientsService.invoices.setPeriodicAutoSend(enabled)
+                _state.update { it.copy(periodicAutoSendEnabled = settings.enabled) }
+            } catch (e: Exception) {
+                println("setPeriodicAutoSendEnabled failed: $e")
+                _state.update { it.copy(periodicAutoSendEnabled = previous) }
+                showErrorModal(
+                    dialogTitle = "Nie udało się zapisać ustawienia",
+                    dialogText = e.message ?: "Auto-wysyłka faktur okresowych nie została zmieniona.",
                     onConfirmation = {},
                 )
             }
@@ -1907,6 +1939,7 @@ class ParkingAppViewModel(
                 .onSuccess { user ->
                     logDebug("login", "restoreSession success")
                     getClientsList(0, pageSize)
+                    loadPeriodicAutoSendSetting()
                     _state.update {
                         it.copy(
                             authState = AuthState(
