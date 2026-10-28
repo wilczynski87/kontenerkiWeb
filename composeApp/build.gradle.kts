@@ -191,5 +191,14 @@ compose.desktop {
     application {
         mainClass = "com.kontenery.MainKt"
         jvmArgs += "-Dkotlinx.coroutines.fast.service.loader=false"
+        nativeDistributions {
+            packageName = "kontenerki"
+            packageVersion = "1.0.0"
+            description = "Zarządzanie kontenerami"
+            vendor = "Kontenerki"
+            linux {
+                iconFile.set(project.file("src/jvmMain/resources/icon.png"))
+            }
+        }
     }
 }
