@@ -91,6 +91,7 @@ kotlin {
         jvmMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(libs.ktor.client.cio)
+            implementation(libs.kotlinx.coroutines.swing)
         }
     }
 
@@ -189,5 +190,6 @@ dependencies {
 compose.desktop {
     application {
         mainClass = "com.kontenery.MainKt"
+        jvmArgs += "-Dkotlinx.coroutines.fast.service.loader=false"
     }
 }
