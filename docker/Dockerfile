@@ -10,6 +10,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 ENV GRADLE_OPTS="-Dorg.gradle.daemon=false"
 ENV GRADLE_USER_HOME=/home/gradle/.gradle
+ARG SERVER_URI
+ENV SERVER_URI=${SERVER_URI}
 
 COPY gradle gradle
 COPY gradlew gradlew.bat settings.gradle.kts build.gradle.kts gradle.properties ./

@@ -7,8 +7,8 @@ class ApiUrlResolverTest {
     @Test
     fun buildsAbsoluteHealthUrl() {
         assertEquals(
-            "http://217.154.148.172:8100/health",
-            resolveHealthCheckUrl("http://217.154.148.172:8100"),
+            "$REMOTE_API_URL/health",
+            resolveHealthCheckUrl(REMOTE_API_URL),
         )
     }
 

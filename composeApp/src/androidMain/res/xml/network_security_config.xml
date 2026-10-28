@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
   API uses HTTP (not HTTPS). base-config must allow cleartext for IP hosts
-  like 217.154.148.172 — domain-config alone is unreliable for IP literals on
+  like the host from SERVER_URI — domain-config alone is unreliable for IP literals on
   physical devices (especially release builds without debug-overrides).
 -->
 <network-security-config>

@@ -87,6 +87,61 @@ kotlin {
 //            implementation(libs.kotlinx.coroutines.core)
         }
     }
+
+    sourceSets.named("commonMain") {
+        kotlin.srcDir(layout.buildDirectory.dir("generated/serverUri"))
+    }
+}
+
+val generateServerUri = tasks.register("generateServerUri") {
+    val outputDir = layout.buildDirectory.dir("generated/serverUri")
+    val serverUri = providers.provider { readServerUri(rootProject.projectDir) }
+    inputs.property("serverUri", serverUri)
+    outputs.dir(outputDir)
+    doLast {
+        val host = serverUri.get()
+        val dir = outputDir.get().asFile.resolve("com/kontenery/config")
+        dir.mkdirs()
+        dir.resolve("RemoteApiUrl.kt").writeText(
+            """
+            package com.kontenery.config
+
+            /** Host z SERVER_URI, wstawiony przy kompilacji. */
+            internal const val REMOTE_API_URL = "http://$host:8100"
+            """.trimIndent() + "\n",
+        )
+    }
+}
+
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask<*>>().configureEach {
+    dependsOn(generateServerUri)
+}
+
+fun readServerUri(projectDir: java.io.File): String {
+    System.getenv("SERVER_URI")?.trim()?.takeIf { it.isNotEmpty() }?.let { return validateServerUri(it) }
+    val envFile = projectDir.resolve(".env")
+    if (!envFile.isFile) {
+        error("Missing SERVER_URI. Ustaw zmienną środowiskową albo wpisz SERVER_URI w ${envFile.path}")
+    }
+    val raw = envFile.readLines()
+        .map { it.trim() }
+        .firstOrNull { it.startsWith("SERVER_URI=") && !it.startsWith("#") }
+        ?.substringAfter("=")
+        ?.trim()
+        ?.trim('"')
+        ?.trim('\'')
+        .orEmpty()
+    if (raw.isEmpty()) {
+        error("Missing SERVER_URI in ${envFile.path}")
+    }
+    return validateServerUri(raw)
+}
+
+fun validateServerUri(value: String): String {
+    require(!value.contains("://") && !value.contains("/") && !value.contains(":")) {
+        "SERVER_URI ma być samym hostem, bez schematu i portu"
+    }
+    return value
 }
 
 android {

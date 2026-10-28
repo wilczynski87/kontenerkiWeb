@@ -11,6 +11,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Docker often has less RAM than a dev machine; gradle.properties requests 4g by default
 ENV GRADLE_OPTS="-Dorg.gradle.daemon=false"
 ENV GRADLE_USER_HOME=/home/gradle/.gradle
+ARG SERVER_URI
+ENV SERVER_URI=${SERVER_URI}
 
 COPY gradle gradle
 COPY gradlew gradlew.bat settings.gradle.kts build.gradle.kts gradle.properties ./

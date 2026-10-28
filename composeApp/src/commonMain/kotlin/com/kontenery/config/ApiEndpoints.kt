@@ -1,7 +1,9 @@
 package com.kontenery.config
 
-/** Produkcyjny / zdalny backend (internet). */
-internal const val REMOTE_API_URL = "http://217.154.148.172:8100"
+/**
+ * Produkcyjny backend. Wartość powstaje przy budowie z `SERVER_URI` w `.env`
+ * (`RemoteApiUrl.kt` w katalogu generowanym).
+ */
 
 /** API wystawione z kontenera Docker na hoście (mapowanie portu 8100). */
 internal const val LOCALHOST_API_URL = "http://localhost:8100"
