@@ -20,6 +20,8 @@ kotlin {
         }
     }
 
+    jvm()
+
     wasmJs {
         browser {
             commonWebpackConfig {
@@ -85,6 +87,10 @@ kotlin {
             implementation(libs.ktor.client.js)
 //            implementation(libs.compose.resources)
 //            implementation(libs.kotlinx.coroutines.core)
+        }
+        jvmMain.dependencies {
+            implementation(compose.desktop.currentOs)
+            implementation(libs.ktor.client.cio)
         }
     }
 
@@ -178,4 +184,10 @@ android {
 
 dependencies {
 //    debugImplementation(compose.uiTooling)
+}
+
+compose.desktop {
+    application {
+        mainClass = "com.kontenery.MainKt"
+    }
 }
