@@ -1164,38 +1164,87 @@ class ParkingAppViewModel(
     }
 
     fun postCustomInvoice(clientId: Long, invoice: Invoice) {
-        // save invoice to DB
         coroutineScope.launch {
-            try {
-                val today = LocalDate.now()
-                val invoiceDate = invoice.invoiceDate?.let { date ->
-                    if (date < today) today else date
-                } ?: today
-                val invoiceToSend = invoice.copy(invoiceDate = invoiceDate)
-                println("saveCustomInvoiceToDB $invoiceToSend")
-                val savedInvoice = ApiClientsService.invoices.postCustomInvoice(clientId, invoiceToSend)
-                if(savedInvoice != null) {
-                    showConfirmModal(
-                        "Status dodatkowej faktury:",
-                        "Faktura o numerze: ${savedInvoice.invoiceNumber}, zapisana w bazie!",
-                    ) {
-                        closeConfirmationModal()
+            saveCustomInvoice(clientId, invoice)
+        }
+    }
 
-                        fetchClient(clientId)
-                        fetchPaymentsForClient(clientId)
-                        fetchInvoicesForClient(clientId)
-                        toPaymentsMenu()
-                    }
-                }
-                // TODO dać info o zapisanej fakturze
-            } catch (e: Exception) {
-                println("saveCustomInvoiceToDB nie udało się wysłać faktury $e")
+    fun sendUtilitiesInvoice(clientId: Long?, invoice: Invoice, readings: List<Reading>) {
+        coroutineScope.launch {
+            val resolvedClientId = clientId?.takeIf { it > 0L }
+            if (resolvedClientId == null) {
+                showConfirmModal(
+                    "Status faktury za media:",
+                    "Wybierz kontrahenta, zanim wyślesz fakturę.",
+                ) { closeConfirmationModal() }
+                return@launch
+            }
+            if (invoice.products.isEmpty()) {
+                showConfirmModal(
+                    "Status faktury za media:",
+                    "Dodaj odczyt, zanim wyślesz fakturę.",
+                ) { closeConfirmationModal() }
+                return@launch
+            }
+            if (!saveUtilityReadings(readings)) return@launch
+            saveCustomInvoice(resolvedClientId, invoice)
+        }
+    }
+
+    private suspend fun saveUtilityReadings(readings: List<Reading>): Boolean {
+        for (reading in readings) {
+            val submeterId = reading.submeterId
+            if (submeterId == null) {
+                showErrorModal(
+                    "Nie zapisano odczytu",
+                    "Brak id podlicznika.",
+                    onConfirmation = { closeConfirmationModal() },
+                )
+                return false
+            }
+            val result = ApiClientsService.utilities.addReadingToSubmeter(submeterId, reading)
+            if (result.isFailure) {
+                showErrorModal(
+                    "Nie zapisano odczytu",
+                    result.exceptionOrNull()?.message ?: "Błąd zapisu odczytu",
+                    onConfirmation = { closeConfirmationModal() },
+                )
+                return false
+            }
+        }
+        _state.update { state -> state.copy(readings = emptyList()) }
+        fetchSubmeters()
+        return true
+    }
+
+    private suspend fun saveCustomInvoice(clientId: Long, invoice: Invoice) {
+        try {
+            val today = LocalDate.now()
+            val invoiceDate = invoice.invoiceDate?.let { date ->
+                if (date < today) today else date
+            } ?: today
+            val invoiceToSend = invoice.copy(invoiceDate = invoiceDate)
+            println("saveCustomInvoiceToDB $invoiceToSend")
+            val savedInvoice = ApiClientsService.invoices.postCustomInvoice(clientId, invoiceToSend)
+            if (savedInvoice != null) {
                 showConfirmModal(
                     "Status dodatkowej faktury:",
-                    "Błąd przy wysłaniu faktury - dokument nie zapisany!",
+                    "Faktura o numerze: ${savedInvoice.invoiceNumber}, zapisana w bazie!",
                 ) {
                     closeConfirmationModal()
+                    fetchClient(clientId)
+                    fetchPaymentsForClient(clientId)
+                    fetchInvoicesForClient(clientId)
+                    toPaymentsMenu()
                 }
+            }
+        } catch (e: Exception) {
+            println("saveCustomInvoiceToDB nie udało się wysłać faktury $e")
+            showConfirmModal(
+                "Status dodatkowej faktury:",
+                "Błąd przy wysłaniu faktury - dokument nie zapisany!",
+            ) {
+                closeConfirmationModal()
             }
         }
     }
@@ -1304,36 +1353,6 @@ class ParkingAppViewModel(
                         onConfirmation = {closeConfirmationModal()},
                     )
                 }
-        }
-    }
-
-    fun postSubmeterReadings(newReadings: List<Reading>) {
-        coroutineScope.launch {
-            newReadings.forEach { newReading ->
-                ApiClientsService.utilities.addReadingToSubmeter(
-                    newReading.submeterId ?: throw NullPointerException("No submeter Id for reading: $newReading") ,
-                    newReading
-                ).onSuccess { submeter ->
-                        if (submeter.clientId == null) throw NullPointerException("No client Id for submeter")
-                        _state.update { state ->
-                            state.copy(
-                                submeter = null,
-                            )
-                        }
-                    }
-                    .onFailure { e ->
-                        println("Could not add Reading to submeter: $e")
-                        showErrorModal(
-                            "Could not add reading",
-                            "${e.message}",
-                            onConfirmation = {closeConfirmationModal()},
-                        )
-                    }
-            }
-            fetchSubmeters()
-            _state.update { state ->
-                state.copy(readings = emptyList())
-            }
         }
     }
 

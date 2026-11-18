@@ -61,6 +61,7 @@ import com.kontenery.model.invoice.Invoice
 import com.kontenery.model.invoice.Position
 import com.kontenery.service.ParkingAppState
 import com.kontenery.service.ParkingAppViewModel
+import com.kontenery.util.clientIdForUtilityReading
 import kotlinx.datetime.LocalDate
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -418,13 +419,10 @@ fun UtilitiesChoice(
         Row {
             Button(
                 onClick = {
-                    // TODO jak nie ma id customera to jakiś błąd?
-                    viewModel.postSubmeterReadings(newReadings = readings)
-                    viewModel.postCustomInvoice(client?.id ?: 0, invoice)
-                    viewModel.showConfirmModal(
-                        "Status dodatkowej faktury",
-                        "Wysyłam fakturę do klienta",
-                        viewModel::closeConfirmationModal,
+                    viewModel.sendUtilitiesInvoice(
+                        clientId = client?.id,
+                        invoice = invoice,
+                        readings = readings,
                     )
                 },
             ) {
@@ -483,7 +481,18 @@ fun SubmeterTable(
             submeters.forEach { submeter ->
                 SubmeterRow(
                     submeter = submeter,
-                    addReading = { submeterId, reading -> viewModel.createPositionFromReading(submeterId, reading) },
+                    addReading = { _, reading ->
+                        val clientId = clientIdForUtilityReading(submeter.clientId, clientId = null)
+                        if (clientId == null) {
+                            viewModel.showConfirmModal(
+                                "Odczyt mediów",
+                                "Podlicznik nie ma przypisanego kontrahenta.",
+                                viewModel::closeConfirmationModal,
+                            )
+                        } else {
+                            viewModel.createPositionFromReading(clientId, reading)
+                        }
+                    },
                     columnWeights,
                 )
             }

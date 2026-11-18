@@ -17,7 +17,7 @@ class ApiUtilities(
 ) {
     suspend fun fetchSubmetersForClient(clientId: Long): Result<List<Submeter>> {
         return try {
-            val result: List<Submeter> = httpClient.get("$baseUrl/utilities/submeter/$clientId").body()
+            val result: List<Submeter> = httpClient.get("$baseUrl/utilities/submeter/forClient/$clientId").body()
             Result.success(result)
         } catch (e: Throwable) {
             Result.failure(e)
