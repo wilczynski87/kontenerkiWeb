@@ -1,17 +1,22 @@
 package com.kontenery.ui
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
@@ -20,6 +25,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -30,30 +36,84 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.kontenery.FileResult
 import com.kontenery.controller.ApiClientsService
+import com.kontenery.csv.BankCsvDetector
+import com.kontenery.csvFileDropSupported
 import com.kontenery.data.CSVType
 import com.kontenery.data.CsvUploadResult
+import com.kontenery.data.MessageRequest
 import com.kontenery.model.Client
 import com.kontenery.model.ClientBankAccount
 import com.kontenery.model.ClientOnList
 import com.kontenery.model.PaymentDto
 import com.kontenery.model.errors.PaymentError
 import com.kontenery.model.payment.PaymentsRecogniseList
-import com.kontenery.pickFile
+import com.kontenery.pickCsvFiles
 import com.kontenery.service.ParkingAppViewModel
 import com.kontenery.util.formatLocalDate
 import com.kontenery.util.to2Decimals
 import kotlinx.coroutines.launch
 
+private data class CsvImportItem(
+    val id: Long,
+    val fileName: String,
+    val csvText: String,
+    val detected: CSVType?,
+    val selected: CSVType? = detected,
+    val uploading: Boolean = false,
+    val result: CsvUploadResult? = null,
+)
+
 @Composable
 fun PaymentsDownload(viewModel: ParkingAppViewModel, modifier: Modifier) {
-    var uploadResult by remember { mutableStateOf<CsvUploadResult?>(null) }
+    var imports by remember { mutableStateOf<List<CsvImportItem>>(emptyList()) }
+    var nextId by remember { mutableLongStateOf(1L) }
+    var notice by remember { mutableStateOf<String?>(null) }
+    var dropHover by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+    val scrollState = rememberScrollState()
+
+    fun updateItem(id: Long, transform: (CsvImportItem) -> CsvImportItem) {
+        imports = imports.map { item -> if (item.id == id) transform(item) else item }
+    }
+
+    fun upload(id: Long, type: CSVType) {
+        val text = imports.find { it.id == id }?.csvText ?: return
+        updateItem(id) { it.copy(selected = type, uploading = true, result = null) }
+        scope.launch {
+            val result = ApiClientsService.csvPayments.uploadCsv(MessageRequest(text), type)
+            updateItem(id) { it.copy(uploading = false, selected = type, result = result) }
+        }
+    }
+
+    fun addFiles(files: List<FileResult>) {
+        if (files.isEmpty()) return
+        notice = null
+        files.forEach { file ->
+            val text = file.bytes.decodeToString()
+            val detected = BankCsvDetector.detect(text)
+            val id = nextId++
+            imports = imports + CsvImportItem(
+                id = id,
+                fileName = file.name,
+                csvText = text,
+                detected = detected,
+            )
+            if (detected != null) upload(id, detected)
+        }
+    }
 
     Column(
         modifier = modifier
-            .fillMaxWidth()
-            .padding(16.dp)
-            .verticalScroll(rememberScrollState()),
+            .fillMaxSize()
+            .bankCsvDropTarget(
+                onFiles = ::addFiles,
+                onHoverChange = { dropHover = it },
+                onNotice = { notice = it },
+            )
+            .padding(start = 16.dp, end = 16.dp, top = 24.dp, bottom = 32.dp)
+            .verticalScroll(scrollState),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
@@ -62,32 +122,160 @@ fun PaymentsDownload(viewModel: ParkingAppViewModel, modifier: Modifier) {
             style = MaterialTheme.typography.headlineMedium,
             textAlign = TextAlign.Center,
         )
-
-        MyFilePickerButton(
-            csvType = CSVType.NEST,
-            pickFile = { pickFile() },
-            onUploadResult = { uploadResult = it },
-        )
-        MyFilePickerButton(
-            csvType = CSVType.PEKAOSABUSSINESS,
-            pickFile = { pickFile() },
-            onUploadResult = { uploadResult = it },
-        )
-        MyFilePickerButton(
-            csvType = CSVType.ALIOR,
-            pickFile = { pickFile() },
-            onUploadResult = { uploadResult = it },
+        Text(
+            text = "Nest, Alior i Pekao SA są rozpoznawane po nagłówku pliku.",
+            style = MaterialTheme.typography.bodyMedium,
+            textAlign = TextAlign.Center,
         )
 
-        uploadResult?.let { result ->
-            println("result: $result")
-            when (result) {
-                is CsvUploadResult.Recognised -> PaymentsRecogniseResult(result.result, viewModel)
-                is CsvUploadResult.Simple -> UploadSimpleResult(result.message)
-                is CsvUploadResult.Failed -> UploadErrorResult(result.message)
+        CsvImportDropZone(
+            dropHover = dropHover,
+            notice = notice,
+            onPick = {
+                scope.launch {
+                    addFiles(pickCsvFiles())
+                }
+            },
+        )
+
+        imports.forEach { item ->
+            CsvImportItemCard(
+                item = item,
+                viewModel = viewModel,
+                onSelectBank = { type -> upload(item.id, type) },
+            )
+        }
+        Spacer(Modifier.height(8.dp))
+    }
+}
+
+@Composable
+private fun CsvImportDropZone(
+    dropHover: Boolean,
+    notice: String?,
+    onPick: () -> Unit,
+) {
+    val border = if (dropHover) {
+        BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
+    } else {
+        CardDefaults.outlinedCardBorder()
+    }
+    OutlinedCard(
+        modifier = Modifier.fillMaxWidth(),
+        border = border,
+        colors = CardDefaults.outlinedCardColors(
+            containerColor = if (dropHover) {
+                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f)
+            } else {
+                Color.Unspecified
+            },
+        ),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Text(
+                text = if (csvFileDropSupported) {
+                    "Upuść tutaj plik CSV albo wybierz go z dysku."
+                } else {
+                    "Wybierz plik CSV z dysku."
+                },
+                style = MaterialTheme.typography.titleMedium,
+                textAlign = TextAlign.Center,
+            )
+            Button(onClick = onPick) {
+                Text("Wybierz pliki CSV")
+            }
+            notice?.let { message ->
+                Text(
+                    text = message,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color(0xFF1565C0),
+                    textAlign = TextAlign.Center,
+                )
             }
         }
     }
+}
+
+@Composable
+private fun CsvImportItemCard(
+    item: CsvImportItem,
+    viewModel: ParkingAppViewModel,
+    onSelectBank: (CSVType) -> Unit,
+) {
+    val bank = item.selected ?: item.detected
+    val needsChoice = bank == null || item.result is CsvUploadResult.Failed
+    OutlinedCard(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier.padding(12.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = importStatusLabel(item),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                }
+                if (item.uploading) {
+                    CircularProgressIndicator()
+                }
+            }
+
+            if (needsChoice && !item.uploading) {
+                Text(
+                    text = if (item.result is CsvUploadResult.Failed) {
+                        "Import się nie powiódł. Możesz wysłać plik ponownie."
+                    } else {
+                        "Wskaż bank, żeby wysłać plik."
+                    },
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    CSVType.entries.forEach { type ->
+                        Button(onClick = { onSelectBank(type) }) {
+                            Text(type.label)
+                        }
+                    }
+                }
+            }
+
+            item.result?.let { result ->
+                when (result) {
+                    is CsvUploadResult.Simple -> UploadSimpleResult(result.message)
+                    is CsvUploadResult.Failed -> UploadErrorResult(result.message)
+                    is CsvUploadResult.Recognised -> Unit
+                }
+            }
+        }
+    }
+    if (item.result is CsvUploadResult.Recognised) {
+        PaymentsRecogniseResult(item.result.result, viewModel)
+    }
+}
+
+private fun importStatusLabel(item: CsvImportItem): String {
+    val bank = item.selected ?: item.detected
+    val prefix = when {
+        item.uploading -> "Wysyłanie"
+        bank != null && bank == item.detected -> "Rozpoznano"
+        bank != null -> "Wybrano"
+        else -> return "Nie rozpoznano formatu — ${item.fileName}"
+    }
+    return "$prefix: ${bank?.label} — ${item.fileName}"
 }
 
 @Composable
@@ -150,16 +338,22 @@ fun PaymentsRecogniseResult(result: PaymentsRecogniseList, viewModel: ParkingApp
             payments = result.unrecognizedPayments.orEmpty(),
             emptyText = "Brak nierozpoznanych przelewów.",
             viewModel = viewModel,
+            containerColor = Color(0xFFE3F2FD),
+            titleColor = Color(0xFF1565C0),
         )
         PaymentDtoSection(
             title = "Nowe płatności",
             payments = result.newPayments.orEmpty(),
             emptyText = "Brak nowych płatności.",
+            containerColor = Color(0xFFE8F5E9),
+            titleColor = Color(0xFF2E7D32),
         )
         PaymentDtoSection(
             title = "Duplikaty (już w bazie)",
             payments = result.oldPayments.orEmpty(),
             emptyText = "Brak duplikatów.",
+            containerColor = Color(0xFFFFF3E0),
+            titleColor = Color(0xFFF57C00),
         )
         PaymentErrorsSection(errors = result.errors.orEmpty())
     }
@@ -188,13 +382,19 @@ private fun PaymentDtoSection(
     payments: List<PaymentDto>,
     emptyText: String,
     viewModel: ParkingAppViewModel? = null,
+    containerColor: Color = Color.Unspecified,
+    titleColor: Color = Color.Unspecified,
 ) {
-    OutlinedCard(modifier = Modifier.fillMaxWidth()) {
+    OutlinedCard(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.outlinedCardColors(containerColor = containerColor),
+    ) {
         Column(modifier = Modifier.padding(12.dp)) {
             Text(
                 text = "$title (${payments.size})",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
+                color = titleColor,
             )
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 

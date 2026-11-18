@@ -11,6 +11,13 @@ import org.w3c.files.FileReader
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
+actual val csvFileDropSupported: Boolean = false
+
+actual suspend fun pickCsvFiles(): List<FileResult> {
+    val file = pickFile() ?: return emptyList()
+    return listOf(file)
+}
+
 @OptIn(ExperimentalWasmJsInterop::class)
 actual suspend fun pickFile(): FileResult? = suspendCancellableCoroutine { cont ->
     val input = document.createElement("input") as HTMLInputElement
