@@ -25,6 +25,8 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -71,8 +73,18 @@ fun PaymentsDownload(viewModel: ParkingAppViewModel, modifier: Modifier) {
     var nextId by remember { mutableLongStateOf(1L) }
     var notice by remember { mutableStateOf<String?>(null) }
     var dropHover by remember { mutableStateOf(false) }
+    var ignoredAccounts by remember { mutableStateOf<List<ClientBankAccount>>(emptyList()) }
+    var ignoredRefresh by remember { mutableIntStateOf(0) }
     val scope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
+
+    LaunchedEffect(ignoredRefresh) {
+        ignoredAccounts = try {
+            ApiClientsService.bankAccounts.listIgnored()
+        } catch (_: Exception) {
+            emptyList()
+        }
+    }
 
     fun updateItem(id: Long, transform: (CsvImportItem) -> CsvImportItem) {
         imports = imports.map { item -> if (item.id == id) transform(item) else item }
@@ -138,11 +150,18 @@ fun PaymentsDownload(viewModel: ParkingAppViewModel, modifier: Modifier) {
             },
         )
 
+        IgnoredAccountsCard(
+            accounts = ignoredAccounts,
+            viewModel = viewModel,
+            onAccountsChanged = { ignoredRefresh++ },
+        )
+
         imports.forEach { item ->
             CsvImportItemCard(
                 item = item,
                 viewModel = viewModel,
                 onSelectBank = { type -> upload(item.id, type) },
+                onAccountsChanged = { ignoredRefresh++ },
             )
         }
         Spacer(Modifier.height(8.dp))
@@ -207,6 +226,7 @@ private fun CsvImportItemCard(
     item: CsvImportItem,
     viewModel: ParkingAppViewModel,
     onSelectBank: (CSVType) -> Unit,
+    onAccountsChanged: () -> Unit,
 ) {
     val bank = item.selected ?: item.detected
     val needsChoice = bank == null || item.result is CsvUploadResult.Failed
@@ -263,7 +283,7 @@ private fun CsvImportItemCard(
         }
     }
     if (item.result is CsvUploadResult.Recognised) {
-        PaymentsRecogniseResult(item.result.result, viewModel)
+        PaymentsRecogniseResult(item.result.result, viewModel, onAccountsChanged)
     }
 }
 
@@ -306,10 +326,15 @@ private fun UploadErrorResult(message: String) {
 }
 
 @Composable
-fun PaymentsRecogniseResult(result: PaymentsRecogniseList, viewModel: ParkingAppViewModel) {
+fun PaymentsRecogniseResult(
+    result: PaymentsRecogniseList,
+    viewModel: ParkingAppViewModel,
+    onAccountsChanged: () -> Unit = {},
+) {
     val newCount = result.newPayments.orEmpty().size
     val oldCount = result.oldPayments.orEmpty().size
     val unrecognizedCount = result.unrecognizedPayments.orEmpty().size
+    val ignoredCount = result.ignoredPayments.orEmpty().size
     val errorCount = result.errors.orEmpty().size
 
     Column(
@@ -330,6 +355,7 @@ fun PaymentsRecogniseResult(result: PaymentsRecogniseList, viewModel: ParkingApp
             SummaryChip("Nowe", newCount, Color(0xFF2E7D32))
             SummaryChip("Duplikaty", oldCount, Color(0xFFF57C00))
             SummaryChip("Nierozpoznane", unrecognizedCount, Color(0xFF1565C0))
+            SummaryChip("Zignorowane", ignoredCount, Color(0xFF455A64))
             SummaryChip("Błędy", errorCount, Color(0xFFC62828))
         }
 
@@ -340,6 +366,18 @@ fun PaymentsRecogniseResult(result: PaymentsRecogniseList, viewModel: ParkingApp
             viewModel = viewModel,
             containerColor = Color(0xFFE3F2FD),
             titleColor = Color(0xFF1565C0),
+            showIgnore = true,
+            onAccountsChanged = onAccountsChanged,
+        )
+        PaymentDtoSection(
+            title = "Zignorowane przelewy",
+            payments = result.ignoredPayments.orEmpty(),
+            emptyText = "Brak zignorowanych przelewów.",
+            viewModel = viewModel,
+            containerColor = Color(0xFFECEFF1),
+            titleColor = Color(0xFF455A64),
+            showUnignore = true,
+            onAccountsChanged = onAccountsChanged,
         )
         PaymentDtoSection(
             title = "Nowe płatności",
@@ -384,6 +422,9 @@ private fun PaymentDtoSection(
     viewModel: ParkingAppViewModel? = null,
     containerColor: Color = Color.Unspecified,
     titleColor: Color = Color.Unspecified,
+    showIgnore: Boolean = false,
+    showUnignore: Boolean = false,
+    onAccountsChanged: () -> Unit = {},
 ) {
     OutlinedCard(
         modifier = Modifier.fillMaxWidth(),
@@ -423,6 +464,9 @@ private fun PaymentDtoSection(
                                     AssignAccountToClientRow(
                                         accountNumber = payment.fromAccount,
                                         viewModel = viewModel,
+                                        showIgnore = showIgnore,
+                                        showUnignore = showUnignore,
+                                        onAccountsChanged = onAccountsChanged,
                                     )
                                 }
                             }
@@ -432,6 +476,9 @@ private fun PaymentDtoSection(
                                 AssignAccountToClientRow(
                                     accountNumber = payment.fromAccount,
                                     viewModel = viewModel,
+                                    showIgnore = showIgnore,
+                                    showUnignore = showUnignore,
+                                    onAccountsChanged = onAccountsChanged,
                                 )
                             }
                         }
@@ -545,6 +592,10 @@ private fun String.formatIban(): String {
 private fun AssignAccountToClientRow(
     accountNumber: String,
     viewModel: ParkingAppViewModel,
+    accountId: Long? = null,
+    showIgnore: Boolean = false,
+    showUnignore: Boolean = false,
+    onAccountsChanged: () -> Unit = {},
 ) {
     val scope = rememberCoroutineScope()
     val clients: List<ClientOnList> = viewModel.state.collectAsState().value.clients
@@ -563,11 +614,61 @@ private fun AssignAccountToClientRow(
     ) {
         HorizontalDivider(color = Color(0xFF1565C0).copy(alpha = 0.3f))
 
+        if ((showIgnore || showUnignore) && saveResult == null) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                if (showIgnore) {
+                    TextButton(
+                        onClick = {
+                            scope.launch {
+                                isSaving = true
+                                try {
+                                    ApiClientsService.bankAccounts.ignoreAccount(accountNumber)
+                                    saveResult = "Konto oznaczone do ignorowania"
+                                    onAccountsChanged()
+                                } catch (e: Exception) {
+                                    saveResult = "Błąd zapisu: ${e.message}"
+                                } finally {
+                                    isSaving = false
+                                }
+                            }
+                        },
+                        enabled = !isSaving && saveResult == null,
+                    ) {
+                        Text("Ignoruj konto")
+                    }
+                }
+                if (showUnignore) {
+                    TextButton(
+                        onClick = {
+                            scope.launch {
+                                isSaving = true
+                                try {
+                                    ApiClientsService.bankAccounts.deleteClientBankAccount("0", accountNumber)
+                                    saveResult = "Cofnięto ignorowanie konta"
+                                    onAccountsChanged()
+                                } catch (e: Exception) {
+                                    saveResult = "Błąd zapisu: ${e.message}"
+                                } finally {
+                                    isSaving = false
+                                }
+                            }
+                        },
+                        enabled = !isSaving && saveResult == null,
+                    ) {
+                        Text("Cofnij ignorowanie")
+                    }
+                }
+            }
+        }
+
         if (saveResult != null) {
             Text(
                 text = saveResult!!,
                 style = MaterialTheme.typography.bodySmall,
-                color = if (saveResult!!.startsWith("Zapisano")) Color(0xFF2E7D32) else Color(0xFFC62828),
+                color = if (saveResult!!.startsWith("Błąd")) Color(0xFFC62828) else Color(0xFF2E7D32),
             )
         } else {
             ClientsListDropdown(
@@ -596,12 +697,16 @@ private fun AssignAccountToClientRow(
                                 isSaving = true
                                 try {
                                     val clientId = selectedClient!!.id!!
-                                    ApiClientsService.bankAccounts.saveClientBankAccount(
-                                        ClientBankAccount(
-                                            bankAccount = accountNumber,
-                                            client = Client(id = clientId),
-                                        )
+                                    val assignment = ClientBankAccount(
+                                        bankAccount = accountNumber,
+                                        client = Client(id = clientId),
                                     )
+                                    if (accountId != null) {
+                                        ApiClientsService.bankAccounts.assignBankAccount(accountId, assignment)
+                                    } else {
+                                        ApiClientsService.bankAccounts.saveClientBankAccount(assignment)
+                                    }
+                                    onAccountsChanged()
                                     val clientName = clients.find { it.id == clientId }?.name ?: "klienta"
                                     saveResult = "Zapisano konto dla: $clientName"
                                 } catch (e: Exception) {
@@ -615,6 +720,58 @@ private fun AssignAccountToClientRow(
                     ) {
                         Text(if (isSaving) "Zapisuję..." else "Przypisz konto do klienta")
                     }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun IgnoredAccountsCard(
+    accounts: List<ClientBankAccount>,
+    viewModel: ParkingAppViewModel,
+    onAccountsChanged: () -> Unit,
+) {
+    OutlinedCard(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.outlinedCardColors(containerColor = Color(0xFFECEFF1)),
+    ) {
+        Column(modifier = Modifier.padding(12.dp)) {
+            Text(
+                text = "Ignorowane konta (${accounts.size})",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = Color(0xFF455A64),
+            )
+            Text(
+                text = "Przelewy z tych kont nie są zapisywane przy imporcie. Można cofnąć ignorowanie albo przypisać konto do klienta.",
+                style = MaterialTheme.typography.bodySmall,
+            )
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            if (accounts.isEmpty()) {
+                Text(text = "Brak kont oznaczonych do ignorowania.", style = MaterialTheme.typography.bodyMedium)
+            } else {
+                accounts.forEachIndexed { index, account ->
+                    val number = account.bankAccount
+                    if (number.isNullOrBlank()) return@forEachIndexed
+                    if (index > 0) {
+                        HorizontalDivider(
+                            modifier = Modifier.padding(vertical = 8.dp),
+                            color = Color.LightGray,
+                        )
+                    }
+                    Text(
+                        text = number.formatIban(),
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium,
+                    )
+                    AssignAccountToClientRow(
+                        accountNumber = number,
+                        viewModel = viewModel,
+                        accountId = account.id,
+                        showUnignore = true,
+                        onAccountsChanged = onAccountsChanged,
+                    )
                 }
             }
         }

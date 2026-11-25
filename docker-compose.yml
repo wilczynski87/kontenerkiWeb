@@ -7,8 +7,16 @@ services:
     ports:
       - "${PORT:-80}:80"
     restart: unless-stopped
+    networks:
+      - default
+      - api_net
     # Kotlin/Wasm build in Docker Desktop typically needs >= 4 GB RAM for the builder stage
     deploy:
       resources:
         limits:
           memory: 8G
+
+networks:
+  api_net:
+    external: true
+    name: kontenerkiapi_default

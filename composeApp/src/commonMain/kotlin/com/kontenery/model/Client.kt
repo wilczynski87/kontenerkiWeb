@@ -73,6 +73,7 @@ data class ClientBankAccount(
     val client: Client? = null,
     @Serializable(with = LocalDateSerializer::class)
     val createdAt: LocalDate? = null,
+    val ignored: Boolean = false,
 )
 
 @Serializable
