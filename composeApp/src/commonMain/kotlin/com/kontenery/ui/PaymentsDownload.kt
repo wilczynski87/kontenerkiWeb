@@ -1,6 +1,12 @@
 package com.kontenery.ui
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -14,10 +20,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
@@ -150,12 +160,6 @@ fun PaymentsDownload(viewModel: ParkingAppViewModel, modifier: Modifier) {
             },
         )
 
-        IgnoredAccountsCard(
-            accounts = ignoredAccounts,
-            viewModel = viewModel,
-            onAccountsChanged = { ignoredRefresh++ },
-        )
-
         imports.forEach { item ->
             CsvImportItemCard(
                 item = item,
@@ -164,6 +168,12 @@ fun PaymentsDownload(viewModel: ParkingAppViewModel, modifier: Modifier) {
                 onAccountsChanged = { ignoredRefresh++ },
             )
         }
+
+        IgnoredAccountsCard(
+            accounts = ignoredAccounts,
+            viewModel = viewModel,
+            onAccountsChanged = { ignoredRefresh++ },
+        )
         Spacer(Modifier.height(8.dp))
     }
 }
@@ -732,46 +742,77 @@ private fun IgnoredAccountsCard(
     viewModel: ParkingAppViewModel,
     onAccountsChanged: () -> Unit,
 ) {
+    var expanded by remember { mutableStateOf(false) }
     OutlinedCard(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.outlinedCardColors(containerColor = Color(0xFFECEFF1)),
     ) {
-        Column(modifier = Modifier.padding(12.dp)) {
-            Text(
-                text = "Ignorowane konta (${accounts.size})",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-                color = Color(0xFF455A64),
-            )
-            Text(
-                text = "Przelewy z tych kont nie są zapisywane przy imporcie. Można cofnąć ignorowanie albo przypisać konto do klienta.",
-                style = MaterialTheme.typography.bodySmall,
-            )
-            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-            if (accounts.isEmpty()) {
-                Text(text = "Brak kont oznaczonych do ignorowania.", style = MaterialTheme.typography.bodyMedium)
-            } else {
-                accounts.forEachIndexed { index, account ->
-                    val number = account.bankAccount
-                    if (number.isNullOrBlank()) return@forEachIndexed
-                    if (index > 0) {
-                        HorizontalDivider(
-                            modifier = Modifier.padding(vertical = 8.dp),
-                            color = Color.LightGray,
-                        )
-                    }
+        Column(modifier = Modifier.fillMaxWidth()) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { expanded = !expanded }
+                    .padding(12.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = number.formatIban(),
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Medium,
+                        text = "Ignorowane konta (${accounts.size})",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color(0xFF455A64),
                     )
-                    AssignAccountToClientRow(
-                        accountNumber = number,
-                        viewModel = viewModel,
-                        accountId = account.id,
-                        showUnignore = true,
-                        onAccountsChanged = onAccountsChanged,
+                    Text(
+                        text = if (expanded) "Zwiń edycję" else "Wysuń, aby edytować",
+                        style = MaterialTheme.typography.bodySmall,
                     )
+                }
+                Icon(
+                    imageVector = if (expanded) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
+                    contentDescription = if (expanded) "Zwiń ignorowane konta" else "Wysuń ignorowane konta",
+                    tint = Color(0xFF455A64),
+                )
+            }
+            AnimatedVisibility(
+                visible = expanded,
+                enter = expandVertically(expandFrom = Alignment.Top) + fadeIn(),
+                exit = shrinkVertically(shrinkTowards = Alignment.Top) + fadeOut(),
+            ) {
+                Column(
+                    modifier = Modifier.padding(start = 12.dp, end = 12.dp, bottom = 12.dp),
+                ) {
+                    Text(
+                        text = "Przelewy z tych kont nie są zapisywane przy imporcie. Można cofnąć ignorowanie albo przypisać konto do klienta.",
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                    if (accounts.isEmpty()) {
+                        Text(text = "Brak kont oznaczonych do ignorowania.", style = MaterialTheme.typography.bodyMedium)
+                    } else {
+                        accounts.forEachIndexed { index, account ->
+                            val number = account.bankAccount
+                            if (number.isNullOrBlank()) return@forEachIndexed
+                            if (index > 0) {
+                                HorizontalDivider(
+                                    modifier = Modifier.padding(vertical = 8.dp),
+                                    color = Color.LightGray,
+                                )
+                            }
+                            Text(
+                                text = number.formatIban(),
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Medium,
+                            )
+                            AssignAccountToClientRow(
+                                accountNumber = number,
+                                viewModel = viewModel,
+                                accountId = account.id,
+                                showUnignore = true,
+                                onAccountsChanged = onAccountsChanged,
+                            )
+                        }
+                    }
                 }
             }
         }
